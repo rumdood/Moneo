@@ -1,4 +1,7 @@
+using System;
+using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -17,8 +20,8 @@ namespace Moneo.Functions
             _logger = log;
         }
 
-        [FunctionName(nameof(DefuseTimer))]
-        public async Task<HttpResponseMessage> DefuseTimer(
+        [FunctionName(nameof(DefuseReminder))]
+        public async Task<HttpResponseMessage> DefuseReminder(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "reminders/{reminderId}")] HttpRequestMessage request,
             string reminderId,
             [DurableClient] IDurableEntityClient client)
@@ -36,8 +39,8 @@ namespace Moneo.Functions
         }
 
         // have to use IActionResult because of issues with async and Kestrel
-        [FunctionName(nameof(GetTimer))]
-        public async Task<IActionResult> GetTimer(
+        [FunctionName(nameof(GetReminderStatus))]
+        public async Task<IActionResult> GetReminderStatus(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "reminders/{reminderId}")] HttpRequestMessage request,
             string reminderId,
             [DurableClient] IDurableEntityClient client)
@@ -52,6 +55,50 @@ namespace Moneo.Functions
             _logger.LogInformation($"Reminder Defused for {reminderId}");
 
             return new OkObjectResult(reminderState.EntityState);
+        }
+
+        [FunctionName("CheckReminders")]
+        public async Task CheckReminders(
+            [TimerTrigger("0 0/5 * * * *", RunOnStartup = true)]  TimerInfo timer,
+            [DurableClient] IDurableEntityClient client)
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var cancelToken = tokenSource.Token;
+
+            var query = new EntityQuery
+            {
+                PageSize = 10,
+                FetchState = true,
+                EntityName = nameof(ReminderState)
+            };
+
+            do
+            {
+                var result = await client.ListEntitiesAsync(query, cancelToken);
+
+                if (!(bool)result?.Entities.Any())
+                {
+                    break;
+                }
+
+                foreach (var entity in result.Entities)
+                {
+                    if (entity.State == null)
+                    {
+                        continue;
+                    }
+
+                    var reminder = entity.State.ToObject<ReminderState>();
+
+                    if (reminder == null || DateTime.UtcNow.Subtract(reminder.LastTaken).TotalHours < 8)
+                    {
+                        continue;
+                    }
+
+                    _logger.LogInformation("Send a reminder");
+                }
+            } 
+            while (query.ContinuationToken != null);
         }
     }
 }
