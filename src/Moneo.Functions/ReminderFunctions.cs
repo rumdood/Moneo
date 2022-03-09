@@ -4,10 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 
 namespace Moneo.Functions
 {
@@ -21,8 +18,6 @@ namespace Moneo.Functions
         }
 
         [FunctionName(nameof(DefuseTimer))]
-        [OpenApiOperation(operationId: nameof(DefuseTimer), tags: new[] { "name" })]
-        [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
         public async Task<HttpResponseMessage> DefuseTimer(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "reminders/{reminderId}")] HttpRequestMessage request,
             string reminderId,
@@ -42,8 +37,6 @@ namespace Moneo.Functions
 
         // have to use IActionResult because of issues with async and Kestrel
         [FunctionName(nameof(GetTimer))]
-        [OpenApiOperation(operationId: nameof(DefuseTimer), tags: new[] { "name" })]
-        [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
         public async Task<IActionResult> GetTimer(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "reminders/{reminderId}")] HttpRequestMessage request,
             string reminderId,
