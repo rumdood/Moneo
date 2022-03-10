@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -19,6 +20,43 @@ namespace Moneo.Functions
         {
             _logger = log;
         }
+
+        private static async Task<IDictionary<string, ReminderState>> GetAllReminders(IDurableEntityClient client)
+        {
+            var allReminders = new Dictionary<string, ReminderState>();
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var cancelToken = tokenSource.Token;
+
+            var query = new EntityQuery
+            {
+                FetchState = true,
+                EntityName = nameof(ReminderState)
+            };
+
+            do
+            {
+                var result = await client.ListEntitiesAsync(query, cancelToken);
+
+                if (!(bool)result?.Entities.Any())
+                {
+                    break;
+                }
+
+                foreach (var entity in result.Entities)
+                {
+                    if (entity.State == null)
+                    {
+                        continue;
+                    }
+
+                    allReminders[entity.EntityId.EntityKey] = entity.State.ToObject<ReminderState>();
+                }
+            }
+            while (query.ContinuationToken != null);
+
+            return allReminders;
+        }
+
 
         [FunctionName(nameof(DefuseReminder))]
         public async Task<HttpResponseMessage> DefuseReminder(
@@ -57,48 +95,55 @@ namespace Moneo.Functions
             return new OkObjectResult(reminderState.EntityState);
         }
 
-        [FunctionName("CheckReminders")]
-        public async Task CheckReminders(
-            [TimerTrigger("0 0/5 * * * *", RunOnStartup = true)]  TimerInfo timer,
+        [FunctionName(nameof(DeleteReminder))]
+        public async Task<HttpResponseMessage> DeleteReminder(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "reminders/{reminderId}")] HttpRequestMessage request,
+            string reminderId,
             [DurableClient] IDurableEntityClient client)
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-            var cancelToken = tokenSource.Token;
-
-            var query = new EntityQuery
+            if (string.IsNullOrEmpty(reminderId))
             {
-                PageSize = 10,
-                FetchState = true,
-                EntityName = nameof(ReminderState)
-            };
+                return request.CreateResponse(System.Net.HttpStatusCode.BadRequest, "Reminder ID Is Required");
+            }
 
-            do
+            var entityId = new EntityId(nameof(ReminderState), reminderId);
+            await client.SignalEntityAsync<IReminderState>(nameof(ReminderState), x => x.Delete());
+            _logger.LogInformation($"Reminder Deleted for {reminderId}");
+
+            return request.CreateResponse(System.Net.HttpStatusCode.OK);
+        }
+
+        [FunctionName(nameof(GetRemindersList))]
+        public async Task<IActionResult> GetRemindersList(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "reminders")] HttpRequestMessage request,
+            [DurableClient] IDurableEntityClient client)
+        {
+            var allReminders = await GetAllReminders(client);
+            return new OkObjectResult(allReminders);
+        }
+
+        [FunctionName("CheckReminders")]
+        public async Task CheckReminders(
+            [TimerTrigger("%check_reminder_cron%", RunOnStartup = true)]  TimerInfo timer,
+            [DurableClient] IDurableEntityClient client)
+        {
+            if (!int.TryParse(Environment.GetEnvironmentVariable("defuseThresholdHours"), out var threshold))
             {
-                var result = await client.ListEntitiesAsync(query, cancelToken);
+                _logger.LogError("Unable to retreive defuse threshold, will use 1 hour");
+                threshold = 1;
+            }
 
-                if (!(bool)result?.Entities.Any())
+            var allReminders = await GetAllReminders(client);
+
+            foreach (var (id, reminder) in allReminders)
+            {
+                if (reminder == null || DateTime.UtcNow.Subtract(reminder.LastDefused).TotalHours <= threshold)
                 {
-                    break;
+                    return;
                 }
 
-                foreach (var entity in result.Entities)
-                {
-                    if (entity.State == null)
-                    {
-                        continue;
-                    }
-
-                    var reminder = entity.State.ToObject<ReminderState>();
-
-                    if (reminder == null || DateTime.UtcNow.Subtract(reminder.LastTaken).TotalHours < 8)
-                    {
-                        continue;
-                    }
-
-                    _logger.LogInformation("Send a reminder");
-                }
-            } 
-            while (query.ContinuationToken != null);
+                _logger.LogInformation($"Send a reminder for {id}");
+            }
         }
     }
 }
