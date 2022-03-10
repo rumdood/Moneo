@@ -9,7 +9,7 @@ namespace Moneo.Functions
     [JsonObject(MemberSerialization.OptIn)]
     public class ReminderState: IReminderState
     {
-        [JsonProperty("lastTaken")]
+        [JsonProperty("lastDefused")]
         public DateTime LastDefused { get; private set; }
 
         public void Defuse()
