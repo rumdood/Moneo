@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Functions", "src\Moneo.Functions\Moneo.Functions.csproj", "{1AC93D5E-B3A5-41FB-AEBB-538565EAE76A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Functions", "src\Moneo.Functions\Moneo.Functions.csproj", "{1AC93D5E-B3A5-41FB-AEBB-538565EAE76A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

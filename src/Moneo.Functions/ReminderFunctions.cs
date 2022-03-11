@@ -15,9 +15,12 @@ namespace Moneo.Functions
     public class ReminderFunctions
     {
         private readonly ILogger<ReminderFunctions> _logger;
+        private readonly INotifyEngine _notifier;
 
-        public ReminderFunctions(ILogger<ReminderFunctions> log)
+        public ReminderFunctions(INotifyEngine notifier,
+            ILogger<ReminderFunctions> log)
         {
+            _notifier = notifier;
             _logger = log;
         }
 
@@ -143,6 +146,7 @@ namespace Moneo.Functions
                 }
 
                 _logger.LogInformation($"Send a reminder for {id}");
+                await _notifier.SendNotification(Environment.GetEnvironmentVariable("reminderMessage"));
             }
         }
     }
