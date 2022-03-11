@@ -60,7 +60,7 @@ namespace Moneo.Functions
 
         [FunctionName(nameof(DefuseReminder))]
         public async Task<HttpResponseMessage> DefuseReminder(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "reminders/{reminderId}")] HttpRequestMessage request,
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "reminders/{reminderId}")] HttpRequestMessage request,
             string reminderId,
             [DurableClient] IDurableEntityClient client)
         {
@@ -79,7 +79,7 @@ namespace Moneo.Functions
         // have to use IActionResult because of issues with async and Kestrel
         [FunctionName(nameof(GetReminderStatus))]
         public async Task<IActionResult> GetReminderStatus(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "reminders/{reminderId}")] HttpRequestMessage request,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "reminders/{reminderId}")] HttpRequestMessage request,
             string reminderId,
             [DurableClient] IDurableEntityClient client)
         {
@@ -97,7 +97,7 @@ namespace Moneo.Functions
 
         [FunctionName(nameof(DeleteReminder))]
         public async Task<HttpResponseMessage> DeleteReminder(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "reminders/{reminderId}")] HttpRequestMessage request,
+            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "reminders/{reminderId}")] HttpRequestMessage request,
             string reminderId,
             [DurableClient] IDurableEntityClient client)
         {
@@ -115,7 +115,7 @@ namespace Moneo.Functions
 
         [FunctionName(nameof(GetRemindersList))]
         public async Task<IActionResult> GetRemindersList(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "reminders")] HttpRequestMessage request,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "reminders")] HttpRequestMessage request,
             [DurableClient] IDurableEntityClient client)
         {
             var allReminders = await GetAllReminders(client);
