@@ -5,8 +5,9 @@ namespace Moneo.Functions
 {
     public interface IReminderState
     {
-        void Defuse();
+        Task Defuse();
         Task<DateTime> GetLastDefusedTimestamp();
-        void Delete();
+        Task Delete();
+        Task CheckSendReminder();
     }
 }

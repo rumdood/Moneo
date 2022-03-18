@@ -15,9 +15,12 @@ namespace Moneo.Functions
     public class ReminderFunctions
     {
         private readonly ILogger<ReminderFunctions> _logger;
+        private readonly INotifyEngine _notifier;
 
-        public ReminderFunctions(ILogger<ReminderFunctions> log)
+        public ReminderFunctions(INotifyEngine notifier,
+            ILogger<ReminderFunctions> log)
         {
+            _notifier = notifier;
             _logger = log;
         }
 
@@ -139,10 +142,11 @@ namespace Moneo.Functions
             {
                 if (reminder == null || DateTime.UtcNow.Subtract(reminder.LastDefused).TotalHours <= threshold)
                 {
-                    return;
+                    continue;
                 }
 
                 _logger.LogInformation($"Send a reminder for {id}");
+                await client.SignalEntityAsync<IReminderState>(new EntityId(nameof(ReminderState), id), x => x.CheckSendReminder());
             }
         }
     }
