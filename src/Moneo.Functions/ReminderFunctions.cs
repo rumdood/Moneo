@@ -93,7 +93,7 @@ namespace Moneo.Functions
 
             var entityId = new EntityId(nameof(ReminderState), reminderId);
             var reminderState = await client.ReadEntityStateAsync<ReminderState>(entityId);
-            _logger.LogInformation($"Reminder Defused for {reminderId}");
+            _logger.LogInformation($"Retrieved status for {reminderId}");
 
             return new OkObjectResult(reminderState.EntityState);
         }
