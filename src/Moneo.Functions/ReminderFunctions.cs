@@ -127,7 +127,7 @@ namespace Moneo.Functions
 
         [FunctionName("CheckReminders")]
         public async Task CheckReminders(
-            [TimerTrigger("%check_reminder_cron%", RunOnStartup = true)]  TimerInfo timer,
+            [TimerTrigger("%check_reminder_cron%", RunOnStartup = false)]  TimerInfo timer,
             [DurableClient] IDurableEntityClient client)
         {
             if (!int.TryParse(Environment.GetEnvironmentVariable("defuseThresholdHours"), out var threshold))
