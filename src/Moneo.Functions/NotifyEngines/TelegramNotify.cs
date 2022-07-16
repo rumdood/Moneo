@@ -5,7 +5,7 @@ using Telegram.Bot;
 
 namespace Moneo.Functions.NotifyEngines
 {
-    public class TelegramNotify : INotifyEngine
+    public class TelegramNotify : NotifyEngineBase, INotifyEngine
     {
         private readonly ITelegramBotClient _botClient;
         private readonly ILogger<TelegramNotify> _logger;
@@ -28,7 +28,7 @@ namespace Moneo.Functions.NotifyEngines
             _chatId = c;
         }
 
-        public async Task SendNotification(string message)
+        public override async Task SendNotification(string message)
         {
             await _botClient.SendTextMessageAsync(_chatId, message);
         }
