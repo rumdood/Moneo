@@ -22,7 +22,7 @@ namespace Moneo.Functions
         public async Task Defuse()
         {
             LastDefused = DateTime.UtcNow;
-            await _notifier.SendNotification(Environment.GetEnvironmentVariable("defusedMessage"));
+            await _notifier.SendDefuseMessage();
         }
 
         [FunctionName(nameof(ReminderState))]
@@ -51,7 +51,7 @@ namespace Moneo.Functions
                 return;
             }
 
-            await _notifier.SendNotification(Environment.GetEnvironmentVariable("reminderMessage"));
+            await _notifier.SendReminder();
 
             // schedule a follow-up
             Entity.Current.SignalEntity<IReminderState>(Entity.Current.EntityId, 

@@ -4,6 +4,7 @@ namespace Moneo.Functions
 {
     public interface INotifyEngine
     {
-        Task SendNotification(string message);
+        Task SendReminder();
+        Task SendDefuseMessage();
     }
 }
