@@ -130,6 +130,8 @@ namespace Moneo.Functions
             [TimerTrigger("%check_reminder_cron%", RunOnStartup = false)]  TimerInfo timer,
             [DurableClient] IDurableEntityClient client)
         {
+            _logger.LogInformation($"Executing check timer, next check at {timer.ScheduleStatus.Next}");
+
             if (!int.TryParse(Environment.GetEnvironmentVariable("defuseThresholdHours"), out var threshold))
             {
                 _logger.LogError("Unable to retreive defuse threshold, will use 1 hour");
