@@ -3,11 +3,14 @@ using System.Threading.Tasks;
 
 namespace Moneo.Functions
 {
-    public interface IReminderState
+    public interface ITaskManager
     {
-        Task Defuse();
-        Task<DateTime> GetLastDefusedTimestamp();
+        Task MarkCompleted(bool skipped);
+        Task<MoneoTask> GetTaskDetail();
         Task Delete();
         Task CheckSendReminder();
+        Task InitializeTask(MoneoTask task);
+        Task UpdateTask(MoneoTask task);
+        Task DisableTask();
     }
 }

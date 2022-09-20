@@ -12,20 +12,10 @@ namespace Moneo.Functions.NotifyEngines
             _logger = logger;
         }
 
-        public Task SendDefuseMessage()
-        {
-            return SendNotification("defuser");
-        }
-
         public Task SendNotification(string message)
         {
             _logger.LogInformation("SENDING NOTIFICATION");
             return Task.CompletedTask;
-        }
-
-        public Task SendReminder()
-        {
-            return SendNotification("reminder");
         }
     }
 }

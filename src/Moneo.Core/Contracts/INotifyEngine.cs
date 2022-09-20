@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Moneo.Functions
+namespace Moneo.Notify
 {
     public interface INotifyEngine
     {
