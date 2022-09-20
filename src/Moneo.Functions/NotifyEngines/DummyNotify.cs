@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Moneo.Notify;
 using System.Threading.Tasks;
 
 namespace Moneo.Functions.NotifyEngines

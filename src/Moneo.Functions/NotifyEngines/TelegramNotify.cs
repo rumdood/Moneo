@@ -3,7 +3,7 @@ using System;
 using System.Threading.Tasks;
 using Telegram.Bot;
 
-namespace Moneo.Functions.NotifyEngines
+namespace Moneo.Notify.Engines
 {
     public class TelegramNotify : INotifyEngine
     {
