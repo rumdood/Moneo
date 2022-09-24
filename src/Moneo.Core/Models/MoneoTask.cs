@@ -15,6 +15,8 @@ public interface IMoneoTask
     string? SkippedMessage { get; }
     TaskRepeater? Repeater { get; }
     TaskBadger? Badger { get; }
+    DateTime Created { get; }
+    DateTime LastUpdated { get; }
 }
 
 public interface IMoneoTaskWithReminders : IMoneoTask
@@ -51,16 +53,27 @@ public abstract class MoneoTask : IMoneoTask
     public TaskRepeater? Repeater { get; set; }
     [JsonProperty("badger")]
     public TaskBadger? Badger { get; set; }
+    public DateTime Created { get; set; }
+    public DateTime LastUpdated { get; set; }
 }
 
 public class MoneoTaskWithReminders : MoneoTask, IMoneoTaskWithReminders
 {
     [JsonProperty("reminders")]
-    public Dictionary<long, TaskReminder> Reminders { get; set; } = new Dictionary<long, TaskReminder>();
+    public Dictionary<long, TaskReminder> Reminders { get; set; } = new();
+
+    public void Deconstruct(out bool isActive, out DateTime? completedOn, out DateTime? skippedOn, out TaskRepeater? repeater, out TaskBadger? badger)
+    {
+        isActive = IsActive;
+        completedOn = CompletedOn;
+        skippedOn = SkippedOn;
+        repeater = Repeater;
+        badger = Badger;
+    }
 }
 
 public class MoneoTaskDto : MoneoTask, IMoneoTaskDto
 {
     [JsonProperty("reminders")]
-    public DateTimeOffset[] Reminders { get; set; } = new DateTimeOffset[0];
+    public DateTimeOffset[] Reminders { get; set; } = Array.Empty<DateTimeOffset>();
 }

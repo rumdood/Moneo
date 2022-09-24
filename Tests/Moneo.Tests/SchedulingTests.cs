@@ -37,7 +37,7 @@ public class SchedulingTests
 
         var dayOffset = DateTime.Now.Hour < 10 ? 0 : 1; 
         _expectedTenAm = new List<DateTime>();
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < ScheduleManager.MaxDueDatesToSchedule; i++)
         {
             var day = DateTime.Now.AddDays(dayOffset + i);
             var localDate = new DateTime(day.Year, day.Month, day.Day, 10, 0, 0);
@@ -46,7 +46,7 @@ public class SchedulingTests
         }
 
         _expectedElevenAm = new List<DateTime>();
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < ScheduleManager.MaxDueDatesToSchedule; i++)
         {
             var day = DateTime.Now.AddDays(dayOffset + i);
             var localDate = new DateTime(day.Year, day.Month, day.Day, 11, 0, 0);
@@ -64,6 +64,17 @@ public class SchedulingTests
             item => Assert.Contains(item, _expectedTenAm));
         Assert.All(scheduledDates,
             item => Assert.DoesNotContain(item, _expectedElevenAm));
+    }
+
+    [Fact]
+    public void MergingDatesPreservesFarawayDates()
+    {
+        var task = _taskFactory.CreateTaskWithReminders(_inputDto);
+
+        var additionalDates = new[] { task.DueDates.Max().AddDays(1), task.DueDates.Max().AddHours(4) };
+        var merged = _scheduleManager.MergeDueDates(task, additionalDates).OrderBy(d => d.Ticks);
+
+        Assert.All(merged, dd => Assert.True(_scheduleManager.IsValidDueDateForTask(dd, task)));
     }
 
     private static DateTime GetTimeZoneAdjustedDateTime(DateTime dateTime, TimeZoneInfo timeZone)

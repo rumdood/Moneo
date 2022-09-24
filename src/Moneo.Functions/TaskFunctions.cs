@@ -10,6 +10,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+
 using Moneo.Models;
 using Moneo.TaskManagement;
 
@@ -144,7 +145,7 @@ namespace Moneo.Functions
             }
 
             var entityId = new EntityId(nameof(TaskManager), taskId);
-            await client.SignalEntityAsync<ITaskManager>(nameof(TaskManager), x => x.Delete());
+            await client.SignalEntityAsync<ITaskManager>(nameof(TaskManager), x => x.DisableTask());
             _logger.LogInformation($"{taskId} has been deactivated");
 
             return request.CreateResponse(System.Net.HttpStatusCode.OK);
@@ -175,7 +176,14 @@ namespace Moneo.Functions
                     continue;
                 }
 
-                await client.SignalEntityAsync<ITaskManager>(nameof(TaskManager), x => x.Delete());
+                try
+                { 
+                    await client.SignalEntityAsync<ITaskManager>(nameof(TaskManager), x => x.Delete());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete entity");
+                }
             }
 
             await client.CleanEntityStorageAsync(true, true, CancellationToken.None);

@@ -5,7 +5,7 @@ namespace Moneo.Core;
 public interface IMoneoTaskFactory
 {
     MoneoTaskDto CreateTaskDto(MoneoTaskWithReminders input);
-    MoneoTaskWithReminders CreateTaskWithReminders(MoneoTaskDto input);
+    MoneoTaskWithReminders CreateTaskWithReminders(MoneoTaskDto input, MoneoTaskWithReminders? previousVersion = null);
 }
 
 public class MoneoTaskFactory : IMoneoTaskFactory
@@ -17,15 +17,18 @@ public class MoneoTaskFactory : IMoneoTaskFactory
         _scheduleManager = scheduleManager;
     }
 
-    public MoneoTaskWithReminders CreateTaskWithReminders(MoneoTaskDto input)
+    public MoneoTaskWithReminders CreateTaskWithReminders(
+        MoneoTaskDto input,
+        MoneoTaskWithReminders? previousVersion = null)
     {
-        return new MoneoTaskWithReminders
+
+        var newTask = new MoneoTaskWithReminders
         {
             Name = input.Name,
             Description = input.Description,
-            IsActive = input.IsActive,
-            CompletedOn = input.CompletedOn,
-            SkippedOn = input.SkippedOn,
+            IsActive = true,
+            CompletedOn = previousVersion?.CompletedOn,
+            SkippedOn = previousVersion?.SkippedOn,
             CompletedMessage = input.CompletedMessage,
             SkippedMessage = input.SkippedMessage,
             Repeater = input.Repeater,
@@ -35,8 +38,19 @@ public class MoneoTaskFactory : IMoneoTaskFactory
                 .Where(d => d > DateTimeOffset.UtcNow)
                 .ToDictionary(d => d.UtcTicks, d => new TaskReminder { DueAt = d.UtcDateTime, IsActive = true }),
             TimeZone = input.TimeZone,
-            DueDates = _scheduleManager.GetDueDates(input).ToHashSet()
+            DueDates = _scheduleManager.GetDueDates(input).ToHashSet(),
+            Created = previousVersion is { Created: var created }
+                ? created
+                : DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow
         };
+
+        if (previousVersion is { DueDates: var previousDueDates } && previousDueDates.Count > 0)
+        {
+            newTask.DueDates = _scheduleManager.MergeDueDates(newTask, previousDueDates).ToHashSet();
+        }
+
+        return newTask;
     }
 
     public MoneoTaskDto CreateTaskDto(MoneoTaskWithReminders input)
@@ -57,7 +71,9 @@ public class MoneoTaskFactory : IMoneoTaskFactory
             Reminders = input.Reminders
                 .EmptyIfNull()
                 .Select(kv => new DateTimeOffset(kv.Value.DueAt))
-                .ToArray()
+                .ToArray(),
+            Created = input.Created,
+            LastUpdated = input.LastUpdated,
         };
     }
 }
