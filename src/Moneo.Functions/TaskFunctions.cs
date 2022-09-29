@@ -28,7 +28,7 @@ namespace Moneo.Functions
         private static async Task<IDictionary<string, TaskManager>> GetAllTasks(IDurableEntityClient client)
         {
             var allTasks = new Dictionary<string, TaskManager>();
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            using var tokenSource = new CancellationTokenSource();
             var cancelToken = tokenSource.Token;
 
             var query = new EntityQuery

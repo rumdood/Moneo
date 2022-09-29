@@ -4,7 +4,7 @@ namespace Moneo.Comparison;
 
 internal static class TaskComparer
 {
-    public static TaskCompareResult CompareTasks(MoneoTaskWithReminders oldTask, MoneoTaskWithReminders newTask)
+    public static TaskCompareResult CompareTasks(MoneoTaskState oldTask, MoneoTaskState newTask)
     {
         return new TaskCompareResult
         (

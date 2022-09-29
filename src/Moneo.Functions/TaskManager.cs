@@ -20,7 +20,7 @@ public class TaskManager : ITaskManager
     private readonly IScheduleManager _scheduleManager;
     private readonly Random _random = new();
 
-    [JsonProperty("task")] public MoneoTaskWithReminders TaskState { get; set; }
+    [JsonProperty("task")] public MoneoTaskState TaskState { get; set; }
     [JsonProperty("scheduledChecks")] public HashSet<DateTime> ScheduledDueDates { get; set; } = new();
 
     private async Task CheckSend(string message, bool badgerFlag = false)
@@ -30,21 +30,23 @@ public class TaskManager : ITaskManager
             return;
 
         var (_, _, _, repeater, badger) = TaskState;
-        var completedOrSkipped = TaskState.GetCompletedOrSkippedOn();
+        var completedOrSkipped = TaskState.GetLastCompletedOrSkippedDate();
 
-        if (completedOrSkipped.HasValue)
+        if (completedOrSkipped != default)
+        {
             switch (repeater)
             {
                 case null:
                     await DisableTask();
                     return;
                 case {EarlyCompletionThresholdHours: var taskThreshold, Expiry: var expiry} when !taskThreshold.HasValue
-                    || completedOrSkipped.Value.HoursSince(DateTime.UtcNow) < taskThreshold.Value:
+                    || completedOrSkipped.HoursSince(DateTime.UtcNow) < taskThreshold.Value:
                 {
                     if (expiry.HasValue && expiry.Value < DateTime.UtcNow) await DisableTask();
                     return;
                 }
             }
+        }
 
         await _notifier.SendNotification(message);
 
@@ -105,7 +107,10 @@ public class TaskManager : ITaskManager
 
     public Task InitializeTask(MoneoTaskDto task)
     {
-        if (TaskState is {IsActive: true}) throw new InvalidOperationException("Active task already exists");
+        if (TaskState is {IsActive: true})
+        {
+            throw new InvalidOperationException("Active task already exists");
+        }
 
         return UpdateTask(task);
     }
@@ -134,20 +139,26 @@ public class TaskManager : ITaskManager
 
     public async Task MarkCompleted(bool skipped = false)
     {
-        if (!TaskState.IsActive) throw new InvalidOperationException("Task is not active");
+        if (!TaskState.IsActive)
+        {
+            throw new InvalidOperationException("Task is not active");
+        }
 
-        if (TaskState.Repeater is null) await DisableTask();
+        if (TaskState.Repeater is null)
+        {
+            await DisableTask();
+        }
 
         if (skipped)
         {
-            TaskState.SkippedOn = DateTime.UtcNow;
+            TaskState.LastSkippedOn = DateTime.UtcNow;
             await _notifier.SendNotification(TaskState.SkippedMessage ??
                                              MoneoConfiguration.DefaultSkippedMessage.Replace("[TaskName]",
                                                  TaskState.Name));
             return;
         }
 
-        TaskState.CompletedOn = DateTime.UtcNow;
+        TaskState.LastCompletedOn = DateTime.UtcNow;
         await _notifier.SendNotification(TaskState.CompletedMessage ??
                                          MoneoConfiguration.DefaultCompletedMessage.Replace("[TaskName]",
                                              TaskState.Name));
@@ -155,7 +166,10 @@ public class TaskManager : ITaskManager
 
     public Task DisableTask()
     {
-        if (TaskState is {IsActive: true}) TaskState.IsActive = false;
+        if (TaskState is {IsActive: true})
+        {
+            TaskState.IsActive = false;
+        }
 
         return Task.CompletedTask;
     }

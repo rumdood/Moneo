@@ -4,8 +4,20 @@ namespace Moneo.Core;
 
 public static class MoneoTaskExtensions
 {
-    public static DateTime? GetCompletedOrSkippedOn(this IMoneoTask task)
+    public static DateTime GetLastCompletedOrSkippedDate(this IMoneoTaskState task)
     {
-        return task.CompletedOn ?? task.SkippedOn;
+        if (task.LastCompletedOn.HasValue && task.LastSkippedOn.HasValue)
+        {
+            return task.LastCompletedOn.Value > task.LastSkippedOn.Value
+                ? task.LastCompletedOn.Value
+                : task.LastSkippedOn.Value;
+        }
+
+        if (task.LastCompletedOn.HasValue && !task.LastSkippedOn.HasValue)
+        {
+            return task.LastCompletedOn.Value;
+        }
+
+        return task.LastSkippedOn ?? default;
     }
 }

@@ -6,4 +6,9 @@ public static class EnumerableExtensions
     {
         return collection ?? Enumerable.Empty<T>();
     }
+
+    public static bool HasMoreThan<T>(this IEnumerable<T> collection, int count)
+    {
+        return collection.Take(count + 1).Count() > count;
+    }
 }

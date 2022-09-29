@@ -9,7 +9,6 @@ public interface IScheduleManager
     IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? maxDate, int max);
     IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? startDate, DateTime? maxDate, int max);
     IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates);
-    bool IsValidDueDate(DateTime dueDate, string cronExpression, DateTime? maxDate = null);
     bool IsValidDueDateForTask(DateTime dueDate, IMoneoTask task);
 }
 
@@ -62,32 +61,31 @@ public class ScheduleManager : IScheduleManager
                 break;
             }
 
-            yield return tz == TimeZoneInfo.Local ? next : next.ToLocalTime();
+            yield return tz.Equals(TimeZoneInfo.Local) ? next : next.ToLocalTime();
         }
     }
 
     public IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates)
     {
-        if (task.Repeater is { RepeatCron: var cron, Expiry: var expiry})
+        if (task.Repeater is not {RepeatCron: var cron, Expiry: var expiry})
         {
-            var keepers = oldDueDates.Where(dd => !task.DueDates.Contains(dd) && IsValidDueDate(dd, cron) && dd < expiry);
-            return task.DueDates.Union(keepers);
+            return task.DueDates;
         }
-
-        return task.DueDates;
+        
+        var keepers = oldDueDates
+            .Where(dd => !task.DueDates.Contains(dd) && IsValidDueDate(dd, cron, expiry));
+        
+        return task.DueDates.Union(keepers);
     }
 
     public bool IsValidDueDateForTask(DateTime dueDate, IMoneoTask task)
     {
-        if (task.Repeater is { RepeatCron: var cron, Expiry: var expiry })
-        {
-            return IsValidDueDate(dueDate, cron, expiry);
-        }
-
-        return task.DueDates.Contains(dueDate);
+        return task.Repeater is { RepeatCron: var cron, Expiry: var expiry } 
+            ? IsValidDueDate(dueDate, cron, expiry) 
+            : task.DueDates.Contains(dueDate);
     }
 
-    public bool IsValidDueDate(DateTime dueDate, string cronExpression, DateTime? maxDate = null)
+    private bool IsValidDueDate(DateTime dueDate, string cronExpression, DateTime? maxDate = null)
     {
         var early = dueDate.AddSeconds(-10);
         var expected = CrontabSchedule.Parse(cronExpression, _parseOptions).GetNextOccurrence(early);
@@ -96,7 +94,7 @@ public class ScheduleManager : IScheduleManager
             && (!maxDate.HasValue || maxDate.Value > expected);
     }
 
-    private DateTime GetTimeZoneAdjustedDateTime(DateTime dateTime, TimeZoneInfo timeZone)
+    private static DateTime GetTimeZoneAdjustedDateTime(DateTime dateTime, TimeZoneInfo timeZone)
     {
         var dtUnspec = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
         var utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dtUnspec, timeZone);

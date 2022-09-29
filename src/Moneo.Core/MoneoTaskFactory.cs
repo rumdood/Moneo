@@ -4,8 +4,8 @@ namespace Moneo.Core;
 
 public interface IMoneoTaskFactory
 {
-    MoneoTaskDto CreateTaskDto(MoneoTaskWithReminders input);
-    MoneoTaskWithReminders CreateTaskWithReminders(MoneoTaskDto input, MoneoTaskWithReminders? previousVersion = null);
+    MoneoTaskDto CreateTaskDto(MoneoTaskState input);
+    MoneoTaskState CreateTaskWithReminders(MoneoTaskDto input, MoneoTaskState? previousVersion = null);
 }
 
 public class MoneoTaskFactory : IMoneoTaskFactory
@@ -17,18 +17,18 @@ public class MoneoTaskFactory : IMoneoTaskFactory
         _scheduleManager = scheduleManager;
     }
 
-    public MoneoTaskWithReminders CreateTaskWithReminders(
+    public MoneoTaskState CreateTaskWithReminders(
         MoneoTaskDto input,
-        MoneoTaskWithReminders? previousVersion = null)
+        MoneoTaskState? previousVersion = null)
     {
 
-        var newTask = new MoneoTaskWithReminders
+        var newTask = new MoneoTaskState
         {
             Name = input.Name,
             Description = input.Description,
             IsActive = true,
-            CompletedOn = previousVersion?.CompletedOn,
-            SkippedOn = previousVersion?.SkippedOn,
+            LastCompletedOn = previousVersion?.LastCompletedOn,
+            LastSkippedOn = previousVersion?.LastSkippedOn,
             CompletedMessage = input.CompletedMessage,
             SkippedMessage = input.SkippedMessage,
             Repeater = input.Repeater,
@@ -36,7 +36,9 @@ public class MoneoTaskFactory : IMoneoTaskFactory
             Reminders = input.Reminders
                 .EmptyIfNull()
                 .Where(d => d > DateTimeOffset.UtcNow)
-                .ToDictionary(d => d.UtcTicks, d => new TaskReminder { DueAt = d.UtcDateTime, IsActive = true }),
+                .ToDictionary(
+                    d => d.UtcTicks, 
+                    d => new TaskReminder { DueAt = d.UtcDateTime, IsActive = true }),
             TimeZone = input.TimeZone,
             DueDates = _scheduleManager.GetDueDates(input).ToHashSet(),
             Created = previousVersion is { Created: var created }
@@ -53,15 +55,15 @@ public class MoneoTaskFactory : IMoneoTaskFactory
         return newTask;
     }
 
-    public MoneoTaskDto CreateTaskDto(MoneoTaskWithReminders input)
+    public MoneoTaskDto CreateTaskDto(MoneoTaskState input)
     {
         return new MoneoTaskDto
         {
             Name = input.Name,
             Description = input.Description,
             IsActive = input.IsActive,
-            CompletedOn = input.CompletedOn,
-            SkippedOn = input.SkippedOn,
+            LastCompletedOn = input.LastCompletedOn,
+            LastSkippedOn = input.LastSkippedOn,
             DueDates = input.DueDates,
             TimeZone = input.TimeZone,
             CompletedMessage = input.CompletedMessage,
