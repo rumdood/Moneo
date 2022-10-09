@@ -1,11 +1,13 @@
 using System.Collections;
+using Newtonsoft.Json;
 
 namespace Moneo.Core;
 
-public sealed class FixedLengthList<T> : ICollection<T>
+[JsonObject]
+public sealed class FixedLengthList<T> : IEnumerable<T>
 {
-    private T[] _collection;
-    private int _maximumCapacity = 0;
+    [JsonProperty]
+    private T?[] _collection;
 
     private void ShiftArrayDown(int count = 1)
     {
@@ -19,29 +21,17 @@ public sealed class FixedLengthList<T> : ICollection<T>
         }
     }
 
-    private void ResizeCollection()
-    {
-        var currentSize = _collection.Length;
-        var newCollection = new T[currentSize + 1];
-        _collection.CopyTo(newCollection, 0);
-        _collection = newCollection;
-    }
+    [JsonProperty("capacity")]
+    public int Capacity { get; init; }
 
-    public int Count => _collection.Length;
+    public T? this[int index] => _collection[index];
 
-    public T this[int index] => _collection[index];
-
-    public IEnumerator<T> GetEnumerator() => (_collection as IEnumerable<T>).GetEnumerator();
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => (_collection as IEnumerable<T>).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => _collection.GetEnumerator();
 
-    public void Add(T item)
+    public void Add(T? item)
     {
-        if (_maximumCapacity == 0)
-        {
-            ResizeCollection();
-        }
-        
         ShiftArrayDown();
         _collection[0] = item;
     }
@@ -75,7 +65,7 @@ public sealed class FixedLengthList<T> : ICollection<T>
     {
         for (var i = 0; i < _collection.Length; i++)
         {
-            if (!_collection[i].Equals(item))
+            if (_collection[i] is null || !_collection[i]!.Equals(item))
             {
                 continue;
             }
@@ -86,18 +76,12 @@ public sealed class FixedLengthList<T> : ICollection<T>
 
         return false;
     }
-    
-    public bool IsReadOnly { get; }
 
-    public FixedLengthList()
-    {
-        _collection = Array.Empty<T>();
-    }
-
+    [JsonConstructor]
     public FixedLengthList(int maxCapacity)
     {
-        _maximumCapacity = maxCapacity;
-        _collection = new T[maxCapacity];
+        Capacity = maxCapacity;
+        _collection = new T?[Capacity];
     }
 
     public FixedLengthList(IEnumerable<T> items, int maxCapacity)
@@ -109,9 +93,8 @@ public sealed class FixedLengthList<T> : ICollection<T>
             throw new InvalidOperationException("Items collection longer than provided capacity");
         }
 
-        _maximumCapacity = maxCapacity;
-
-        _collection = new T[maxCapacity];
+        Capacity = maxCapacity;
+        _collection = new T?[Capacity];
         itemArray.CopyTo(_collection, 0);
     }
 }

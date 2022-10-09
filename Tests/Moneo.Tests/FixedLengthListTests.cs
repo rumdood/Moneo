@@ -1,6 +1,4 @@
 using Moneo.Core;
-using Moneo.Models;
-using Xunit;
 using Newtonsoft.Json;
 
 namespace Moneo.Tests;
@@ -11,7 +9,7 @@ public class FixedLengthListTests
     public void CanCreate()
     {
         var fll = new FixedLengthList<DateTime>(4);
-        Assert.Equal(4, fll.Count);
+        Assert.Equal(4, fll.Capacity);
     }
 
     [Fact]
@@ -19,7 +17,7 @@ public class FixedLengthListTests
     {
         var dates = new[] {DateTime.Now, DateTime.Now.AddDays(-1), DateTime.Now.AddDays(-2)};
         var fll = new FixedLengthList<DateTime>(dates, 4);
-        Assert.Equal(4, fll.Count);
+        Assert.Equal(4, fll.Capacity);
     }
 
     [Fact]
@@ -67,21 +65,22 @@ public class FixedLengthListTests
     [Fact]
     public void CanSerialize()
     {
-        var expectedJson = @"[""2022-01-01T00:00:00"",""2021-01-01T00:00:00"",""2020-01-01T00:00:00"",""0001-01-01T00:00:00""]";
-        var fll = new FixedLengthList<DateTime>(4);
-        fll.Add(new DateTime(2020, 1, 1));
-        fll.Add(new DateTime(2021, 1, 1));
-        fll.Add(new DateTime(2022, 1, 1));
+        const string expectedJson = @"{""_collection"":[""2022-01-01T00:00:00"",""2021-01-01T00:00:00"",""2020-01-01T00:00:00"",""0001-01-01T00:00:00""],""capacity"":4}";
+        var fll = new FixedLengthList<DateTime>(4)
+        {
+            new DateTime(2020, 1, 1),
+            new DateTime(2021, 1, 1),
+            new DateTime(2022, 1, 1)
+        };
 
         var json = JsonConvert.SerializeObject(fll);
         Assert.Equal(expectedJson, json);
     }
-
-    /*
+    
     [Fact]
     public void CanDeserialize()
     {
-        var json = @"[""2022-01-01T00:00:00"",""2021-01-01T00:00:00"",""2020-01-01T00:00:00"",""0001-01-01T00:00:00""]";
+        const string json = @"{""_collection"":[""2022-01-01T00:00:00"",""2021-01-01T00:00:00"",""2020-01-01T00:00:00"",""0001-01-01T00:00:00""],""capacity"":4}";
         var fll = JsonConvert.DeserializeObject<FixedLengthList<DateTime>>(json);
         
         Assert.Collection(fll,
@@ -90,5 +89,4 @@ public class FixedLengthListTests
                 item => Assert.Equal(new DateTime(2020, 1, 1), item),
             item => Assert.Equal(default, item));
     }
-    */
 }
