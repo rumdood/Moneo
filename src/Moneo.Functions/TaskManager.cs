@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 using Moneo.Core;
 using Moneo.Models;
 using Moneo.Notify;
@@ -19,40 +20,70 @@ public class TaskManager : ITaskManager
     private readonly IMoneoTaskFactory _taskFactory;
     private readonly IScheduleManager _scheduleManager;
     private readonly Random _random = new();
+    private readonly ILogger<TaskManager> _logger;
 
-    [JsonProperty("task")] public MoneoTaskState TaskState { get; set; }
-    [JsonProperty("scheduledChecks")] public HashSet<DateTime> ScheduledDueDates { get; set; } = new();
+    [JsonProperty("task")] 
+    public MoneoTaskState TaskState { get; set; }
+    [JsonProperty("scheduledChecks")] 
+    public HashSet<DateTime> ScheduledDueDates { get; set; } = new();
+
+    private static bool IsQuietHours()
+    {
+        var timezoneString = MoneoConfiguration.QuietHours.TimeZone;
+        var now = DateTime.Now.GetTimeZoneAdjustedDateTime(timezoneString);
+
+        return now > MoneoConfiguration.QuietHours.Start.GetTimeZoneAdjustedDateTime(timezoneString)
+            && now < MoneoConfiguration.QuietHours.End.GetTimeZoneAdjustedDateTime(timezoneString);
+    }
 
     private async Task CheckSend(string message, bool badgerFlag = false)
     {
+        _logger.LogDebug(
+            "Performing CheckSend for [{0}] {1}", 
+            this.TaskState.Name, 
+            badgerFlag ? "(badgering)" : "");
+
         if (TaskState is null || !TaskState.IsActive)
+        { 
             // skip the check and wait for cleanup
             return;
+        }
 
         var (_, _, _, repeater, badger) = TaskState;
         var completedOrSkipped = TaskState.GetLastCompletedOrSkippedDate();
 
-        if (completedOrSkipped != default)
+        if (completedOrSkipped is not null)
         {
+            _logger.LogDebug("    Last Completed/Skipped on {0}", completedOrSkipped.Value);
+
             switch (repeater)
             {
                 case null:
                     await DisableTask();
                     return;
                 case {EarlyCompletionThresholdHours: var taskThreshold, Expiry: var expiry} when !taskThreshold.HasValue
-                    || completedOrSkipped.HoursSince(DateTime.UtcNow) < taskThreshold.Value:
+                    || completedOrSkipped?.HoursSince(DateTime.UtcNow) < taskThreshold.Value:
                 {
-                    if (expiry.HasValue && expiry.Value < DateTime.UtcNow) await DisableTask();
+                    if (expiry.HasValue && expiry.Value < DateTime.UtcNow)
+                    {
+                        _logger.LogDebug("    Diabling Expired Task");
+                        await DisableTask();
+                    }
                     return;
                 }
             }
         }
 
-        await _notifier.SendNotification(message);
+        if (!IsQuietHours())
+        { 
+            _logger.LogDebug("    Sending Notification");
+            await _notifier.SendNotification(message);
+        }
 
         // if there's a repeater, schedule the next go-round
         if (repeater is not null)
         {
+            _logger.LogDebug("    Schedule Repeater");
             // TODO: Criteria for removing old/expired duedates, for now, anything older than X days
             ScheduledDueDates.RemoveWhere(d =>
                 DateTime.Now.Subtract(d).TotalDays > MoneoConfiguration.OldDueDatesMaxDays);
@@ -62,6 +93,7 @@ public class TaskManager : ITaskManager
 
         if (badger is null || !badgerFlag) return;
 
+        _logger.LogDebug("    Schedule badger");
         // schedule a follow-up
         Entity.Current.SignalEntity<ITaskManager>(Entity.Current.EntityId,
             DateTime.UtcNow.AddMinutes(TaskState.Badger!.BadgerFrequencyMinutes),
@@ -70,10 +102,15 @@ public class TaskManager : ITaskManager
 
     private void UpdateSchedule()
     {
-        ScheduledDueDates = _scheduleManager.MergeDueDates(TaskState, ScheduledDueDates).ToHashSet();
+        _logger.LogDebug("Updating schedule for [{0}]", this.TaskState.Name);
+
+        var keepers = _scheduleManager.GetKeepers(TaskState, ScheduledDueDates);
+        ScheduledDueDates.RemoveWhere(dueDate => !keepers.Contains(dueDate));
 
         foreach (var dueDate in TaskState.DueDates.Where(dueDate => !ScheduledDueDates.Contains(dueDate)))
         {
+            _logger.LogDebug("    Scheduling CheckSend for DueDate [{0}]", dueDate);
+
             ScheduledDueDates.Add(dueDate);
 
             Entity.Current.SignalEntity<ITaskManager>(
@@ -98,15 +135,19 @@ public class TaskManager : ITaskManager
     public TaskManager(
         INotifyEngine notifier,
         IMoneoTaskFactory moneoTaskFactory,
-        IScheduleManager scheduleManager)
+        IScheduleManager scheduleManager,
+        ILogger<TaskManager> logger)
     {
         _notifier = notifier;
         _taskFactory = moneoTaskFactory;
         _scheduleManager = scheduleManager;
+        _logger = logger;
     }
 
     public Task InitializeTask(MoneoTaskDto task)
     {
+        _logger.LogDebug("Initializing new task [{0}]", task.Name);
+
         if (TaskState is {IsActive: true})
         {
             throw new InvalidOperationException("Active task already exists");
@@ -117,6 +158,8 @@ public class TaskManager : ITaskManager
 
     public Task UpdateTask(MoneoTaskDto task)
     {
+        _logger.LogDebug("Updating Task [{0}]", task.Name);
+
         var existingReminders = TaskState?.Reminders;
 
         TaskState = _taskFactory.CreateTaskWithReminders(task, TaskState);
@@ -127,6 +170,8 @@ public class TaskManager : ITaskManager
         {
             if ((existingReminders is not null && existingReminders.ContainsKey(reminder.UtcTicks)) ||
                 reminder.UtcDateTime <= DateTime.UtcNow) continue;
+
+            _logger.LogDebug("    Scheduling Reminder for {0}", reminder.UtcDateTime);
 
             Entity.Current.SignalEntity<ITaskManager>(
                 Entity.Current.EntityId,
@@ -139,6 +184,8 @@ public class TaskManager : ITaskManager
 
     public async Task MarkCompleted(bool skipped = false)
     {
+        _logger.LogDebug("{0} Task [{1}]", skipped ? "Skipping" : "Completing", this.TaskState.Name);
+
         if (!TaskState.IsActive)
         {
             throw new InvalidOperationException("Task is not active");
@@ -151,14 +198,14 @@ public class TaskManager : ITaskManager
 
         if (skipped)
         {
-            TaskState.LastSkippedOn = DateTime.UtcNow;
+            TaskState.LastSkippedOn.Add(DateTime.UtcNow);
             await _notifier.SendNotification(TaskState.SkippedMessage ??
                                              MoneoConfiguration.DefaultSkippedMessage.Replace("[TaskName]",
                                                  TaskState.Name));
             return;
         }
 
-        TaskState.LastCompletedOn = DateTime.UtcNow;
+        TaskState.LastCompletedOn.Add(DateTime.UtcNow);
         await _notifier.SendNotification(TaskState.CompletedMessage ??
                                          MoneoConfiguration.DefaultCompletedMessage.Replace("[TaskName]",
                                              TaskState.Name));
@@ -182,6 +229,8 @@ public class TaskManager : ITaskManager
 
     public Task CheckSendBadger()
     {
+        _logger.LogDebug("Sending Badger for [{0}]", this.TaskState.Name);
+
         if (TaskState?.Badger is null)
         {
             throw new InvalidOperationException("Cannot use null Badger reference to send a badger message");
@@ -202,7 +251,9 @@ public class TaskManager : ITaskManager
     public Task SendScheduledReminder(long id)
     {
         // skip any reminders that have been removed
-        return !TaskState.Reminders.ContainsKey(id) ? Task.CompletedTask : CheckSend(GetReminderMessage(TaskState));
+        return !TaskState.Reminders.ContainsKey(id) 
+            ? Task.CompletedTask 
+            : CheckSend(GetReminderMessage(TaskState));
     }
 
     [FunctionName(nameof(TaskManager))]

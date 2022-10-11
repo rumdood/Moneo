@@ -53,7 +53,7 @@ public sealed class FixedLengthList<T> : IEnumerable<T>
     {
         for (var i = 0; i < _collection.Length; i++)
         {
-            _collection[i] = default(T);
+            _collection[i] = default;
         }
     }
 

@@ -6,6 +6,13 @@
         "isEnabled": true,
         "excludedTypes": "Request"
       }
+    },
+    "console": {
+      "LogLevel": {
+        "Default": "Debug",
+        "Microsoft": "Warning",
+        "Microsoft.Hosting.Lifetime": "Information"
+      }
     }
   },
   "extensions": {

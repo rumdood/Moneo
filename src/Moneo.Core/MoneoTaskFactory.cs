@@ -11,6 +11,7 @@ public interface IMoneoTaskFactory
 public class MoneoTaskFactory : IMoneoTaskFactory
 {
     private readonly IScheduleManager _scheduleManager;
+    public const int MaxCompletionEventHistoryCount = 5;
 
     public MoneoTaskFactory(IScheduleManager scheduleManager)
     {
@@ -27,8 +28,8 @@ public class MoneoTaskFactory : IMoneoTaskFactory
             Name = input.Name,
             Description = input.Description,
             IsActive = true,
-            LastCompletedOn = previousVersion?.LastCompletedOn,
-            LastSkippedOn = previousVersion?.LastSkippedOn,
+            LastCompletedOn = previousVersion?.LastCompletedOn ?? new FixedLengthList<DateTime?>(MaxCompletionEventHistoryCount),
+            LastSkippedOn = previousVersion?.LastSkippedOn ?? new FixedLengthList<DateTime?>(MaxCompletionEventHistoryCount),
             CompletedMessage = input.CompletedMessage,
             SkippedMessage = input.SkippedMessage,
             Repeater = input.Repeater,
@@ -62,8 +63,8 @@ public class MoneoTaskFactory : IMoneoTaskFactory
             Name = input.Name,
             Description = input.Description,
             IsActive = input.IsActive,
-            LastCompletedOn = input.LastCompletedOn,
-            LastSkippedOn = input.LastSkippedOn,
+            LastCompletedOn = input.LastCompletedOn.FirstOrDefault(),
+            LastSkippedOn = input.LastSkippedOn.FirstOrDefault(),
             DueDates = input.DueDates,
             TimeZone = input.TimeZone,
             CompletedMessage = input.CompletedMessage,

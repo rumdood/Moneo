@@ -8,15 +8,16 @@ public interface IScheduleManager
     IEnumerable<DateTime> GetDueDates(IMoneoTask input);
     IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? maxDate, int max);
     IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? startDate, DateTime? maxDate, int max);
+    IEnumerable<DateTime> GetKeepers(IMoneoTask task, IEnumerable<DateTime> oldDueDates);
     IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates);
     bool IsValidDueDateForTask(DateTime dueDate, IMoneoTask task);
 }
 
 public class ScheduleManager : IScheduleManager
 {
-    private readonly CrontabSchedule.ParseOptions _parseOptions = new CrontabSchedule.ParseOptions { IncludingSeconds = true };
-
     public const int MaxDueDatesToSchedule = 2;
+
+    private readonly CrontabSchedule.ParseOptions _parseOptions = new() { IncludingSeconds = true };
 
     public IEnumerable<DateTime> GetDueDates(IMoneoTask input)
     {
@@ -34,9 +35,6 @@ public class ScheduleManager : IScheduleManager
 
     }
 
-    public IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone = "", DateTime? maxDate = null, int max = MaxDueDatesToSchedule)
-        => GetDueDates(cronExpression, timeZone, DateTime.Now, maxDate, max);
-
     public IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? startDate, DateTime? maxDate = null, int max = MaxDueDatesToSchedule)
     {
         if (string.IsNullOrEmpty(cronExpression))
@@ -49,8 +47,8 @@ public class ScheduleManager : IScheduleManager
             : TimeZoneInfo.Local;
 
         var next = startDate.HasValue
-            ? GetTimeZoneAdjustedDateTime(startDate.Value, tz)
-            : GetTimeZoneAdjustedDateTime(DateTime.Now, tz);
+            ? startDate.Value.GetTimeZoneAdjustedDateTime(tz)
+            : DateTime.Now.GetTimeZoneAdjustedDateTime(tz);
 
         for (var i = 0; i < max; i++)
         {
@@ -65,16 +63,22 @@ public class ScheduleManager : IScheduleManager
         }
     }
 
-    public IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates)
+    public IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone = "", DateTime? maxDate = null, int max = MaxDueDatesToSchedule)
+        => GetDueDates(cronExpression, timeZone, DateTime.Now, maxDate, max);
+
+    public IEnumerable<DateTime> GetKeepers(IMoneoTask task, IEnumerable<DateTime> oldDueDates)
     {
-        if (task.Repeater is not {RepeatCron: var cron, Expiry: var expiry})
+        if (task.Repeater is not { RepeatCron: var cron, Expiry: var expiry })
         {
-            return task.DueDates;
+            return Enumerable.Empty<DateTime>();
         }
         
-        var keepers = oldDueDates
-            .Where(dd => !task.DueDates.Contains(dd) && IsValidDueDate(dd, cron, expiry));
-        
+        return oldDueDates.Where(dd => !task.DueDates.Contains(dd) && IsValidDueDate(dd, cron, expiry));
+    }
+
+    public IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates)
+    {
+        var keepers = GetKeepers(task, oldDueDates);        
         return task.DueDates.Union(keepers);
     }
 
@@ -92,12 +96,5 @@ public class ScheduleManager : IScheduleManager
 
         return dueDate == expected 
             && (!maxDate.HasValue || maxDate.Value > expected);
-    }
-
-    private static DateTime GetTimeZoneAdjustedDateTime(DateTime dateTime, TimeZoneInfo timeZone)
-    {
-        var dtUnspec = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
-        var utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dtUnspec, timeZone);
-        return TimeZoneInfo.ConvertTime(utcDateTime, timeZone);
     }
 }

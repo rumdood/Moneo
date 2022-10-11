@@ -10,18 +10,28 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-
+using Moneo.Core;
 using Moneo.Models;
 using Moneo.TaskManagement;
 
 namespace Moneo.Functions
 {
+    internal class HttpVerbs
+    {
+        public const string Delete = "delete";
+        public const string Get = "get";
+        public const string Patch = "patch";
+        public const string Post = "post";
+        public const string Put = "put";
+    }
     public class TaskFunctions
     {
         private readonly ILogger<TaskFunctions> _logger;
+        private readonly IMoneoTaskFactory _taskFactory;
 
-        public TaskFunctions(ILogger<TaskFunctions> log)
+        public TaskFunctions(IMoneoTaskFactory taskFactory, ILogger<TaskFunctions> log)
         {
+            _taskFactory = taskFactory;
             _logger = log;
         }
 
@@ -85,20 +95,20 @@ namespace Moneo.Functions
 
         [FunctionName(nameof(CreateTask))]
         public async Task<IActionResult> CreateTask(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "tasks/{taskId}")][FromBody] MoneoTaskDto task,
+            [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Post, Route = "tasks/{taskId}")][FromBody] MoneoTaskDto task,
             string taskId,
             [DurableClient] IDurableEntityClient client) => await CreateOrModifyTask(taskId, client, r => r.InitializeTask(task));
 
         [FunctionName(nameof(UpdateTask))]
         public async Task<IActionResult> UpdateTask(
-            [HttpTrigger(AuthorizationLevel.Function, "put", Route = "tasks/{taskId}")][FromBody] MoneoTaskDto task,
+            [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Patch, Route = "tasks/{taskId}")][FromBody] MoneoTaskDto task,
             string taskId,
             [DurableClient] IDurableEntityClient client) => await CreateOrModifyTask(taskId, client, r => r.UpdateTask(task));
 
 
         [FunctionName(nameof(CompleteReminderTask))]
         public async Task<IActionResult> CompleteReminderTask(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "tasks/{taskId}/{action}")]
+            [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Post, Route = "tasks/{taskId}/{action}")]
             HttpRequest request,
             string taskId,
             string action,
@@ -117,7 +127,7 @@ namespace Moneo.Functions
         // have to use IActionResult because of issues with async and Kestrel
         [FunctionName(nameof(GetTaskStatus))]
         public async Task<IActionResult> GetTaskStatus(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "tasks/{taskId}")] HttpRequestMessage request,
+            [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Get, Route = "tasks/{taskId}")] HttpRequestMessage request,
             string taskId,
             [DurableClient] IDurableEntityClient client)
         {
@@ -128,14 +138,22 @@ namespace Moneo.Functions
 
             var entityId = new EntityId(nameof(TaskManager), taskId);
             var taskState = await client.ReadEntityStateAsync<TaskManager>(entityId);
+
+            if (!taskState.EntityExists)
+            {
+                return new NotFoundResult();
+            }
+
             _logger.LogInformation($"Retrieved status for {taskId}");
 
-            return new OkObjectResult(taskState);
+            var dto = _taskFactory.CreateTaskDto(taskState.EntityState.TaskState);
+
+            return new OkObjectResult(dto);
         }
 
         [FunctionName(nameof(DeleteTask))]
         public async Task<HttpResponseMessage> DeleteTask(
-            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "tasks/{taskId}")] HttpRequestMessage request,
+            [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Delete, Route = "tasks/{taskId}")] HttpRequestMessage request,
             string taskId,
             [DurableClient] IDurableEntityClient client)
         {
@@ -153,7 +171,7 @@ namespace Moneo.Functions
 
         [FunctionName(nameof(GetTasksList))]
         public async Task<IActionResult> GetTasksList(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "tasks")] HttpRequestMessage request,
+            [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Get, Route = "tasks")] HttpRequestMessage request,
             [DurableClient] IDurableEntityClient client)
         {
             var allTasks = await GetAllTasks(client);

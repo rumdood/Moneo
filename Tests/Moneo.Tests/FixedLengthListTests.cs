@@ -5,6 +5,9 @@ namespace Moneo.Tests;
 
 public class FixedLengthListTests
 {
+    private const string WorkingSerializedJson =
+        @"{""_collection"":[""2022-01-01T00:00:00"",""2021-01-01T00:00:00"",""2020-01-01T00:00:00"",""0001-01-01T00:00:00""],""capacity"":4}";
+    
     [Fact]
     public void CanCreate()
     {
@@ -65,7 +68,6 @@ public class FixedLengthListTests
     [Fact]
     public void CanSerialize()
     {
-        const string expectedJson = @"{""_collection"":[""2022-01-01T00:00:00"",""2021-01-01T00:00:00"",""2020-01-01T00:00:00"",""0001-01-01T00:00:00""],""capacity"":4}";
         var fll = new FixedLengthList<DateTime>(4)
         {
             new DateTime(2020, 1, 1),
@@ -74,19 +76,19 @@ public class FixedLengthListTests
         };
 
         var json = JsonConvert.SerializeObject(fll);
-        Assert.Equal(expectedJson, json);
+        Assert.Equal(WorkingSerializedJson, json);
     }
     
     [Fact]
     public void CanDeserialize()
     {
-        const string json = @"{""_collection"":[""2022-01-01T00:00:00"",""2021-01-01T00:00:00"",""2020-01-01T00:00:00"",""0001-01-01T00:00:00""],""capacity"":4}";
-        var fll = JsonConvert.DeserializeObject<FixedLengthList<DateTime>>(json);
+        var fll = JsonConvert.DeserializeObject<FixedLengthList<DateTime>>(WorkingSerializedJson);
         
         Assert.Collection(fll,
             item => Assert.Equal(new DateTime(2022, 1, 1), item),
             item => Assert.Equal(new DateTime(2021, 1, 1), item),
                 item => Assert.Equal(new DateTime(2020, 1, 1), item),
             item => Assert.Equal(default, item));
+        Assert.Equal(4, fll?.Capacity);
     }
 }

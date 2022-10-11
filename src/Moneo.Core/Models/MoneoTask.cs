@@ -10,9 +10,7 @@ public interface IMoneoTask
     bool IsActive { get; }
     HashSet<DateTime> DueDates { get; }
     string TimeZone { get; }
-    DateTime? LastCompletedOn { get; }
     string? CompletedMessage { get; }
-    DateTime? LastSkippedOn { get; }
     string? SkippedMessage { get; }
     TaskRepeater? Repeater { get; }
     TaskBadger? Badger { get; }
@@ -23,6 +21,8 @@ public interface IMoneoTask
 public interface IMoneoTaskState : IMoneoTask
 {
     Dictionary<long, TaskReminder> Reminders { get; }
+    FixedLengthList<DateTime?> LastCompletedOn { get; }
+    FixedLengthList<DateTime?> LastSkippedOn { get; }
 }
 
 public interface IMoneoTaskDto : IMoneoTask
@@ -42,12 +42,8 @@ public abstract class MoneoTask : IMoneoTask
     public HashSet<DateTime> DueDates { get; set; } = new ();
     [JsonProperty("timeZone")]
     public string TimeZone { get; set; } = "";
-    [JsonProperty("lastCompletedOn")]
-    public DateTime? LastCompletedOn { get; set; }
     [JsonProperty("completedMessage")]
     public string? CompletedMessage { get; set; }
-    [JsonProperty("lastSkippedOn")]
-    public DateTime? LastSkippedOn { get; set; }
     [JsonProperty("skippedMessage")]
     public string? SkippedMessage { get; set; }
     [JsonProperty("repeater")]
@@ -60,15 +56,17 @@ public abstract class MoneoTask : IMoneoTask
 
 public class MoneoTaskState : MoneoTask, IMoneoTaskState
 {
-    public const int MaxDateHistory = 5;
-
     [JsonProperty("reminders")]
     public Dictionary<long, TaskReminder> Reminders { get; set; } = new();
+    [JsonProperty("lastCompletedOn")]
+    public FixedLengthList<DateTime?> LastCompletedOn { get; set; }
+    [JsonProperty("lastSkippedOn")]
+    public FixedLengthList<DateTime?> LastSkippedOn { get; set; }
 
     public void Deconstruct(
         out bool isActive, 
-        out DateTime? lastCompletedOn, 
-        out DateTime? lastSkippedOn, 
+        out FixedLengthList<DateTime?> lastCompletedOn, 
+        out FixedLengthList<DateTime?> lastSkippedOn, 
         out TaskRepeater? repeater, 
         out TaskBadger? badger)
     {
