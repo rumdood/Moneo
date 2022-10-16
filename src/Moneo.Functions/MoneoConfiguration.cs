@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 
 namespace Moneo.Functions
 {
@@ -14,6 +13,7 @@ namespace Moneo.Functions
 
         private const int DefaultDefuseThresholdHours = 4;
         private const int DefaultOldDueDatesMaxDays = 7;
+        private const int DefaultCompletionHistoryEventCount = 5;
 
         public static string DefaultCompletedMessage { get => Environment.GetEnvironmentVariable("defaultCompletedMessage"); }
         public static string DefaultSkippedMessage { get => Environment.GetEnvironmentVariable("defaulteSkippedMessage"); }
@@ -21,6 +21,8 @@ namespace Moneo.Functions
         public static string DefaultReminderMessage { get => Environment.GetEnvironmentVariable("defaultReminderMessage"); }
         public static int DefuseThresholdHours { get => GetIntFromEnvironment("defuseThresholdHours", DefaultDefuseThresholdHours); }
         public static int OldDueDatesMaxDays { get => GetIntFromEnvironment("oldDueDatesMaxDays", DefaultOldDueDatesMaxDays); }
+        public static int MaxCompletionHistoryEventCount { get => GetIntFromEnvironment("completionHistoryEventCount", DefaultCompletionHistoryEventCount); }
+
         public static QuietHoursSetting QuietHours 
         { 
             get

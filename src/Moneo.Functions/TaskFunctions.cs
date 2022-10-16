@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
 using Moneo.Core;
 using Moneo.Models;
@@ -24,6 +28,7 @@ namespace Moneo.Functions
         public const string Post = "post";
         public const string Put = "put";
     }
+
     public class TaskFunctions
     {
         private readonly ILogger<TaskFunctions> _logger;
@@ -35,9 +40,8 @@ namespace Moneo.Functions
             _logger = log;
         }
 
-        private static async Task<IDictionary<string, TaskManager>> GetAllTasks(IDurableEntityClient client)
+        private static async Task<Dictionary<string, TaskManager>> GetAllTasks(IDurableEntityClient client)
         {
-            var allTasks = new Dictionary<string, TaskManager>();
             using var tokenSource = new CancellationTokenSource();
             var cancelToken = tokenSource.Token;
 
@@ -56,19 +60,12 @@ namespace Moneo.Functions
                     break;
                 }
 
-                foreach (var entity in result.Entities)
-                {
-                    if (entity.State == null)
-                    {
-                        continue;
-                    }
-
-                    allTasks[entity.EntityId.EntityKey] = entity.State.ToObject<TaskManager>();
-                }
+                return result!.Entities.Where(x => x.State is not null)
+                    .ToDictionary(x => x.EntityId.EntityKey, x => x.State.ToObject<TaskManager>());
             }
             while (query.ContinuationToken != null);
 
-            return allTasks;
+            return new Dictionary<string, TaskManager>();
         }
 
         private async Task<IActionResult> CreateOrModifyTask(string taskId, IDurableEntityClient client, Action<ITaskManager> doWork)
@@ -93,12 +90,42 @@ namespace Moneo.Functions
             return new OkResult();
         }
 
+        [OpenApiOperation(operationId: "MoneoCreateTask",
+            tags: new[] { "CreateTask" },
+            Summary = "Create new task",
+            Description = "Will create a new MoneoTask and schedule any necessary reminders",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiParameter(name: "taskId",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Path,
+            Required = true,
+            Type = typeof(string),
+            Summary = "The ID of the task to create",
+            Description = "The ID of the task to create",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.OK,
+            Summary = "If the create activity succeeded",
+            Description = "If the create activity succeeded")]
         [FunctionName(nameof(CreateTask))]
         public async Task<IActionResult> CreateTask(
             [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Post, Route = "tasks/{taskId}")][FromBody] MoneoTaskDto task,
             string taskId,
             [DurableClient] IDurableEntityClient client) => await CreateOrModifyTask(taskId, client, r => r.InitializeTask(task));
 
+        [OpenApiOperation(operationId: "MoneoUpdateTask",
+            tags: new[] { "UpdateTask" },
+            Summary = "Upates an existing task",
+            Description = "Will update an existing MoneoTask and schedule any necessary new reminders",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiParameter(name: "taskId",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Path,
+            Required = true,
+            Type = typeof(string),
+            Summary = "The ID of the task to update",
+            Description = "The ID of the task to update",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.OK,
+            Summary = "If the udpate activity succeeded",
+            Description = "If the update activity succeeded")]
         [FunctionName(nameof(UpdateTask))]
         public async Task<IActionResult> UpdateTask(
             [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Patch, Route = "tasks/{taskId}")][FromBody] MoneoTaskDto task,
@@ -106,6 +133,28 @@ namespace Moneo.Functions
             [DurableClient] IDurableEntityClient client) => await CreateOrModifyTask(taskId, client, r => r.UpdateTask(task));
 
 
+        [OpenApiOperation(operationId: "CompleteMoneoTask",
+            tags: new[] { "CompleteTask" },
+            Summary = "Complete a task",
+            Description = "Adds a new time for completion or skipping a task. Will defuse any pending due-date reminders",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiParameter(name: "taskId",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Path,
+            Required = true,
+            Type = typeof(string),
+            Summary = "The ID of the task to complete",
+            Description = "The ID of the task to complete",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiParameter(name: "action",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Path,
+            Required = true,
+            Type = typeof(string),
+            Summary = "The action (complete or skip) to perform on the task",
+            Description = "The action (complete or skip) to perform on the task",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.OK,
+            Summary = "If the completion/skip activity succeeded",
+            Description = "If the completion/skip activity succeeded")]
         [FunctionName(nameof(CompleteReminderTask))]
         public async Task<IActionResult> CompleteReminderTask(
             [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Post, Route = "tasks/{taskId}/{action}")]
@@ -124,9 +173,25 @@ namespace Moneo.Functions
             return await CompleteOrSkipTask(taskId, skip, client);
         }
 
-        // have to use IActionResult because of issues with async and Kestrel
+        [OpenApiOperation(operationId: "GetMoneoTask",
+            tags: new[] { "GetTask" },
+            Summary = "Gets a single MoneoTask",
+            Description = "Gets the current data for a single MoneoTask",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiParameter(name: "taskId",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Path,
+            Required = true,
+            Type = typeof(string),
+            Summary = "The ID of the task to retrieve",
+            Description = "The ID of the task to retrieve",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK,
+            contentType: "application/json",
+            bodyType: typeof(IMoneoTask),
+            Summary = "The requested MoneoTask",
+            Description = "The requested MoneoTask")]
         [FunctionName(nameof(GetTaskStatus))]
-        public async Task<IActionResult> GetTaskStatus(
+        public async Task<ActionResult<IMoneoTaskDto>> GetTaskStatus(
             [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Get, Route = "tasks/{taskId}")] HttpRequestMessage request,
             string taskId,
             [DurableClient] IDurableEntityClient client)
@@ -151,6 +216,26 @@ namespace Moneo.Functions
             return new OkObjectResult(dto);
         }
 
+        [OpenApiOperation(operationId: "DeactivateMoneoTask",
+            tags: new[] { "DeactivateTask" },
+            Summary = "Delete existing task",
+            Description = "If the specified task exists, it will be deactivated and available for the cleanup routine to purge",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiParameter(name: "taskId",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Path,
+            Required = true,
+            Type = typeof(string),
+            Summary = "The ID of the task to deactivate",
+            Description = "The ID of the task to deactivate",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.OK,
+            Summary = "If the deactivation succeeded",
+            Description = "If the deactivation succeeded")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest,
+            contentType: "application/text",
+            bodyType: typeof(string),
+            Summary = "If the request is missing the Task ID",
+            Description = "If the request is missing the Task ID")]
         [FunctionName(nameof(DeleteTask))]
         public async Task<HttpResponseMessage> DeleteTask(
             [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Delete, Route = "tasks/{taskId}")] HttpRequestMessage request,
@@ -159,18 +244,28 @@ namespace Moneo.Functions
         {
             if (string.IsNullOrEmpty(taskId))
             {
-                return request.CreateResponse(System.Net.HttpStatusCode.BadRequest, "Task ID Is Required");
+                return request.CreateResponse(HttpStatusCode.BadRequest, "Task ID Is Required");
             }
 
             var entityId = new EntityId(nameof(TaskManager), taskId);
             await client.SignalEntityAsync<ITaskManager>(nameof(TaskManager), x => x.DisableTask());
             _logger.LogInformation($"{taskId} has been deactivated");
 
-            return request.CreateResponse(System.Net.HttpStatusCode.OK);
+            return request.CreateResponse(HttpStatusCode.OK);
         }
 
+        [OpenApiOperation(operationId: "GetAllMoneoTasks",
+            tags: new[] { "GetAllTasks" },
+            Summary = "A complete list of all tasks in the system",
+            Description = "Returns a detailed list of MoneoTasks in the system without any filters",
+            Visibility = OpenApiVisibilityType.Important)]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK,
+            contentType: "application/json",
+            bodyType: typeof(Dictionary<string, TaskManager>),
+            Summary = "The list of tasks by Task ID",
+            Description = "The list of tasks by Task ID")]
         [FunctionName(nameof(GetTasksList))]
-        public async Task<IActionResult> GetTasksList(
+        public async Task<ActionResult<Dictionary<string, TaskManager>>> GetTasksList(
             [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Get, Route = "tasks")] HttpRequestMessage request,
             [DurableClient] IDurableEntityClient client)
         {

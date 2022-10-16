@@ -6,8 +6,8 @@ public static class MoneoTaskExtensions
 {
     public static DateTime? GetLastCompletedOrSkippedDate(this IMoneoTaskState task)
     {
-        var completed = task.LastCompletedOn.FirstOrDefault();
-        var skipped = task.LastSkippedOn.FirstOrDefault();
+        var completed = task.CompletedHistory.FirstOrDefault();
+        var skipped = task.SkippedHistory.FirstOrDefault();
 
         if (completed.HasValue && skipped.HasValue)
         {

@@ -17,6 +17,8 @@
 mono_crash.*
 
 # Build results
+artifacts/*
+!artifacts/.gitkeep
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -60,7 +62,6 @@ BenchmarkDotNet.Artifacts/
 # .NET
 project.lock.json
 project.fragment.lock.json
-artifacts/
 
 # Tye
 .tye/

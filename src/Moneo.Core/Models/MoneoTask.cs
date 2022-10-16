@@ -21,13 +21,15 @@ public interface IMoneoTask
 public interface IMoneoTaskState : IMoneoTask
 {
     Dictionary<long, TaskReminder> Reminders { get; }
-    FixedLengthList<DateTime?> LastCompletedOn { get; }
-    FixedLengthList<DateTime?> LastSkippedOn { get; }
+    FixedLengthList<DateTime?> CompletedHistory { get; }
+    FixedLengthList<DateTime?> SkippedHistory { get; }
 }
 
 public interface IMoneoTaskDto : IMoneoTask
 {
     DateTimeOffset[] Reminders { get; set; }
+    IEnumerable<DateTime?> CompletedHistory { get; set; }
+    IEnumerable<DateTime?> SkippedHistory { get; set; }
 }
 
 public abstract class MoneoTask : IMoneoTask
@@ -59,9 +61,9 @@ public class MoneoTaskState : MoneoTask, IMoneoTaskState
     [JsonProperty("reminders")]
     public Dictionary<long, TaskReminder> Reminders { get; set; } = new();
     [JsonProperty("lastCompletedOn")]
-    public FixedLengthList<DateTime?> LastCompletedOn { get; set; }
+    public FixedLengthList<DateTime?> CompletedHistory { get; set; } = new(5);
     [JsonProperty("lastSkippedOn")]
-    public FixedLengthList<DateTime?> LastSkippedOn { get; set; }
+    public FixedLengthList<DateTime?> SkippedHistory { get; set; } = new(5);
 
     public void Deconstruct(
         out bool isActive, 
@@ -71,8 +73,8 @@ public class MoneoTaskState : MoneoTask, IMoneoTaskState
         out TaskBadger? badger)
     {
         isActive = IsActive;
-        lastCompletedOn = LastCompletedOn;
-        lastSkippedOn = LastSkippedOn;
+        lastCompletedOn = CompletedHistory;
+        lastSkippedOn = SkippedHistory;
         repeater = Repeater;
         badger = Badger;
     }
@@ -82,7 +84,8 @@ public class MoneoTaskDto : MoneoTask, IMoneoTaskDto
 {
     [JsonProperty("reminders")]
     public DateTimeOffset[] Reminders { get; set; } = Array.Empty<DateTimeOffset>();
-
-    public DateTime? LastCompletedOn { get; init; }
-    public DateTime? LastSkippedOn { get; init; }
+    [JsonProperty("completedHistory")]
+    public IEnumerable<DateTime?> CompletedHistory { get; set; } = Enumerable.Empty<DateTime?>();
+    [JsonProperty("skippedHistory")]
+    public IEnumerable<DateTime?> SkippedHistory { get; set; } = Enumerable.Empty<DateTime?>();
 }

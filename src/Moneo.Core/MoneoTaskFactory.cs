@@ -5,13 +5,15 @@ namespace Moneo.Core;
 public interface IMoneoTaskFactory
 {
     MoneoTaskDto CreateTaskDto(MoneoTaskState input);
-    MoneoTaskState CreateTaskWithReminders(MoneoTaskDto input, MoneoTaskState? previousVersion = null);
+    MoneoTaskState CreateTaskWithReminders(
+        MoneoTaskDto input, 
+        MoneoTaskState? previousVersion = null, 
+        int maxCompletionHistoryEventCount = 5);
 }
 
 public class MoneoTaskFactory : IMoneoTaskFactory
 {
     private readonly IScheduleManager _scheduleManager;
-    public const int MaxCompletionEventHistoryCount = 5;
 
     public MoneoTaskFactory(IScheduleManager scheduleManager)
     {
@@ -20,7 +22,8 @@ public class MoneoTaskFactory : IMoneoTaskFactory
 
     public MoneoTaskState CreateTaskWithReminders(
         MoneoTaskDto input,
-        MoneoTaskState? previousVersion = null)
+        MoneoTaskState? previousVersion = null,
+        int maxCompletionHistoryEventCount = 5)
     {
 
         var newTask = new MoneoTaskState
@@ -28,8 +31,8 @@ public class MoneoTaskFactory : IMoneoTaskFactory
             Name = input.Name,
             Description = input.Description,
             IsActive = true,
-            LastCompletedOn = previousVersion?.LastCompletedOn ?? new FixedLengthList<DateTime?>(MaxCompletionEventHistoryCount),
-            LastSkippedOn = previousVersion?.LastSkippedOn ?? new FixedLengthList<DateTime?>(MaxCompletionEventHistoryCount),
+            CompletedHistory = previousVersion?.CompletedHistory ?? new FixedLengthList<DateTime?>(maxCompletionHistoryEventCount),
+            SkippedHistory = previousVersion?.SkippedHistory ?? new FixedLengthList<DateTime?>(maxCompletionHistoryEventCount),
             CompletedMessage = input.CompletedMessage,
             SkippedMessage = input.SkippedMessage,
             Repeater = input.Repeater,
@@ -63,8 +66,8 @@ public class MoneoTaskFactory : IMoneoTaskFactory
             Name = input.Name,
             Description = input.Description,
             IsActive = input.IsActive,
-            LastCompletedOn = input.LastCompletedOn.FirstOrDefault(),
-            LastSkippedOn = input.LastSkippedOn.FirstOrDefault(),
+            CompletedHistory = input.CompletedHistory.Where(x => x is not null).ToArray(),
+            SkippedHistory = input.SkippedHistory.Where(x => x is not null).ToArray(),
             DueDates = input.DueDates,
             TimeZone = input.TimeZone,
             CompletedMessage = input.CompletedMessage,

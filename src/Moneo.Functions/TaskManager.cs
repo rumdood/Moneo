@@ -198,14 +198,14 @@ public class TaskManager : ITaskManager
 
         if (skipped)
         {
-            TaskState.LastSkippedOn.Add(DateTime.UtcNow);
+            TaskState.SkippedHistory.Add(DateTime.UtcNow);
             await _notifier.SendNotification(TaskState.SkippedMessage ??
                                              MoneoConfiguration.DefaultSkippedMessage.Replace("[TaskName]",
                                                  TaskState.Name));
             return;
         }
 
-        TaskState.LastCompletedOn.Add(DateTime.UtcNow);
+        TaskState.CompletedHistory.Add(DateTime.UtcNow);
         await _notifier.SendNotification(TaskState.CompletedMessage ??
                                          MoneoConfiguration.DefaultCompletedMessage.Replace("[TaskName]",
                                              TaskState.Name));
