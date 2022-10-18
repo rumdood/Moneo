@@ -162,7 +162,7 @@ public class TaskManager : ITaskManager
 
         var existingReminders = TaskState?.Reminders;
 
-        TaskState = _taskFactory.CreateTaskWithReminders(task, TaskState);
+        TaskState = _taskFactory.CreateTaskWithReminders(task, TaskState, MoneoConfiguration.MaxCompletionHistoryEventCount);
 
         UpdateSchedule();
 
