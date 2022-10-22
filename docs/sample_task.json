@@ -1,0 +1,36 @@
+{
+    "reminders": [
+        {
+            "dueAt": "2022-10-11T05:45:00",
+            "isActive": true,
+            "reminderId": 1212121212121
+        },
+        {
+            "dueAt": "2022-10-11T05:45:00",
+            "isActive": true,
+            "reminderId": 1212121212122
+        }
+    ],
+    "name": "Test Task 2",
+    "description": "This is a test",
+    "isActive": false,
+    "dueDates": [
+      "2022-10-11T05:45:00-07:00"
+    ],
+    "timeZone": "Pacific Standard Time",
+    "completedMessage": "Test completed",
+    "skippedMessage": "Test skipped",
+    "repeater": {
+        "expiry": "2022-10-11T05:45:00",
+        "repeatCron": "* * 1,13 0 0 0",
+        "nextDueDate": "2022-10-11T05:45:00",
+        "earlyCompletionThreshold": 1
+    },
+    "badger": {
+        "badgerFrequencyMinutes": 30,
+        "badgerMessages": [
+            "Do the thing",
+            "This is a badger message"
+        ]
+    }
+  }

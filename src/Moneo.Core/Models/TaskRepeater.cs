@@ -9,7 +9,7 @@ public class TaskRepeater
     public DateTime? Expiry { get; set; }
 
     [JsonProperty("repeatCron")]
-    public string RepeatCron { get; set; }
+    public string RepeatCron { get; set; } = "";
 
     [JsonProperty("nextDueDate")]
     public DateTime? NextDueDate { get; set; }
