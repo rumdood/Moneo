@@ -30,10 +30,10 @@ public class TaskManager : ITaskManager
     private static bool IsQuietHours()
     {
         var timezoneString = MoneoConfiguration.QuietHours.TimeZone;
-        var now = DateTime.Now.GetTimeZoneAdjustedDateTime(timezoneString);
+        var now = DateTime.UtcNow;
 
-        return now > MoneoConfiguration.QuietHours.Start.GetTimeZoneAdjustedDateTime(timezoneString)
-            && now < MoneoConfiguration.QuietHours.End.GetTimeZoneAdjustedDateTime(timezoneString);
+        return now > MoneoConfiguration.QuietHours.Start.ToUniversalTime(timezoneString)
+            && now < MoneoConfiguration.QuietHours.End.ToUniversalTime(timezoneString);
     }
 
     private async Task CheckSend(string message, bool badgerFlag = false)

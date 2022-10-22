@@ -10,7 +10,6 @@ public interface IScheduleManager
     IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? startDate, DateTime? maxDate, int max);
     IEnumerable<DateTime> GetKeepers(IMoneoTask task, IEnumerable<DateTime> oldDueDates);
     IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates);
-    bool IsValidDueDateForTask(DateTime dueDate, IMoneoTask task);
 }
 
 public class ScheduleManager : IScheduleManager
@@ -19,6 +18,12 @@ public class ScheduleManager : IScheduleManager
 
     private readonly CrontabSchedule.ParseOptions _parseOptions = new() { IncludingSeconds = true };
 
+    /// <summary>
+    /// Gets the UTC due dates for a task based on the given start and end times and the CRON expression
+    /// </summary>
+    /// <param name="input">The moneo task input to base the calculation on.</param>
+    /// <returns>A collection of DateTime objects for UTC</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public IEnumerable<DateTime> GetDueDates(IMoneoTask input)
     {
         if (input.Repeater is {Expiry: var expiry, RepeatCron: var cron})
@@ -34,7 +39,17 @@ public class ScheduleManager : IScheduleManager
         return input.DueDates;
 
     }
-
+    
+    /// <summary>
+    /// Gets the UTC due dates for a task based on the given start and end times and the CRON expression
+    /// </summary>
+    /// <param name="cronExpression">The CRON expression to configure the repeater</param>
+    /// <param name="timeZone">The universal ID string for the configured time zone</param>
+    /// <param name="startDate">OPTIONAL: The earlierst date from which to calculate the next due date based on the CRON expression</param>
+    /// <param name="maxDate">OPTIONAL: The latest date for which to calculate the next due date based on the CRON expression</param>
+    /// <param name="max">OPTIONAL: The maximum number of due date instances to calculate</param>
+    /// <returns>A collection of DateTime objects for UTC</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? startDate, DateTime? maxDate = null, int max = MaxDueDatesToSchedule)
     {
         if (string.IsNullOrEmpty(cronExpression))
@@ -43,12 +58,12 @@ public class ScheduleManager : IScheduleManager
         }
 
         var tz = string.IsNullOrEmpty(timeZone) 
-            ? TimeZoneInfo.FindSystemTimeZoneById(timeZone) 
-            : TimeZoneInfo.Local;
+            ? TimeZoneInfo.Utc
+            : TimeZoneInfo.FindSystemTimeZoneById(timeZone);
 
         var next = startDate.HasValue
-            ? startDate.Value.GetTimeZoneAdjustedDateTime(tz)
-            : DateTime.Now.GetTimeZoneAdjustedDateTime(tz);
+            ? startDate.Value
+            : DateTime.UtcNow.UniversalTimeToTimeZone(tz);
 
         for (var i = 0; i < max; i++)
         {
@@ -59,10 +74,19 @@ public class ScheduleManager : IScheduleManager
                 break;
             }
 
-            yield return tz.Equals(TimeZoneInfo.Local) ? next : next.ToLocalTime();
+            yield return tz.Equals(TimeZoneInfo.Utc) ? next : next.ToUniversalTime(tz);
         }
     }
 
+    /// <summary>
+    /// Gets the UTC due dates for a task based on the given start and end times and the CRON expression
+    /// </summary>
+    /// <param name="cronExpression">The CRON expression to configure the repeater</param>
+    /// <param name="timeZone">The universal ID string for the configured time zone</param>
+    /// <param name="maxDate">OPTIONAL: The latest date for which to calculate the next due date based on the CRON expression</param>
+    /// <param name="max">OPTIONAL: The maximum number of due date instances to calculate</param>
+    /// <returns>A collection of DateTime objects for UTC</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone = "", DateTime? maxDate = null, int max = MaxDueDatesToSchedule)
         => GetDueDates(cronExpression, timeZone, DateTime.Now, maxDate, max);
 
@@ -73,28 +97,18 @@ public class ScheduleManager : IScheduleManager
             return Enumerable.Empty<DateTime>();
         }
         
-        return oldDueDates.Where(dd => !task.DueDates.Contains(dd) && IsValidDueDate(dd, cron, expiry));
+        return oldDueDates.Where(dd => !task.DueDates.Contains(dd) && task.IsValidDueDate(dd));
     }
 
+    /// <summary>
+    /// Merges a collection of DueDates with a MoneoTask, keeping only those that are valid based on the current CRON expression
+    /// </summary>
+    /// <param name="task"></param>
+    /// <param name="oldDueDates"></param>
+    /// <returns>A collection of DateTime objects for UTC</returns>
     public IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates)
     {
         var keepers = GetKeepers(task, oldDueDates);        
         return task.DueDates.Union(keepers);
-    }
-
-    public bool IsValidDueDateForTask(DateTime dueDate, IMoneoTask task)
-    {
-        return task.Repeater is { RepeatCron: var cron, Expiry: var expiry } 
-            ? IsValidDueDate(dueDate, cron, expiry) 
-            : task.DueDates.Contains(dueDate);
-    }
-
-    private bool IsValidDueDate(DateTime dueDate, string cronExpression, DateTime? maxDate = null)
-    {
-        var early = dueDate.AddSeconds(-10);
-        var expected = CrontabSchedule.Parse(cronExpression, _parseOptions).GetNextOccurrence(early);
-
-        return dueDate == expected 
-            && (!maxDate.HasValue || maxDate.Value > expected);
     }
 }

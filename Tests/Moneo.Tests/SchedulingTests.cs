@@ -1,5 +1,6 @@
 using Moneo.Core;
 using Moneo.Models;
+using NCrontab;
 
 namespace Moneo.Tests;
 
@@ -10,7 +11,7 @@ public class SchedulingTests
     private readonly MoneoTaskDto _inputDto;
     private readonly List<DateTime> _expectedTenAm;
     private readonly List<DateTime> _expectedElevenAm;
-    private const string PST = "Pacific Standard Time";
+    private const string EST = "Eastern Standard Time";
 
     public SchedulingTests()
     {
@@ -22,7 +23,7 @@ public class SchedulingTests
             Description = "Test description",
             CompletedMessage = "Task Completed Message",
             SkippedMessage = "Task Skipped Message",
-            TimeZone = PST,
+            TimeZone = EST,
             Repeater = new()
             {
                 Expiry = DateTime.Now.AddMonths(1),
@@ -41,8 +42,8 @@ public class SchedulingTests
         {
             var day = DateTime.Now.AddDays(dayOffset + i);
             var localDate = new DateTime(day.Year, day.Month, day.Day, 10, 0, 0);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(PST);
-            _expectedTenAm.Add(GetTimeZoneAdjustedDateTime(localDate, tz));
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(EST);
+            _expectedTenAm.Add(localDate.ToUniversalTime(tz));
         }
 
         _expectedElevenAm = new List<DateTime>();
@@ -50,8 +51,8 @@ public class SchedulingTests
         {
             var day = DateTime.Now.AddDays(dayOffset + i);
             var localDate = new DateTime(day.Year, day.Month, day.Day, 11, 0, 0);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(PST);
-            _expectedTenAm.Add(GetTimeZoneAdjustedDateTime(localDate, tz));
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(EST);
+            _expectedElevenAm.Add(localDate.ToUniversalTime(tz));
         }
     }
 
@@ -74,13 +75,28 @@ public class SchedulingTests
         var additionalDates = new[] { task.DueDates.Max().AddDays(1), task.DueDates.Max().AddHours(4) };
         var merged = _scheduleManager.MergeDueDates(task, additionalDates).OrderBy(d => d.Ticks);
 
-        Assert.All(merged, dd => Assert.True(_scheduleManager.IsValidDueDateForTask(dd, task)));
+        Assert.All(merged, dd => Assert.True(task.IsValidDueDate(dd)));
     }
 
-    private static DateTime GetTimeZoneAdjustedDateTime(DateTime dateTime, TimeZoneInfo timeZone)
+    [Fact]
+    public void ScratchTest()
     {
-        var dtUnspec = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
-        var utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dtUnspec, timeZone);
-        return TimeZoneInfo.ConvertTime(utcDateTime, timeZone);
+        var cron = "0 10 * * *";
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(EST);
+
+        DateTime? startDate = new DateTime(2022, 12, 25, 0, 0, 0);
+
+        // exptected EST would be 2022-12-25T10:00:00.000-5:00
+        // UTC would be 2022-12-25T15:00:00.000+0:00
+        DateTime expected = new DateTime(2022, 12, 25, 15, 0, 0);
+
+        var next = startDate.HasValue
+            ? startDate.Value
+            : DateTime.UtcNow.UniversalTimeToTimeZone(tz);
+
+        next = CrontabSchedule.Parse(cron).GetNextOccurrence(next);
+
+        var nextActual = tz.Equals(TimeZoneInfo.Utc) ? next : next.ToUniversalTime(tz);
+        Assert.Equal(expected, nextActual);
     }
 }

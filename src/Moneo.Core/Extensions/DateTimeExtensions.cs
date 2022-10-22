@@ -1,4 +1,6 @@
-﻿namespace Moneo.Core;
+﻿using System;
+
+namespace Moneo.Core;
 
 public static class DateTimeExtensions
 {
@@ -7,19 +9,56 @@ public static class DateTimeExtensions
         return second.Subtract(first).TotalHours;
     }
 
-    public static DateTime GetTimeZoneAdjustedDateTime(this DateTime dateTime, TimeZoneInfo timeZone)
+    public static DateTime ToUniversalTime(this DateTime dateTime, TimeZoneInfo fromTimeZone)
     {
-        var dtUnspec = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
-        var utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dtUnspec, timeZone);
-        return TimeZoneInfo.ConvertTime(utcDateTime, timeZone);
+        if (fromTimeZone.Equals(TimeZoneInfo.Utc))
+        {
+            return dateTime;
+        }
+
+        var dtUnSpec = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTimeToUtc(dtUnSpec, fromTimeZone);
     }
 
-    public static DateTime GetTimeZoneAdjustedDateTime(this DateTime dateTime, string timeZone = "")
+    public static DateTime ToUniversalTime(this DateTime dateTime, string fromTimeZone)
     {
-        var tz = string.IsNullOrEmpty(timeZone)
-            ? TimeZoneInfo.FindSystemTimeZoneById(timeZone)
-            : TimeZoneInfo.Local;
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(fromTimeZone);
+        return dateTime.ToUniversalTime(tz);
+    }
 
-        return dateTime.GetTimeZoneAdjustedDateTime(tz);
+    public static DateTime UniversalTimeToTimeZone(this DateTime dateTime, TimeZoneInfo toTimeZone)
+    {
+        if (toTimeZone.Equals(TimeZoneInfo.Utc))
+        {
+            return dateTime;
+        }
+
+        var dtUtc = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+        return TimeZoneInfo.ConvertTimeFromUtc(dtUtc, toTimeZone);
+    }
+
+    public static DateTime UniversalTimeToTimeZone(this DateTime dateTime, string toTimeZone)
+    {
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(toTimeZone);
+        return dateTime.UniversalTimeToTimeZone(tz);
+    }
+
+    public static DateTime ConvertTimeZone(this DateTime dateTime, TimeZoneInfo fromTimeZone, TimeZoneInfo toTimeZone)
+    {
+        if (fromTimeZone.Equals(toTimeZone))
+        {
+            return dateTime;
+        }
+
+        var dtUnSpec = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTime(dtUnSpec, fromTimeZone, toTimeZone);
+    }
+
+    public static DateTime ConvertTimeZone(this DateTime dateTime, string fromTimeZone, string toTimeZone)
+    {
+        var from = TimeZoneInfo.FindSystemTimeZoneById(fromTimeZone);
+        var to = TimeZoneInfo.FindSystemTimeZoneById(toTimeZone);
+
+        return dateTime.ConvertTimeZone(from, to);
     }
 }

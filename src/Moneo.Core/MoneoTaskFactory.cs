@@ -68,7 +68,7 @@ public class MoneoTaskFactory : IMoneoTaskFactory
             IsActive = input.IsActive,
             CompletedHistory = input.CompletedHistory.Where(x => x is not null).ToArray(),
             SkippedHistory = input.SkippedHistory.Where(x => x is not null).ToArray(),
-            DueDates = input.DueDates,
+            DueDates = input.DueDates.Select(x => x.UniversalTimeToTimeZone(input.TimeZone)).ToHashSet(),
             TimeZone = input.TimeZone,
             CompletedMessage = input.CompletedMessage,
             SkippedMessage = input.SkippedMessage,
