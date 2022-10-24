@@ -68,17 +68,6 @@ public class SchedulingTests
     }
 
     [Fact]
-    public void MergingDatesPreservesFarawayDates()
-    {
-        var task = _taskFactory.CreateTaskWithReminders(_inputDto);
-
-        var additionalDates = new[] { task.DueDates.Max().AddDays(1), task.DueDates.Max().AddHours(4) };
-        var merged = _scheduleManager.MergeDueDates(task, additionalDates).OrderBy(d => d.Ticks);
-
-        Assert.All(merged, dd => Assert.True(task.IsValidDueDate(dd)));
-    }
-
-    [Fact]
     public void ScratchTest()
     {
         var cron = "0 10 * * *";

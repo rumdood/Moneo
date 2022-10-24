@@ -53,7 +53,7 @@ public class MoneoTaskFactory : IMoneoTaskFactory
 
         if (previousVersion is { DueDates: var previousDueDates } && previousDueDates.Count > 0)
         {
-            newTask.DueDates = _scheduleManager.MergeDueDates(newTask, previousDueDates).ToHashSet();
+            newTask.DueDates.UnionWith(previousDueDates.Where(dd => dd > DateTime.UtcNow && newTask.IsValidDueDate(dd)));
         }
 
         return newTask;

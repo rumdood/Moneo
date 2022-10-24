@@ -38,7 +38,7 @@ public class TaskManager : ITaskManager
 
     private async Task CheckSend(string message, bool badgerFlag = false)
     {
-        _logger.LogDebug(
+        _logger.LogTrace(
             "Performing CheckSend for [{0}] {1}", 
             this.TaskState.Name, 
             badgerFlag ? "(badgering)" : "");
@@ -54,7 +54,7 @@ public class TaskManager : ITaskManager
 
         if (completedOrSkipped is not null)
         {
-            _logger.LogDebug("    Last Completed/Skipped on {0}", completedOrSkipped.Value);
+            _logger.LogTrace("    Last Completed/Skipped on {0}", completedOrSkipped.Value);
 
             switch (repeater)
             {
@@ -66,7 +66,7 @@ public class TaskManager : ITaskManager
                 {
                     if (expiry.HasValue && expiry.Value < DateTime.UtcNow)
                     {
-                        _logger.LogDebug("    Diabling Expired Task");
+                        _logger.LogTrace("    Diabling Expired Task");
                         await DisableTask();
                     }
                     return;
@@ -76,14 +76,14 @@ public class TaskManager : ITaskManager
 
         if (!IsQuietHours())
         { 
-            _logger.LogDebug("    Sending Notification");
+            _logger.LogTrace("    Sending Notification");
             await _notifier.SendNotification(message);
         }
 
         // if there's a repeater, schedule the next go-round
         if (repeater is not null)
         {
-            _logger.LogDebug("    Schedule Repeater");
+            _logger.LogTrace("    Schedule Repeater");
             // TODO: Criteria for removing old/expired duedates, for now, anything older than X days
             ScheduledDueDates.RemoveWhere(d =>
                 DateTime.Now.Subtract(d).TotalDays > MoneoConfiguration.OldDueDatesMaxDays);
@@ -93,7 +93,7 @@ public class TaskManager : ITaskManager
 
         if (badger is null || !badgerFlag) return;
 
-        _logger.LogDebug("    Schedule badger");
+        _logger.LogTrace("    Schedule badger");
         // schedule a follow-up
         Entity.Current.SignalEntity<ITaskManager>(Entity.Current.EntityId,
             DateTime.UtcNow.AddMinutes(TaskState.Badger!.BadgerFrequencyMinutes),
@@ -102,14 +102,18 @@ public class TaskManager : ITaskManager
 
     private void UpdateSchedule()
     {
-        _logger.LogDebug("Updating schedule for [{0}]", this.TaskState.Name);
+        _logger.LogTrace("Updating schedule for [{0}]", this.TaskState.Name);
 
-        var keepers = _scheduleManager.GetKeepers(TaskState, ScheduledDueDates);
-        ScheduledDueDates.RemoveWhere(dueDate => !keepers.Contains(dueDate));
+        if (TaskState.Repeater is not null)
+        {
+            // remove any scheduled items that haven't been carried over
+            ScheduledDueDates.RemoveWhere(dueDate => !TaskState.DueDates.Contains(dueDate));
+        }
 
         foreach (var dueDate in TaskState.DueDates.Where(dueDate => !ScheduledDueDates.Contains(dueDate)))
         {
-            _logger.LogDebug("    Scheduling CheckSend for DueDate [{0}]", dueDate);
+            // schedule and add new DueDates that aren't already scheduled
+            _logger.LogTrace("    Scheduling CheckSend for DueDate [{0}]", dueDate);
 
             ScheduledDueDates.Add(dueDate);
 
@@ -146,7 +150,7 @@ public class TaskManager : ITaskManager
 
     public Task InitializeTask(MoneoTaskDto task)
     {
-        _logger.LogDebug("Initializing new task [{0}]", task.Name);
+        _logger.LogTrace("Initializing new task [{0}]", task.Name);
 
         if (TaskState is {IsActive: true})
         {
@@ -158,7 +162,7 @@ public class TaskManager : ITaskManager
 
     public Task UpdateTask(MoneoTaskDto task)
     {
-        _logger.LogDebug("Updating Task [{0}]", task.Name);
+        _logger.LogTrace("Updating Task [{0}]", task.Name);
 
         var existingReminders = TaskState?.Reminders;
 
@@ -171,7 +175,7 @@ public class TaskManager : ITaskManager
             if ((existingReminders is not null && existingReminders.ContainsKey(reminder.UtcTicks)) ||
                 reminder.UtcDateTime <= DateTime.UtcNow) continue;
 
-            _logger.LogDebug("    Scheduling Reminder for {0}", reminder.UtcDateTime);
+            _logger.LogTrace("    Scheduling Reminder for {0}", reminder.UtcDateTime);
 
             Entity.Current.SignalEntity<ITaskManager>(
                 Entity.Current.EntityId,
@@ -184,7 +188,7 @@ public class TaskManager : ITaskManager
 
     public async Task MarkCompleted(bool skipped = false)
     {
-        _logger.LogDebug("{0} Task [{1}]", skipped ? "Skipping" : "Completing", this.TaskState.Name);
+        _logger.LogTrace("{0} Task [{1}]", skipped ? "Skipping" : "Completing", this.TaskState.Name);
 
         if (!TaskState.IsActive)
         {
@@ -229,7 +233,7 @@ public class TaskManager : ITaskManager
 
     public Task CheckSendBadger()
     {
-        _logger.LogDebug("Sending Badger for [{0}]", this.TaskState.Name);
+        _logger.LogTrace("Sending Badger for [{0}]", this.TaskState.Name);
 
         if (TaskState?.Badger is null)
         {
@@ -245,7 +249,7 @@ public class TaskManager : ITaskManager
     {
         return !ScheduledDueDates.Contains(dueDate)
             ? Task.CompletedTask
-            : CheckSend(GetTaskDueMessage(TaskState), true);
+            : CheckSend(GetTaskDueMessage(TaskState));
     }
 
     public Task SendScheduledReminder(long id)

@@ -8,8 +8,6 @@ public interface IScheduleManager
     IEnumerable<DateTime> GetDueDates(IMoneoTask input);
     IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? maxDate, int max);
     IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone, DateTime? startDate, DateTime? maxDate, int max);
-    IEnumerable<DateTime> GetKeepers(IMoneoTask task, IEnumerable<DateTime> oldDueDates);
-    IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates);
 }
 
 public class ScheduleManager : IScheduleManager
@@ -89,26 +87,4 @@ public class ScheduleManager : IScheduleManager
     /// <exception cref="InvalidOperationException"></exception>
     public IEnumerable<DateTime> GetDueDates(string cronExpression, string timeZone = "", DateTime? maxDate = null, int max = MaxDueDatesToSchedule)
         => GetDueDates(cronExpression, timeZone, DateTime.Now, maxDate, max);
-
-    public IEnumerable<DateTime> GetKeepers(IMoneoTask task, IEnumerable<DateTime> oldDueDates)
-    {
-        if (task.Repeater is not { RepeatCron: var cron, Expiry: var expiry })
-        {
-            return Enumerable.Empty<DateTime>();
-        }
-        
-        return oldDueDates.Where(dd => !task.DueDates.Contains(dd) && task.IsValidDueDate(dd));
-    }
-
-    /// <summary>
-    /// Merges a collection of DueDates with a MoneoTask, keeping only those that are valid based on the current CRON expression
-    /// </summary>
-    /// <param name="task"></param>
-    /// <param name="oldDueDates"></param>
-    /// <returns>A collection of DateTime objects for UTC</returns>
-    public IEnumerable<DateTime> MergeDueDates(IMoneoTask task, IEnumerable<DateTime> oldDueDates)
-    {
-        var keepers = GetKeepers(task, oldDueDates);        
-        return task.DueDates.Union(keepers);
-    }
 }

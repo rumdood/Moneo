@@ -22,7 +22,7 @@
     "skippedMessage": "Test skipped",
     "repeater": {
         "expiry": "2022-10-11T05:45:00",
-        "repeatCron": "* * 1,13 0 0 0",
+        "repeatCron": "0 0 1,13 * * *",
         "nextDueDate": "2022-10-11T05:45:00",
         "earlyCompletionThreshold": 1
     },

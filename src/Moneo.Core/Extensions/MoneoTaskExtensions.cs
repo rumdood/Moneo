@@ -1,6 +1,5 @@
 using Moneo.Models;
 using NCrontab;
-using System.Threading.Tasks;
 using static NCrontab.CrontabSchedule;
 
 namespace Moneo.Core;
