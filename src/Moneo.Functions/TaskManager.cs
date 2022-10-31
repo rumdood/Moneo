@@ -249,7 +249,7 @@ public class TaskManager : ITaskManager
     {
         return !ScheduledDueDates.Contains(dueDate)
             ? Task.CompletedTask
-            : CheckSend(GetTaskDueMessage(TaskState));
+            : CheckSend(GetTaskDueMessage(TaskState), true);
     }
 
     public Task SendScheduledReminder(long id)

@@ -5,6 +5,7 @@ using Moneo.Notify.Engines;
 using Moneo.Core;
 using Serilog;
 using Serilog.Events;
+using Microsoft.ApplicationInsights.Extensibility;
 
 [assembly: FunctionsStartup(typeof(Moneo.Functions.Startup))]
 namespace Moneo.Functions
@@ -24,6 +25,10 @@ namespace Moneo.Functions
                 .MinimumLevel.Override("Azure", LogEventLevel.Warning)
                 .MinimumLevel.Override("DurableTask", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
+                .WriteTo.ApplicationInsights(
+                    TelemetryConfiguration.CreateDefault(),
+                    TelemetryConverter.Events,
+                    LogEventLevel.Information)
                 .WriteTo.Console()
                 .CreateLogger();
 
@@ -36,6 +41,12 @@ namespace Moneo.Functions
             {
                 cfg.AddSerilog(Log.Logger, true);
             });
+
+            /*
+            // Is this how you're supposed to make serilog work in AzFn when actually deployed?
+            builder.Services.AddSingleton(Log.Logger)
+                .AddSingleton<ILoggerProvider>(new Serilog.Extensions.Logging.SerilogLoggerProvider(Log.Logger, dispose: true));
+            */
         }
     }
 }

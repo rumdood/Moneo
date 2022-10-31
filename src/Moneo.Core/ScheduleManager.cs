@@ -12,6 +12,7 @@ public interface IScheduleManager
 
 public class ScheduleManager : IScheduleManager
 {
+    private const string UTC = "UTC";
     public const int MaxDueDatesToSchedule = 2;
 
     private readonly CrontabSchedule.ParseOptions _parseOptions = new() { IncludingSeconds = true };
@@ -34,7 +35,11 @@ public class ScheduleManager : IScheduleManager
             throw new InvalidOperationException("Task must have at least one due date");
         }
 
-        return input.DueDates;
+        var timezone = string.IsNullOrEmpty(input.TimeZone)
+            ? UTC
+            : input.TimeZone;
+
+        return input.DueDates.Select(dd => dd.ToUniversalTime(timezone));
 
     }
     
