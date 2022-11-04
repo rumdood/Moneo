@@ -5,6 +5,14 @@ VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Functions", "src\Moneo.Functions\Moneo.Functions.csproj", "{1AC93D5E-B3A5-41FB-AEBB-538565EAE76A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1C2AAB11-7929-4C83-BA18-70CBBB4FE657}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Core", "src\moneo.core\Moneo.Core.csproj", "{F0416414-1F51-43A7-8035-565F1B47B976}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BE78DF45-BDCF-46FB-ACCB-7FC2F9590C03}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Tests", "Tests\Moneo.Tests\Moneo.Tests.csproj", "{0725362F-6676-4471-A06A-4982F25D74F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +23,22 @@ Global
 		{1AC93D5E-B3A5-41FB-AEBB-538565EAE76A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1AC93D5E-B3A5-41FB-AEBB-538565EAE76A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1AC93D5E-B3A5-41FB-AEBB-538565EAE76A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0416414-1F51-43A7-8035-565F1B47B976}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0416414-1F51-43A7-8035-565F1B47B976}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0416414-1F51-43A7-8035-565F1B47B976}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0416414-1F51-43A7-8035-565F1B47B976}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0725362F-6676-4471-A06A-4982F25D74F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0725362F-6676-4471-A06A-4982F25D74F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0725362F-6676-4471-A06A-4982F25D74F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0725362F-6676-4471-A06A-4982F25D74F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1AC93D5E-B3A5-41FB-AEBB-538565EAE76A} = {1C2AAB11-7929-4C83-BA18-70CBBB4FE657}
+		{F0416414-1F51-43A7-8035-565F1B47B976} = {1C2AAB11-7929-4C83-BA18-70CBBB4FE657}
+		{0725362F-6676-4471-A06A-4982F25D74F2} = {BE78DF45-BDCF-46FB-ACCB-7FC2F9590C03}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A69730A-25AE-421F-A76A-39B03C0A0207}
