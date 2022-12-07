@@ -13,7 +13,7 @@ namespace Moneo.Functions.NotifyEngines
             _logger = logger;
         }
 
-        public Task SendNotification(string message)
+        public Task SendNotification(long chatId, string message)
         {
             _logger.LogInformation("SENDING NOTIFICATION");
             return Task.CompletedTask;

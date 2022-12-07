@@ -1,19 +1,15 @@
 {
     "reminders": [
         {
-            "dueAt": "2022-10-11T05:45:00",
-            "isActive": true,
-            "reminderId": 1212121212121
+            "dueAt": "2022-10-11T05:45:00"
         },
         {
-            "dueAt": "2022-10-11T05:45:00",
-            "isActive": true,
-            "reminderId": 1212121212122
+            "dueAt": "2022-10-11T05:45:00"
         }
     ],
     "name": "Test Task 2",
     "description": "This is a test",
-    "isActive": false,
+    "isActive": true,
     "dueDates": [
       "2022-10-11T05:45:00-07:00"
     ],

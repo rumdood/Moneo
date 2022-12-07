@@ -22,9 +22,14 @@ namespace Moneo.Functions
         public static int DefuseThresholdHours { get => GetIntFromEnvironment("defuseThresholdHours", DefaultDefuseThresholdHours); }
         public static int OldDueDatesMaxDays { get => GetIntFromEnvironment("oldDueDatesMaxDays", DefaultOldDueDatesMaxDays); }
         public static int MaxCompletionHistoryEventCount { get => GetIntFromEnvironment("completionHistoryEventCount", DefaultCompletionHistoryEventCount); }
+        public static string TelegramBotToken { get 
+                => Environment.GetEnvironmentVariable("telegramBotToken", EnvironmentVariableTarget.Process) 
+                ?? throw new ArgumentException("Telegram Token Not Found"); }
+        public static string BotUri { get => Environment.GetEnvironmentVariable("botUri"); }
+        public static string BotClientId { get => Environment.GetEnvironmentVariable("botClientId"); }
 
-        public static QuietHoursSetting QuietHours 
-        { 
+        public static QuietHoursSetting QuietHours
+        {
             get
             {
                 return new QuietHoursSetting
@@ -45,5 +50,6 @@ namespace Moneo.Functions
 
             return defaultValue;
         }
+
     }
 }

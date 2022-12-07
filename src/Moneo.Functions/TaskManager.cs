@@ -77,7 +77,7 @@ public class TaskManager : ITaskManager
         if (!IsQuietHours())
         { 
             _logger.LogTrace("    Sending Notification");
-            await _notifier.SendNotification(message);
+            await _notifier.SendNotification(TaskState.ChatId, message);
         }
 
         // if there's a repeater, schedule the next go-round
@@ -134,6 +134,23 @@ public class TaskManager : ITaskManager
     private static string GetTaskDueMessage(IMoneoTask task)
     {
         return MoneoConfiguration.DefaultTaskDueMessage.Replace("[TaskName]", task.Name);
+    }
+
+    private void CheckMigrateChatId()
+    {
+        if (TaskState.ChatId > 0)
+        {
+            return;
+        }
+
+        if (!long.TryParse(Environment.GetEnvironmentVariable("telegramChatId"), out var chatId))
+        {
+            _logger.LogError("Unable to determine chat ID");
+            throw new ArgumentException("Telegram ChatID Not Found");
+        }
+
+        TaskState.ChatId = chatId;
+        _logger.LogInformation("Set ChatId For Task to {0}", chatId);
     }
 
     public TaskManager(
@@ -203,14 +220,14 @@ public class TaskManager : ITaskManager
         if (skipped)
         {
             TaskState.SkippedHistory.Add(DateTime.UtcNow);
-            await _notifier.SendNotification(TaskState.SkippedMessage ??
+            await _notifier.SendNotification(TaskState.ChatId, TaskState.SkippedMessage ??
                                              MoneoConfiguration.DefaultSkippedMessage.Replace("[TaskName]",
                                                  TaskState.Name));
             return;
         }
 
         TaskState.CompletedHistory.Add(DateTime.UtcNow);
-        await _notifier.SendNotification(TaskState.CompletedMessage ??
+        await _notifier.SendNotification(TaskState.ChatId, TaskState.CompletedMessage ??
                                          MoneoConfiguration.DefaultCompletedMessage.Replace("[TaskName]",
                                              TaskState.Name));
     }

@@ -6,6 +6,7 @@ namespace Moneo.Models;
 public interface IMoneoTask
 {
     string Name { get; }
+    long ChatId { get; }
     string? Description { get; }
     bool IsActive { get; }
     HashSet<DateTime> DueDates { get; }
@@ -36,6 +37,8 @@ public abstract class MoneoTask : IMoneoTask
 {
     [JsonProperty("name")]
     public string Name { get; set; }
+    [JsonProperty("chatId")]
+    public long ChatId { get; set;}
     [JsonProperty("description")]
     public string? Description { get; set; }
     [JsonProperty("isActive")]

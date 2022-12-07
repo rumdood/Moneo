@@ -247,7 +247,7 @@ namespace Moneo.Functions
             }
 
             var entityId = new EntityId(nameof(TaskManager), taskId);
-            await client.SignalEntityAsync<ITaskManager>(nameof(TaskManager), x => x.DisableTask());
+            await client.SignalEntityAsync<ITaskManager>(entityId, x => x.DisableTask());
             _logger.LogInformation($"{taskId} has been deactivated");
 
             return request.CreateResponse(HttpStatusCode.OK);
@@ -290,7 +290,7 @@ namespace Moneo.Functions
 
                 try
                 { 
-                    await client.SignalEntityAsync<ITaskManager>(nameof(TaskManager), x => x.Delete());
+                    await client.SignalEntityAsync<ITaskManager>(id, x => x.Delete());
                 }
                 catch (Exception ex)
                 {

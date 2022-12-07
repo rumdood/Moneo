@@ -4,6 +4,6 @@ namespace Moneo.Notify
 {
     public interface INotifyEngine
     {
-        Task SendNotification(string message);
+        Task SendNotification(long chatId, string message);
     }
 }

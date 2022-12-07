@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Moneo.Functions;
 using System;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -9,28 +10,19 @@ namespace Moneo.Notify.Engines
     {
         private readonly ITelegramBotClient _botClient;
         private readonly ILogger<TelegramNotify> _logger;
-        private readonly long _chatId;
 
         public TelegramNotify(ILogger<TelegramNotify> logger)
         {
-            var botToken = Environment.GetEnvironmentVariable("telegramBotToken", EnvironmentVariableTarget.Process) ??
-                throw new ArgumentException("Telegram Token Not Found");
+            var botToken = MoneoConfiguration.TelegramBotToken;
 
             _botClient = new TelegramBotClient(botToken);
             _logger = logger;
-
-            if (!long.TryParse(Environment.GetEnvironmentVariable("telegramChatId"), out var c))
-            {
-                _logger.LogError("Unable to determine chat ID");
-                throw new ArgumentException("Telegram ChatID Not Found");
-            }
-
-            _chatId = c;
         }
 
-        public async Task SendNotification(string message)
+        public async Task SendNotification(long chatId, string message)
         {
-            await _botClient.SendTextMessageAsync(_chatId, message);
+            _logger.LogDebug("SendNotification: {0}", new { chatId, message });
+            await _botClient.SendTextMessageAsync(chatId, message);
         }
     }
 }
