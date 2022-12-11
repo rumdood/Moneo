@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Moneo.Models;
 
-namespace Moneo.TaskManagement
+namespace Moneo.Functions
 {
     public interface ITaskManager
     {
@@ -11,7 +11,7 @@ namespace Moneo.TaskManagement
         Task CheckSendBadger();
         Task CheckTaskCompleted(DateTime dueDate);
         Task SendScheduledReminder(long id);
-        Task InitializeTask(MoneoTaskDto task);
+        Task InitializeTask(MoneoTaskCreateModel task);
         Task UpdateTask(MoneoTaskDto task);
         Task DisableTask();
     }
