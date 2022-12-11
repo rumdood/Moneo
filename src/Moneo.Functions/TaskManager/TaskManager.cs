@@ -149,18 +149,18 @@ public class TaskManager : ITaskManager
         _logger = logger;
     }
 
-    public Task InitializeTask(MoneoTaskCreateModel createModel)
+    public Task InitializeTask(MoneoTaskDto task)
     {
-        _logger.LogTrace("Initializing new task [{0}]", createModel.TaskDto.Name);
+        _logger.LogTrace("Initializing new task [{0}]", task.Name);
 
         if (TaskState is { IsActive: true })
         {
             throw new InvalidOperationException("Active task already exists");
         }
 
-        this.ChatId = createModel.ChatId;
+        ChatId = Entity.Current.GetChatIdFromEntityId();
 
-        return UpdateTask(createModel.TaskDto);
+        return UpdateTask(task);
     }
 
     public Task UpdateTask(MoneoTaskDto task)
@@ -222,11 +222,7 @@ public class TaskManager : ITaskManager
 
     public Task DisableTask()
     {
-        if (TaskState is { IsActive: true })
-        {
-            TaskState.IsActive = false;
-        }
-
+        TaskState.IsActive = false;
         return Task.CompletedTask;
     }
 

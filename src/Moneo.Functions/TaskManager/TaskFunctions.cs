@@ -125,7 +125,7 @@ public class TaskFunctions
         [DurableClient] IDurableEntityClient client) =>
             await CreateOrModifyTask(
                 new TaskFullId(chatId.ToString(), taskId), client,
-                r => r.InitializeTask(new MoneoTaskCreateModel(chatId, task)));
+                r => r.InitializeTask(task));
 
     [OpenApiOperation(operationId: "MoneoUpdateTask",
         tags: new[] { "UpdateTask" },
@@ -332,7 +332,8 @@ public class TaskFunctions
         return new OkObjectResult(allTasks);
     }
 
-    public async Task<IActionResult> MigrateTask(
+    [FunctionName(nameof(MigrateTasks))]
+    public async Task<IActionResult> MigrateTasks(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Patch, Route = "tasks/migrate")] HttpRequestMessage request,
         [DurableClient] IDurableEntityClient client)
     {
@@ -343,7 +344,7 @@ public class TaskFunctions
 
         foreach (var (id, taskManager) in allTasks)
         {
-            if (taskManager is not { TaskState: var taskState } || taskState is not { IsActive: true })
+            if (taskManager is not { TaskState: var taskState } || taskState is not { IsActive: true } || taskManager.ChatId > 0)
             {
                 continue;
             }
@@ -352,12 +353,14 @@ public class TaskFunctions
             {
                 var state = taskManager.TaskState;
                 var stateDto = _taskFactory.CreateTaskDto(state);
-                await taskManager.DisableTask();
 
                 var newId = new TaskFullId(MoneoConfiguration.LegacyChatId.ToString(), id);
                 var newEntityId = new EntityId(nameof(TaskManager), newId.FullId);
+
+                await client.SignalEntityAsync<ITaskManager>(new EntityId(nameof(TaskManager), id), x => x.DisableTask());
+
                 await client.SignalEntityAsync<ITaskManager>(
-                    newEntityId, x => x.InitializeTask(new MoneoTaskCreateModel(MoneoConfiguration.LegacyChatId, stateDto)));
+                    newEntityId, x => x.InitializeTask(stateDto));
                 succeeded.Add(id);
             }
             catch (Exception ex)

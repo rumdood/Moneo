@@ -11,7 +11,7 @@ namespace Moneo.Functions
         Task CheckSendBadger();
         Task CheckTaskCompleted(DateTime dueDate);
         Task SendScheduledReminder(long id);
-        Task InitializeTask(MoneoTaskCreateModel task);
+        Task InitializeTask(MoneoTaskDto task);
         Task UpdateTask(MoneoTaskDto task);
         Task DisableTask();
     }
