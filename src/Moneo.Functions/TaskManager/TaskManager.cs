@@ -40,7 +40,8 @@ public class TaskManager : ITaskManager
     private async Task CheckSend(string message, bool badgerFlag = false)
     {
         _logger.LogTrace(
-            "Performing CheckSend for [{0}] {1}",
+            "[{Method}] Performing CheckSend for [{Name}] {BadgerFlag}",
+            nameof(CheckSend),
             TaskState.Name,
             badgerFlag ? "(badgering)" : "");
 
@@ -53,48 +54,48 @@ public class TaskManager : ITaskManager
         var (_, _, _, repeater, badger) = TaskState;
         var completedOrSkipped = TaskState.GetLastCompletedOrSkippedDate();
 
-        if (completedOrSkipped is not null)
+        if (repeater is { EarlyCompletionThresholdHours: var threshold, Expiry: var expiry })
         {
-            _logger.LogTrace("    Last Completed/Skipped on {0}", completedOrSkipped.Value);
-
-            switch (repeater)
+            if (expiry.HasValue && expiry.Value < DateTime.UtcNow && completedOrSkipped is not null)
             {
-                case null:
-                    await DisableTask();
-                    return;
-                case { EarlyCompletionThresholdHours: var taskThreshold, Expiry: var expiry } when !taskThreshold.HasValue
-                    || completedOrSkipped?.HoursSince(DateTime.UtcNow) < taskThreshold.Value:
-                    {
-                        if (expiry.HasValue && expiry.Value < DateTime.UtcNow)
-                        {
-                            _logger.LogTrace("    Diabling Expired Task");
-                            await DisableTask();
-                        }
-                        return;
-                    }
+                await DisableTask();
+                return; // task is completed and expired, disable and close
+            }
+            else
+            {
+                _logger.LogTrace("[{Method}] Schedule Repeater", nameof(CheckSend));
+                // TODO: Criteria for removing old/expired due-dates, for now, anything older than X days
+                ScheduledDueDates.RemoveWhere(d =>
+                    DateTime.Now.Subtract(d).TotalDays > MoneoConfiguration.OldDueDatesMaxDays);
+                TaskState.DueDates = _scheduleManager.GetDueDates(TaskState).ToHashSet();
+                UpdateSchedule();
+
+                if (completedOrSkipped is not null
+                    && !threshold.HasValue || completedOrSkipped?.HoursSince(DateTime.UtcNow) < threshold.Value)
+                {
+                    return; // don't continue to the badger
+                }
+            }
+        }
+        else
+        {
+            // if there is no repeater and the task has been completed, disable the task and return
+            if (completedOrSkipped is not null)
+            {
+                await DisableTask();
+                return;
             }
         }
 
         if (!IsQuietHours())
         {
-            _logger.LogTrace("    Sending Notification");
+            _logger.LogTrace("[{Method}] Sending Notification", nameof(CheckSend));
             await _notifier.SendNotification(ChatId, message);
-        }
-
-        // if there's a repeater, schedule the next go-round
-        if (repeater is not null)
-        {
-            _logger.LogTrace("    Schedule Repeater");
-            // TODO: Criteria for removing old/expired duedates, for now, anything older than X days
-            ScheduledDueDates.RemoveWhere(d =>
-                DateTime.Now.Subtract(d).TotalDays > MoneoConfiguration.OldDueDatesMaxDays);
-            TaskState.DueDates = _scheduleManager.GetDueDates(TaskState).ToHashSet();
-            UpdateSchedule();
         }
 
         if (badger is null || !badgerFlag) return;
 
-        _logger.LogTrace("    Schedule badger");
+        _logger.LogTrace("[{Method}] Schedule badger", nameof(CheckSend));
         // schedule a follow-up
         Entity.Current.SignalEntity<ITaskManager>(Entity.Current.EntityId,
             DateTime.UtcNow.AddMinutes(TaskState.Badger!.BadgerFrequencyMinutes),
@@ -107,6 +108,9 @@ public class TaskManager : ITaskManager
 
         if (TaskState.Repeater is not null)
         {
+            var datesToRemove = ScheduledDueDates.Where(dueDate => !TaskState.DueDates.Contains(dueDate));
+            _logger.LogTrace("The following DueDates will be removed: {D}", datesToRemove);
+            
             // remove any scheduled items that haven't been carried over
             ScheduledDueDates.RemoveWhere(dueDate => !TaskState.DueDates.Contains(dueDate));
         }
@@ -114,7 +118,7 @@ public class TaskManager : ITaskManager
         foreach (var dueDate in TaskState.DueDates.Where(dueDate => !ScheduledDueDates.Contains(dueDate)))
         {
             // schedule and add new DueDates that aren't already scheduled
-            _logger.LogTrace("    Scheduling CheckSend for DueDate [{0}]", dueDate);
+            _logger.LogTrace("Scheduling CheckSend for DueDate [{0}]", dueDate);
 
             ScheduledDueDates.Add(dueDate);
 
@@ -248,6 +252,12 @@ public class TaskManager : ITaskManager
 
     public Task CheckTaskCompleted(DateTime dueDate)
     {
+        if (!ScheduledDueDates.Contains(dueDate))
+        {
+            _logger.LogTrace("Checked Due Date not in schedule, CheckSend will not be called: {D}",
+                dueDate.ToLongDateString());
+        }
+        
         return !ScheduledDueDates.Contains(dueDate)
             ? Task.CompletedTask
             : CheckSend(GetTaskDueMessage(TaskState), true);

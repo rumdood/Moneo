@@ -27,8 +27,7 @@ namespace Moneo.Functions
                 .Enrich.FromLogContext()
                 .WriteTo.ApplicationInsights(
                     TelemetryConfiguration.CreateDefault(),
-                    TelemetryConverter.Events,
-                    LogEventLevel.Information)
+                    TelemetryConverter.Events)
                 .WriteTo.Console()
                 .CreateLogger();
 
