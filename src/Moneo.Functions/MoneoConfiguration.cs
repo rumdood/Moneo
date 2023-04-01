@@ -27,6 +27,7 @@ namespace Moneo.Functions
                 ?? throw new ArgumentException("Telegram Token Not Found"); }
         public static string BotUri { get => Environment.GetEnvironmentVariable("botUri"); }
         public static string BotClientId { get => Environment.GetEnvironmentVariable("botClientId"); }
+        public static long LegacyChatId { get => GetLongFromEnvironment("telegramChatId", -1); }
 
         public static QuietHoursSetting QuietHours
         {
@@ -44,6 +45,16 @@ namespace Moneo.Functions
         private static int GetIntFromEnvironment(string key, int defaultValue)
         {
             if (int.TryParse(Environment.GetEnvironmentVariable(key), out var value))
+            {
+                return value;
+            }
+
+            return defaultValue;
+        }
+
+        private static long GetLongFromEnvironment(string key, int defaultValue)
+        {
+            if (long.TryParse(Environment.GetEnvironmentVariable(key), out var value))
             {
                 return value;
             }

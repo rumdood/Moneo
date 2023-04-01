@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Moneo.Models;
 
-namespace Moneo.TaskManagement
+namespace Moneo.Functions
 {
     public interface ITaskManager
     {

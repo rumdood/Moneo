@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Moneo.Core;
 using Moneo.Models;
 using Moneo.Notify;
-using Moneo.TaskManagement;
 using Newtonsoft.Json;
 
 namespace Moneo.Functions;
@@ -22,10 +21,12 @@ public class TaskManager : ITaskManager
     private readonly Random _random = new();
     private readonly ILogger<TaskManager> _logger;
 
-    [JsonProperty("task")] 
+    [JsonProperty("task")]
     public MoneoTaskState TaskState { get; set; }
-    [JsonProperty("scheduledChecks")] 
+    [JsonProperty("scheduledChecks")]
     public HashSet<DateTime> ScheduledDueDates { get; set; } = new();
+    [JsonProperty("chatId")]
+    public long ChatId { get; set; }
 
     private static bool IsQuietHours()
     {
@@ -39,12 +40,12 @@ public class TaskManager : ITaskManager
     private async Task CheckSend(string message, bool badgerFlag = false)
     {
         _logger.LogTrace(
-            "Performing CheckSend for [{0}] {1}", 
-            this.TaskState.Name, 
+            "Performing CheckSend for [{0}] {1}",
+            TaskState.Name,
             badgerFlag ? "(badgering)" : "");
 
         if (TaskState is null || !TaskState.IsActive)
-        { 
+        {
             // skip the check and wait for cleanup
             return;
         }
@@ -61,23 +62,23 @@ public class TaskManager : ITaskManager
                 case null:
                     await DisableTask();
                     return;
-                case {EarlyCompletionThresholdHours: var taskThreshold, Expiry: var expiry} when !taskThreshold.HasValue
+                case { EarlyCompletionThresholdHours: var taskThreshold, Expiry: var expiry } when !taskThreshold.HasValue
                     || completedOrSkipped?.HoursSince(DateTime.UtcNow) < taskThreshold.Value:
-                {
-                    if (expiry.HasValue && expiry.Value < DateTime.UtcNow)
                     {
-                        _logger.LogTrace("    Diabling Expired Task");
-                        await DisableTask();
+                        if (expiry.HasValue && expiry.Value < DateTime.UtcNow)
+                        {
+                            _logger.LogTrace("    Diabling Expired Task");
+                            await DisableTask();
+                        }
+                        return;
                     }
-                    return;
-                }
             }
         }
 
         if (!IsQuietHours())
-        { 
+        {
             _logger.LogTrace("    Sending Notification");
-            await _notifier.SendNotification(TaskState.ChatId, message);
+            await _notifier.SendNotification(ChatId, message);
         }
 
         // if there's a repeater, schedule the next go-round
@@ -102,7 +103,7 @@ public class TaskManager : ITaskManager
 
     private void UpdateSchedule()
     {
-        _logger.LogTrace("Updating schedule for [{0}]", this.TaskState.Name);
+        _logger.LogTrace("Updating schedule for [{0}]", TaskState.Name);
 
         if (TaskState.Repeater is not null)
         {
@@ -136,23 +137,6 @@ public class TaskManager : ITaskManager
         return MoneoConfiguration.DefaultTaskDueMessage.Replace("[TaskName]", task.Name);
     }
 
-    private void CheckMigrateChatId()
-    {
-        if (TaskState.ChatId > 0)
-        {
-            return;
-        }
-
-        if (!long.TryParse(Environment.GetEnvironmentVariable("telegramChatId"), out var chatId))
-        {
-            _logger.LogError("Unable to determine chat ID");
-            throw new ArgumentException("Telegram ChatID Not Found");
-        }
-
-        TaskState.ChatId = chatId;
-        _logger.LogInformation("Set ChatId For Task to {0}", chatId);
-    }
-
     public TaskManager(
         INotifyEngine notifier,
         IMoneoTaskFactory moneoTaskFactory,
@@ -169,10 +153,12 @@ public class TaskManager : ITaskManager
     {
         _logger.LogTrace("Initializing new task [{0}]", task.Name);
 
-        if (TaskState is {IsActive: true})
+        if (TaskState is { IsActive: true })
         {
             throw new InvalidOperationException("Active task already exists");
         }
+
+        ChatId = Entity.Current.GetChatIdFromEntityId();
 
         return UpdateTask(task);
     }
@@ -189,7 +175,7 @@ public class TaskManager : ITaskManager
 
         foreach (var reminder in task.Reminders.EmptyIfNull())
         {
-            if ((existingReminders is not null && existingReminders.ContainsKey(reminder.UtcTicks)) ||
+            if (existingReminders is not null && existingReminders.ContainsKey(reminder.UtcTicks) ||
                 reminder.UtcDateTime <= DateTime.UtcNow) continue;
 
             _logger.LogTrace("    Scheduling Reminder for {0}", reminder.UtcDateTime);
@@ -205,7 +191,7 @@ public class TaskManager : ITaskManager
 
     public async Task MarkCompleted(bool skipped = false)
     {
-        _logger.LogTrace("{0} Task [{1}]", skipped ? "Skipping" : "Completing", this.TaskState.Name);
+        _logger.LogTrace("{0} Task [{1}]", skipped ? "Skipping" : "Completing", TaskState.Name);
 
         if (!TaskState.IsActive)
         {
@@ -220,25 +206,23 @@ public class TaskManager : ITaskManager
         if (skipped)
         {
             TaskState.SkippedHistory.Add(DateTime.UtcNow);
-            await _notifier.SendNotification(TaskState.ChatId, TaskState.SkippedMessage ??
-                                             MoneoConfiguration.DefaultSkippedMessage.Replace("[TaskName]",
-                                                 TaskState.Name));
+            await _notifier.SendNotification(
+                ChatId,
+                TaskState.SkippedMessage ?? MoneoConfiguration.DefaultSkippedMessage.Replace("[TaskName]",
+                TaskState.Name));
             return;
         }
 
         TaskState.CompletedHistory.Add(DateTime.UtcNow);
-        await _notifier.SendNotification(TaskState.ChatId, TaskState.CompletedMessage ??
-                                         MoneoConfiguration.DefaultCompletedMessage.Replace("[TaskName]",
-                                             TaskState.Name));
+        await _notifier.SendNotification(
+            ChatId,
+            TaskState.CompletedMessage ?? MoneoConfiguration.DefaultCompletedMessage.Replace("[TaskName]",
+            TaskState.Name));
     }
 
     public Task DisableTask()
     {
-        if (TaskState is {IsActive: true})
-        {
-            TaskState.IsActive = false;
-        }
-
+        TaskState.IsActive = false;
         return Task.CompletedTask;
     }
 
@@ -250,13 +234,13 @@ public class TaskManager : ITaskManager
 
     public Task CheckSendBadger()
     {
-        _logger.LogTrace("Sending Badger for [{0}]", this.TaskState.Name);
+        _logger.LogTrace("Sending Badger for [{0}]", TaskState.Name);
 
         if (TaskState?.Badger is null)
         {
             throw new InvalidOperationException("Cannot use null Badger reference to send a badger message");
         }
-        
+
         return CheckSend(
             TaskState.Badger.BadgerMessages[_random.Next(0, TaskState.Badger.BadgerMessages.Length)],
             true);
@@ -272,8 +256,8 @@ public class TaskManager : ITaskManager
     public Task SendScheduledReminder(long id)
     {
         // skip any reminders that have been removed
-        return !TaskState.Reminders.ContainsKey(id) 
-            ? Task.CompletedTask 
+        return !TaskState.Reminders.ContainsKey(id)
+            ? Task.CompletedTask
             : CheckSend(GetReminderMessage(TaskState));
     }
 
@@ -281,5 +265,18 @@ public class TaskManager : ITaskManager
     public static Task Run([EntityTrigger] IDurableEntityContext context)
     {
         return context.DispatchAsync<TaskManager>();
+    }
+}
+
+internal static class DurableEntityContextExtensions
+{
+    internal static long GetChatIdFromEntityId(this IDurableEntityContext context)
+    {
+        if (!long.TryParse(context.EntityKey.Split('_').First(), out var chatId))
+        {
+            throw new InvalidOperationException($"Cannot retrieve Chat Id from entity key [{context.EntityKey}]");
+        }
+
+        return chatId;
     }
 }
