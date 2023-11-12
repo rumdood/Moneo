@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Bot.BotRequests;
@@ -60,30 +61,19 @@ internal class ConversationManager : IConversationManager
             _ = AddUser(message.ConversationId, message.UserFirstName, message.UserLastName);
         }
 
-        var messageParts = message.Text.Split(' ');
+        var containsCommand = ContainsSlashCommand(message.Text);
 
-        if (messageParts is null || messageParts.Length == 0)
-        {
-            throw new InvalidOperationException("Empty message received from user");
-        }
+        var result = containsCommand
+            ? await ProcessCommand(message.ConversationId, message.Text)
+            : await HandleChitChat(message.ConversationId, message.Text);
 
-        var cmd = messageParts[0];
-        var taskName = message.Text[message.Text.IndexOf(" ", StringComparison.Ordinal)..];
-        
         _logger.LogDebug("Handling {@Command}", message.Text);
-
-        var resultTask = cmd switch
-        {
-            CompleteTaskRequest.CommandKey => _mediator.Send(new CompleteTaskRequest(message.ConversationId, taskName)),
-            SkipTaskRequest.CommandKey => _mediator.Send(new SkipTaskRequest(message.ConversationId, taskName)),
-            _ => _mediator.Send(new ChitChatRequest(message.ConversationId, message.Text))
-        };
-
-        var result = await resultTask.WaitAsync(CancellationToken.None);
         
         _logger.LogDebug("{@Result}", result);
         switch (result.ResponseType)
         {
+            case ResponseType.None:
+                break;
             case ResponseType.Text:
                 await _mediator.Send(new BotTextMessageRequest(message.ConversationId, result.UserMessageText ?? "",
                     result.Type == ResultType.Error));
@@ -102,6 +92,38 @@ internal class ConversationManager : IConversationManager
     public bool AddUser(long conversationId, string firstName, string? lastName)
     {
         return _usersByConversationId.TryAdd(conversationId, new User(Guid.NewGuid(), firstName, lastName, conversationId));
+    }
+    
+    private static bool ContainsSlashCommand(string input)
+    {
+        // Define a regular expression pattern for a slash command
+        const string pattern = @"^\/\w+"; // Assumes the slash command starts with a slash and is followed by word characters
+
+        // Check if the input string matches the pattern
+        return Regex.IsMatch(input, pattern);
+    }
+
+    private Task<MoneoCommandResult> HandleChitChat(long conversationId, string text) =>
+        _mediator.Send(new ChitChatRequest(conversationId, text));
+
+    private async Task<MoneoCommandResult> ProcessCommand(long conversationId, string text)
+    {
+        var parts = text.Split(' ');
+        var cmd = parts.First(p => p.StartsWith("/")).ToLowerInvariant();
+        var args = parts.Skip(1).ToArray();
+
+        // this should really be replaced with dynamically loading the command keys and a func from the assembly
+        return cmd switch
+        {
+            CompleteTaskRequest.CommandKey => await _mediator.Send(new CompleteTaskRequest(conversationId, args[0])),
+            SkipTaskRequest.CommandKey => await _mediator.Send(new SkipTaskRequest(conversationId, args[0])),
+            _ => new MoneoCommandResult
+            {
+                ResponseType = ResponseType.Text,
+                Type = ResultType.Error,
+                UserMessageText = $"Unknown command: {cmd}"
+            }
+        };
     }
     
     private void AddMessageEntry(long conversationId, string message, MessageDirection direction)

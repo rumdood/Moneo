@@ -9,6 +9,7 @@ public enum ResultType
 
 public enum ResponseType
 {
+    None,
     Text,
     Animation,
     Media,

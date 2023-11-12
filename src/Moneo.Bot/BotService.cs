@@ -73,7 +73,7 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
         await _botClient.SendAnimationAsync(request.ConversationId, inputFile, cancellationToken: cancellationToken);
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         RunBot(stoppingToken);
 
@@ -83,5 +83,6 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
         }
         
         _logger.LogInformation("Stopping Bot");
+        return Task.CompletedTask;
     }
 }

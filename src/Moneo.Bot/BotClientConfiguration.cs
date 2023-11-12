@@ -2,6 +2,8 @@ namespace Moneo.Bot;
 
 public class BotClientConfiguration
 {
-    public string Token { get; set; }
-    public long MasterConversationId { get; set; } = 123;
+    public string Token { get; set; } = default!;
+    public long MasterConversationId { get; set; }
+    public string FunctionKey { get; set; } = default!;
+    public string ApiBase { get; set; } = default!;
 }
