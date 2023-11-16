@@ -64,8 +64,8 @@ internal class ConversationManager : IConversationManager
         var containsCommand = ContainsSlashCommand(message.Text);
 
         var result = containsCommand
-            ? await ProcessCommand(message.ConversationId, message.Text)
-            : await HandleChitChat(message.ConversationId, message.Text);
+            ? await ProcessCommandAsync(message.ConversationId, message.Text)
+            : await HandleChitChatAsync(message.ConversationId, message.Text);
 
         _logger.LogDebug("Handling {@Command}", message.Text);
         
@@ -103,10 +103,10 @@ internal class ConversationManager : IConversationManager
         return Regex.IsMatch(input, pattern);
     }
 
-    private Task<MoneoCommandResult> HandleChitChat(long conversationId, string text) =>
+    private Task<MoneoCommandResult> HandleChitChatAsync(long conversationId, string text) =>
         _mediator.Send(new ChitChatRequest(conversationId, text));
 
-    private async Task<MoneoCommandResult> ProcessCommand(long conversationId, string text)
+    private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, string text)
     {
         var parts = text.Split(' ');
         var cmd = parts.First(p => p.StartsWith("/")).ToLowerInvariant();
@@ -115,8 +115,8 @@ internal class ConversationManager : IConversationManager
         // this should really be replaced with dynamically loading the command keys and a func from the assembly
         return cmd switch
         {
-            CompleteTaskRequest.CommandKey => await _mediator.Send(new CompleteTaskRequest(conversationId, args[0])),
-            SkipTaskRequest.CommandKey => await _mediator.Send(new SkipTaskRequest(conversationId, args[0])),
+            CompleteTaskRequest.CommandKey => await _mediator.Send(new CompleteTaskRequest(conversationId, args)),
+            SkipTaskRequest.CommandKey => await _mediator.Send(new SkipTaskRequest(conversationId, args)),
             _ => new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,

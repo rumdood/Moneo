@@ -11,9 +11,11 @@ public class SkipTaskRequest : IUserRequest, IRequest<MoneoCommandResult>
     public string Name => "Skip";
     public string TaskName { get; init; }
     
-    public SkipTaskRequest(long conversationId, string taskName)
+    public SkipTaskRequest(long conversationId, params string[] args)
     {
         ConversationId = conversationId;
-        TaskName = taskName;
+        TaskName = args.Length > 0
+            ? string.Join(' ', args)
+            : "";
     }
 }
