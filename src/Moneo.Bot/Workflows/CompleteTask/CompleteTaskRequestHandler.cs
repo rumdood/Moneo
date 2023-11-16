@@ -1,22 +1,22 @@
 using MediatR;
-using Microsoft.Extensions.Options;
 using Moneo.Bot.Commands;
 
 namespace Moneo.Bot.UserRequests;
 
 internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest, MoneoCommandResult>
 {
-    private readonly IMoneoProxy _proxy;
+    private readonly ITaskService _taskService;
     
-    public CompleteTaskRequestHandler(IMoneoProxy proxy)
+    public CompleteTaskRequestHandler(ITaskService taskService)
     {
-        _proxy = proxy;
+        _taskService = taskService;
     }
     
     public async Task<MoneoCommandResult> Handle(CompleteTaskRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(request.TaskName))
         {
+            // TODO: Change this to retrieve a list of tasks and send them as a menu
             return new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
@@ -26,7 +26,7 @@ internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest,
         }
         
         // here we'll do a call to the Azure Function to complete the task
-        var proxyResult = await _proxy.CompleteTaskAsync(request.ConversationId, request.TaskName);
+        var proxyResult = await _taskService.CompleteTaskAsync(request.ConversationId, request.TaskName);
 
         return new MoneoCommandResult
         {

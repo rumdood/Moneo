@@ -46,4 +46,28 @@ public static class MoneoTaskExtensions
         return dueDate == expected
             && (!expiry.HasValue || expiry.Value > expected);
     }
+    
+    public static MoneoTaskDto ToMoneoTaskDto(this MoneoTaskState input)
+    {
+        return new MoneoTaskDto
+        {
+            Name = input.Name,
+            Description = input.Description,
+            IsActive = input.IsActive,
+            CompletedHistory = input.CompletedHistory.Where(x => x is not null).ToArray(),
+            SkippedHistory = input.SkippedHistory.Where(x => x is not null).ToArray(),
+            DueDates = input.DueDates.Select(x => x.UniversalTimeToTimeZone(input.TimeZone)).ToHashSet(),
+            TimeZone = input.TimeZone,
+            CompletedMessage = input.CompletedMessage,
+            SkippedMessage = input.SkippedMessage,
+            Repeater = input.Repeater,
+            Badger = input.Badger,
+            Reminders = input.Reminders
+                .EmptyIfNull()
+                .Select(kv => new DateTimeOffset(kv.Value.DueAt))
+                .ToArray(),
+            Created = input.Created,
+            LastUpdated = input.LastUpdated,
+        };
+    }
 }

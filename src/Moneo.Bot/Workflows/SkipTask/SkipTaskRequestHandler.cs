@@ -3,13 +3,13 @@ using Moneo.Bot.Commands;
 
 namespace Moneo.Bot.UserRequests;
 
-public class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCommandResult>
+internal class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCommandResult>
 {
-    private readonly IMoneoProxy _proxy;
+    private readonly ITaskService _taskService;
 
-    public SkipTaskRequestHandler(IMoneoProxy proxy)
+    public SkipTaskRequestHandler(ITaskService taskService)
     {
-        _proxy = proxy;
+        _taskService = taskService;
     }
     
     public async Task<MoneoCommandResult> Handle(SkipTaskRequest request, CancellationToken cancellationToken)
@@ -25,13 +25,13 @@ public class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoComm
         }
         
         // here we'll do a call to the Azure Function to complete the task
-        var proxyResult = await _proxy.SkipTaskAsync(request.ConversationId, request.TaskName);
+        var skipResult = await _taskService.SkipTaskAsync(request.ConversationId, request.TaskName);
 
         return new MoneoCommandResult
         {
-            ResponseType = proxyResult.IsSuccessful ? ResponseType.None : ResponseType.Text,
-            Type = proxyResult.IsSuccessful ? ResultType.WorkflowCompleted : ResultType.Error,
-            UserMessageText = proxyResult.IsSuccessful ? "" : "Something went wrong. Look at the logs?"
+            ResponseType = skipResult.IsSuccessful ? ResponseType.None : ResponseType.Text,
+            Type = skipResult.IsSuccessful ? ResultType.WorkflowCompleted : ResultType.Error,
+            UserMessageText = skipResult.IsSuccessful ? "" : "Something went wrong. Look at the logs?"
         };
     }
 }

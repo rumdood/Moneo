@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Mediatr" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
     <PackageReference Include="restsharp" Version="110.2.0" />
     <PackageReference Include="Telegram.Bot" Version="19.0.0" />

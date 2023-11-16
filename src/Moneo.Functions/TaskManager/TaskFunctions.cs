@@ -18,7 +18,7 @@ using Moneo.Models;
 
 namespace Moneo.Functions;
 
-internal class HttpVerbs
+internal static class HttpVerbs
 {
     public const string Delete = "delete";
     public const string Get = "get";
@@ -38,7 +38,7 @@ public class TaskFunctions
         _logger = log;
     }
 
-    private static async Task<Dictionary<string, TaskManager>> GetAllTasks(IDurableEntityClient client)
+    private static async Task<Dictionary<string, TaskManager>> GetAllTasksAsync(IDurableEntityClient client)
     {
         using var tokenSource = new CancellationTokenSource();
         var cancelToken = tokenSource.Token;
@@ -66,22 +66,50 @@ public class TaskFunctions
         return new Dictionary<string, TaskManager>();
     }
 
-    private sealed record TaskFullId(
-        string ChatId,
-        string TaskId)
+    private static async Task<Dictionary<string, MoneoTaskDto>> GetAllTasksForConversationAsync(string chatId, IDurableEntityClient client)
     {
-        public string FullId => $"{ChatId}_{TaskId}";
+        using var tokenSource = new CancellationTokenSource();
+        var cancelToken = tokenSource.Token;
+
+        var query = new EntityQuery
+        {
+            FetchState = true,
+            EntityName = nameof(TaskManager)
+        };
+
+        do
+        {
+            var result = await client.ListEntitiesAsync(query, cancelToken);
+
+            if (!(bool)result?.Entities.Any())
+            {
+                break;
+            }
+
+            return result!.Entities
+                .Where(x => x.EntityId.EntityKey.Contains('_')) // since there's no way to delete the old ones...
+                .Select(x => new
+                {
+                    FullId = TaskFullId.CreateFromFullId(x.EntityId.EntityKey), 
+                    x.State
+                })
+                .Where(x => x.State is not null && x.FullId.ChatId.Equals(chatId))
+                .ToDictionary(x => x.FullId.TaskId, x => x.State.ToObject<TaskManager>().TaskState.ToMoneoTaskDto());
+        }
+        while (query.ContinuationToken != null);
+
+        return new Dictionary<string, MoneoTaskDto>();
     }
 
-    private async Task<IActionResult> CreateOrModifyTask(TaskFullId taskFullId, IDurableEntityClient client, Action<ITaskManager> doWork)
+    private async Task<IActionResult> CreateOrModifyTaskAsync(TaskFullId taskFullId, IDurableEntityClient client, Action<ITaskManager> doWork)
     {
         var entityId = new EntityId(nameof(TaskManager), taskFullId.FullId);
-        await client.SignalEntityAsync<ITaskManager>(entityId, r => doWork(r));
+        await client.SignalEntityAsync(entityId, doWork);
 
         return new OkResult();
     }
 
-    private async Task<IActionResult> CompleteOrSkipTask(TaskFullId taskFullId, bool isSkipped, IDurableEntityClient client)
+    private async Task<IActionResult> CompleteOrSkipTaskAsync(TaskFullId taskFullId, bool isSkipped, IDurableEntityClient client)
     {
         if (taskFullId is null)
         {
@@ -90,7 +118,7 @@ public class TaskFunctions
 
         var entityId = new EntityId(nameof(TaskManager), taskFullId.FullId);
         await client.SignalEntityAsync<ITaskManager>(entityId, r => r.MarkCompleted(isSkipped));
-        _logger.LogInformation($"Reminder Defused for {taskFullId.TaskId}");
+        _logger.LogInformation("Reminder Defused for {TaskId}", taskFullId.TaskId);
 
         return new OkResult();
     }
@@ -117,19 +145,19 @@ public class TaskFunctions
     [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.OK,
         Summary = "If the create activity succeeded",
         Description = "If the create activity succeeded")]
-    [FunctionName(nameof(CreateTask))]
-    public async Task<IActionResult> CreateTask(
+    [FunctionName(nameof(CreateTaskAsync))]
+    public async Task<IActionResult> CreateTaskAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Post, Route = "{chatId}/tasks/{taskId}")][FromBody] MoneoTaskDto task,
         long chatId,
         string taskId,
         [DurableClient] IDurableEntityClient client) =>
-            await CreateOrModifyTask(
+            await CreateOrModifyTaskAsync(
                 new TaskFullId(chatId.ToString(), taskId), client,
                 r => r.InitializeTask(task));
 
     [OpenApiOperation(operationId: "MoneoUpdateTask",
         tags: new[] { "UpdateTask" },
-        Summary = "Upates an existing task",
+        Summary = "Updates an existing task",
         Description = "Will update an existing MoneoTask and schedule any necessary new reminders",
         Visibility = OpenApiVisibilityType.Important)]
     [OpenApiParameter(name: "chatId",
@@ -147,14 +175,14 @@ public class TaskFunctions
         Description = "The ID of the task to update",
         Visibility = OpenApiVisibilityType.Important)]
     [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.OK,
-        Summary = "If the udpate activity succeeded",
+        Summary = "If the update activity succeeded",
         Description = "If the update activity succeeded")]
-    [FunctionName(nameof(UpdateTask))]
-    public async Task<IActionResult> UpdateTask(
+    [FunctionName(nameof(UpdateTaskAsync))]
+    public async Task<IActionResult> UpdateTaskAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Patch, Route = "{chatId}/tasks/{taskId}")][FromBody] MoneoTaskDto task,
         string chatId,
         string taskId,
-        [DurableClient] IDurableEntityClient client) => await CreateOrModifyTask(new TaskFullId(chatId, taskId), client, r => r.UpdateTask(task));
+        [DurableClient] IDurableEntityClient client) => await CreateOrModifyTaskAsync(new TaskFullId(chatId, taskId), client, r => r.UpdateTask(task));
 
 
     [OpenApiOperation(operationId: "CompleteMoneoTask",
@@ -186,8 +214,8 @@ public class TaskFunctions
     [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.OK,
         Summary = "If the completion/skip activity succeeded",
         Description = "If the completion/skip activity succeeded")]
-    [FunctionName(nameof(CompleteReminderTask))]
-    public async Task<IActionResult> CompleteReminderTask(
+    [FunctionName(nameof(CompleteReminderTaskAsync))]
+    public async Task<IActionResult> CompleteReminderTaskAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Post, Route = "{chatId}/tasks/{taskId}/{action}")]
         HttpRequest request,
         string chatId,
@@ -197,12 +225,12 @@ public class TaskFunctions
     {
         var skip = action switch
         {
-            string v when v.Equals("complete", StringComparison.OrdinalIgnoreCase) => false,
-            string v when v.Equals("skip", StringComparison.OrdinalIgnoreCase) => true,
+            not null when action.Equals("complete", StringComparison.OrdinalIgnoreCase) => false,
+            not null when action.Equals("skip", StringComparison.OrdinalIgnoreCase) => true,
             _ => throw new InvalidOperationException($"Unknown Action: {action}")
         };
 
-        return await CompleteOrSkipTask(new TaskFullId(chatId, taskId), skip, client);
+        return await CompleteOrSkipTaskAsync(new TaskFullId(chatId, taskId), skip, client);
     }
 
     [OpenApiOperation(operationId: "GetMoneoTask",
@@ -229,8 +257,8 @@ public class TaskFunctions
         bodyType: typeof(IMoneoTask),
         Summary = "The requested MoneoTask",
         Description = "The requested MoneoTask")]
-    [FunctionName(nameof(GetTaskStatus))]
-    public async Task<ActionResult<IMoneoTaskDto>> GetTaskStatus(
+    [FunctionName(nameof(GetTaskStatusAsync))]
+    public async Task<ActionResult<IMoneoTaskDto>> GetTaskStatusAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Get, Route = "{chatId}/tasks/{taskId}")] HttpRequestMessage request,
         string chatId,
         string taskId,
@@ -250,9 +278,9 @@ public class TaskFunctions
             return new NotFoundResult();
         }
 
-        _logger.LogInformation($"Retrieved status for {taskId}");
+        _logger.LogInformation("Retrieved status for {TaskId}", taskId);
 
-        var dto = _taskFactory.CreateTaskDto(taskState.EntityState.TaskState);
+        var dto = taskState.EntityState.TaskState.ToMoneoTaskDto();
 
         return new OkObjectResult(dto);
     }
@@ -284,8 +312,8 @@ public class TaskFunctions
         bodyType: typeof(string),
         Summary = "If the request is missing the Task ID",
         Description = "If the request is missing the Task ID")]
-    [FunctionName(nameof(DeleteTask))]
-    public async Task<HttpResponseMessage> DeleteTask(
+    [FunctionName(nameof(DeleteTaskAsync))]
+    public async Task<HttpResponseMessage> DeleteTaskAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Delete, Route = "{chatId}/tasks/{taskId}")] HttpRequestMessage request,
         string chatId,
         string taskId,
@@ -301,15 +329,15 @@ public class TaskFunctions
 
         await client.SignalEntityAsync<ITaskManager>(entityId, x => x.DisableTask());
 
-        _logger.LogInformation($"{taskId} has been deactivated");
+        _logger.LogInformation("{TaskId} has been deactivated", taskId);
 
         return request.CreateResponse(HttpStatusCode.OK);
     }
-
-    [OpenApiOperation(operationId: "GetAllMoneoTasks",
-        tags: new[] { "GetAllTasks" },
-        Summary = "A complete list of all tasks in the system",
-        Description = "Returns a detailed list of MoneoTasks in the system without any filters",
+    
+    [OpenApiOperation(operationId: "GetAllMoneoTasksForChat",
+        tags: new[] { "GetAllTasksForChat" },
+        Summary = "A complete list of all tasks associated with a given chat",
+        Description = "Returns a detailed list of MoneoTasks associated with a given chat",
         Visibility = OpenApiVisibilityType.Important)]
     [OpenApiParameter(name: "chatId",
         In = Microsoft.OpenApi.Models.ParameterLocation.Path,
@@ -323,21 +351,41 @@ public class TaskFunctions
         bodyType: typeof(Dictionary<string, TaskManager>),
         Summary = "The list of tasks by Task ID",
         Description = "The list of tasks by Task ID")]
-    [FunctionName(nameof(GetTasksList))]
-    public async Task<ActionResult<Dictionary<string, TaskManager>>> GetTasksList(
+    [FunctionName(nameof(GetTasksListForChatAsync))]
+    public async Task<ActionResult<Dictionary<string, TaskManager>>> GetTasksListForChatAsync(
+        [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Get, Route = "{chatId}/tasks")] HttpRequestMessage request,
+        string chatId,
+        [DurableClient] IDurableEntityClient client)
+    {
+        var chatTasks = await GetAllTasksForConversationAsync(chatId, client);
+        return new OkObjectResult(chatTasks);
+    }
+
+    [OpenApiOperation(operationId: "GetAllMoneoTasks",
+        tags: new[] { "GetAllTasks" },
+        Summary = "A complete list of all tasks in the system",
+        Description = "Returns a detailed list of MoneoTasks in the system without any filters",
+        Visibility = OpenApiVisibilityType.Important)]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK,
+        contentType: "application/json",
+        bodyType: typeof(Dictionary<string, TaskManager>),
+        Summary = "The list of tasks by Task ID",
+        Description = "The list of tasks by Task ID")]
+    [FunctionName(nameof(GetTasksListAsync))]
+    public async Task<ActionResult<Dictionary<string, TaskManager>>> GetTasksListAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Get, Route = "tasks")] HttpRequestMessage request,
         [DurableClient] IDurableEntityClient client)
     {
-        var allTasks = await GetAllTasks(client);
+        var allTasks = await GetAllTasksAsync(client);
         return new OkObjectResult(allTasks);
     }
 
-    [FunctionName(nameof(MigrateTasks))]
-    public async Task<IActionResult> MigrateTasks(
+    [FunctionName(nameof(MigrateTasksAsync))]
+    public async Task<IActionResult> MigrateTasksAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Patch, Route = "tasks/migrate")] HttpRequestMessage request,
         [DurableClient] IDurableEntityClient client)
     {
-        var allTasks = await GetAllTasks(client);
+        var allTasks = await GetAllTasksAsync(client);
 
         var succeeded = new List<string>();
         var failed = new List<string>();
@@ -365,43 +413,11 @@ public class TaskFunctions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to migrate task: {id}");
+                _logger.LogError(ex, "Failed to migrate task: {Id}", id);
                 failed.Add(id);
             }
         }
 
         return new OkObjectResult((succeeded, failed));
     }
-
-    /*
-    [FunctionName("CleanupDeactivated")]
-    public async Task CleanupDeactivated(
-        [TimerTrigger("%cleanup_cron%", RunOnStartup = false)] TimerInfo timer,
-        [DurableClient] IDurableEntityClient client)
-    {
-        _logger.LogInformation($"Executing cleanup timer, next check at {timer.ScheduleStatus.Next}");
-
-        var allTasks = await GetAllTasks(client);
-
-        foreach (var (id, taskManager) in allTasks)
-        {
-            if (taskManager == null || taskManager.TaskState is { IsActive: true })
-            {
-                continue;
-            }
-
-            try
-            {
-                await client.SignalEntityAsync<ITaskManager>(id, x => x.Delete());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to delete entity");
-            }
-        }
-
-        await client.CleanEntityStorageAsync(true, true, CancellationToken.None);
-    }
-    */
 }
-

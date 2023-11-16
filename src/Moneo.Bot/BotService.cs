@@ -16,6 +16,7 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
     private readonly BotClientConfiguration _config;
     private readonly IConversationManager _conversationManager;
     private readonly TelegramBotClient _botClient;
+    private readonly ITaskService _taskService;
     private readonly ILogger<BotService> _logger;
     
     private void RunBot(CancellationToken cancelToken)
@@ -54,11 +55,13 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
         }
     }
 
-    public BotService(IConversationManager conversationManager, IOptions<BotClientConfiguration> config, ILogger<BotService> logger)
+    public BotService(IConversationManager conversationManager, IOptions<BotClientConfiguration> config,
+        ITaskService taskService, ILogger<BotService> logger)
     {
         _config = config.Value;
         _conversationManager = conversationManager;
         _botClient = new TelegramBotClient(_config.Token);
+        _taskService = taskService;
         _logger = logger;
     }
 
@@ -73,8 +76,9 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
         await _botClient.SendAnimationAsync(request.ConversationId, inputFile, cancellationToken: cancellationToken);
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await _taskService.InitializeAsync();
         RunBot(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
@@ -83,6 +87,5 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
         }
         
         _logger.LogInformation("Stopping Bot");
-        return Task.CompletedTask;
     }
 }

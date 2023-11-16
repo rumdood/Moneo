@@ -17,9 +17,11 @@ builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssemblies(typeof(IMoneoCommand).Assembly);
 });
+builder.Services.AddMemoryCache();
 
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
-builder.Services.AddScoped<IMoneoProxy, MoneoProxy>();
+builder.Services.AddSingleton<ITaskService, TaskService>();
+builder.Services.AddSingleton<IMoneoProxy, MoneoProxy>();
 builder.Services.Configure<BotClientConfiguration>(builder.Configuration.GetSection(nameof(BotClientConfiguration)));
 builder.Services.AddHostedService<BotService>();
 
