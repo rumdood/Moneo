@@ -6,10 +6,10 @@ using RestSharp;
 
 namespace Moneo.Bot;
 
-internal record MoneoTaskManagerDto(MoneoTaskState Task, long ChatId);
+public record MoneoTaskManagerDto(MoneoTaskState Task, long ChatId);
 internal class ConversationTaskStore : Dictionary<long, Dictionary<string, MoneoTaskDto>> { }
 
-internal interface IMoneoProxy
+public interface ITaskManagerClient
 {
     Task<MoneoTaskResult<Dictionary<string, MoneoTaskManagerDto>>> GetAllTasksAsync();
     Task<MoneoTaskResult<Dictionary<string, MoneoTaskDto>>> GetTasksForConversation(long conversationId);
@@ -17,7 +17,7 @@ internal interface IMoneoProxy
     Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskName);
 }
 
-internal class MoneoProxy : IMoneoProxy
+internal class TaskManagerHttpClient : ITaskManagerClient
 {
     private enum TaskAction
     {
@@ -27,10 +27,10 @@ internal class MoneoProxy : IMoneoProxy
 
     private readonly BotClientConfiguration _configuration;
     private readonly RestClient _client;
-    private readonly ILogger<MoneoProxy> _logger;
+    private readonly ILogger<TaskManagerHttpClient> _logger;
     private const string FunctionKeyHeader = "x-functions-key";
 
-    public MoneoProxy(IOptions<BotClientConfiguration> configuration, ILogger<MoneoProxy> logger)
+    public TaskManagerHttpClient(IOptions<BotClientConfiguration> configuration, ILogger<TaskManagerHttpClient> logger)
     {
         _configuration = configuration.Value;
         _logger = logger;

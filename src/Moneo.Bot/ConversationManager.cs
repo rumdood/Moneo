@@ -9,13 +9,13 @@ using Moneo.Core;
 
 namespace Moneo.Bot;
 
-internal enum MessageDirection
+public enum MessageDirection
 {
     UserToBot,
     BotToUser
 }
 
-internal interface IConversationManager
+public interface IConversationManager
 {
     IEnumerable<ConversationEntry> GetLastEntriesForConversation(long conversationId, int count);
     Task ProcessUserMessageAsync(UserMessage message);

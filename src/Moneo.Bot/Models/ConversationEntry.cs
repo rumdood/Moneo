@@ -1,6 +1,6 @@
 namespace Moneo.Bot;
 
-internal record ConversationEntry(
+public record ConversationEntry(
     long ConversationId, 
     User ForUser, 
     string Message, 

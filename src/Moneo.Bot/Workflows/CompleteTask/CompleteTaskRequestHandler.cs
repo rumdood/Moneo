@@ -5,11 +5,11 @@ namespace Moneo.Bot.UserRequests;
 
 internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest, MoneoCommandResult>
 {
-    private readonly ITaskService _taskService;
+    private readonly ITaskResourceManager _taskResourceManager;
     
-    public CompleteTaskRequestHandler(ITaskService taskService)
+    public CompleteTaskRequestHandler(ITaskResourceManager taskResourceManager)
     {
-        _taskService = taskService;
+        _taskResourceManager = taskResourceManager;
     }
     
     public async Task<MoneoCommandResult> Handle(CompleteTaskRequest request, CancellationToken cancellationToken)
@@ -26,13 +26,13 @@ internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest,
         }
         
         // here we'll do a call to the Azure Function to complete the task
-        var proxyResult = await _taskService.CompleteTaskAsync(request.ConversationId, request.TaskName);
+        var completeTaskResult = await _taskResourceManager.CompleteTaskAsync(request.ConversationId, request.TaskName);
 
         return new MoneoCommandResult
         {
-            ResponseType = proxyResult.IsSuccessful ? ResponseType.None : ResponseType.Text,
-            Type = proxyResult.IsSuccessful ? ResultType.WorkflowCompleted : ResultType.Error,
-            UserMessageText = proxyResult.IsSuccessful ? "" : "Something went wrong. Look at the logs?"
+            ResponseType = completeTaskResult.IsSuccessful ? ResponseType.None : ResponseType.Text,
+            Type = completeTaskResult.IsSuccessful ? ResultType.WorkflowCompleted : ResultType.Error,
+            UserMessageText = completeTaskResult.IsSuccessful ? "" : "Something went wrong. Look at the logs?"
         };
     }
 }

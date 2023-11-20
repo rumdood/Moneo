@@ -6,7 +6,7 @@ using Moneo.Models;
 
 namespace Moneo.Bot;
 
-public interface ITaskService
+public interface ITaskResourceManager
 {
     Task InitializeAsync();
     Task<MoneoTaskResult<IEnumerable<MoneoTaskDto>>> GetAllTasksForUserAsync(long conversationId);
@@ -14,14 +14,14 @@ public interface ITaskService
     Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskId);
 }
 
-internal class TaskService : ITaskService
+internal class TaskResourceManager : ITaskResourceManager
 {
-    private readonly IMoneoProxy _proxy;
+    private readonly ITaskManagerClient _proxy;
     private readonly IMemoryCache _cache;
-    private readonly ILogger<TaskService> _logger;
+    private readonly ILogger<TaskResourceManager> _logger;
     private bool _isInitialized = false;
 
-    public TaskService(IMoneoProxy proxy, IMemoryCache cache, ILogger<TaskService> logger)
+    public TaskResourceManager(ITaskManagerClient proxy, IMemoryCache cache, ILogger<TaskResourceManager> logger)
     {
         _proxy = proxy;
         _cache = cache;
@@ -34,7 +34,7 @@ internal class TaskService : ITaskService
 
         if (conversationStore is null)
         {
-            throw new MoneoProxyException("Failed to get all tasks");
+            throw new TaskManagementException("Failed to get all tasks");
         }
         
         var cacheOptions = new MemoryCacheEntryOptions
@@ -56,7 +56,7 @@ internal class TaskService : ITaskService
 
         if (!isSuccessful)
         {
-            throw new MoneoProxyException("Failed to get all tasks",
+            throw new TaskManagementException("Failed to get all tasks",
                 new HttpRequestException(errorMessage));
         }
         
@@ -89,7 +89,7 @@ internal class TaskService : ITaskService
 
         if (!isSuccessful)
         {
-            throw new MoneoProxyException($"Failed to retrieve tasks for conversation: [{conversationId}",
+            throw new TaskManagementException($"Failed to retrieve tasks for conversation: [{conversationId}",
                 new HttpRequestException(errorMessage));
         }
         

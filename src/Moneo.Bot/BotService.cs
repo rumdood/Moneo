@@ -16,7 +16,7 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
     private readonly BotClientConfiguration _config;
     private readonly IConversationManager _conversationManager;
     private readonly TelegramBotClient _botClient;
-    private readonly ITaskService _taskService;
+    private readonly ITaskResourceManager _taskResourceManager;
     private readonly ILogger<BotService> _logger;
     
     private void RunBot(CancellationToken cancelToken)
@@ -56,12 +56,12 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
     }
 
     public BotService(IConversationManager conversationManager, IOptions<BotClientConfiguration> config,
-        ITaskService taskService, ILogger<BotService> logger)
+        ITaskResourceManager taskResourceManager, ILogger<BotService> logger)
     {
         _config = config.Value;
         _conversationManager = conversationManager;
         _botClient = new TelegramBotClient(_config.Token);
-        _taskService = taskService;
+        _taskResourceManager = taskResourceManager;
         _logger = logger;
     }
 
@@ -78,7 +78,7 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _taskService.InitializeAsync();
+        await _taskResourceManager.InitializeAsync();
         RunBot(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)

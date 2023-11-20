@@ -20,8 +20,8 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddMemoryCache();
 
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
-builder.Services.AddSingleton<ITaskService, TaskService>();
-builder.Services.AddSingleton<IMoneoProxy, MoneoProxy>();
+builder.Services.AddSingleton<ITaskResourceManager, TaskResourceManager>();
+builder.Services.AddSingleton<TaskManagerHttpClient, TaskManagerHttpClient>();
 builder.Services.Configure<BotClientConfiguration>(builder.Configuration.GetSection(nameof(BotClientConfiguration)));
 builder.Services.AddHostedService<BotService>();
 

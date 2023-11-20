@@ -5,11 +5,11 @@ namespace Moneo.Bot.UserRequests;
 
 internal class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCommandResult>
 {
-    private readonly ITaskService _taskService;
+    private readonly ITaskResourceManager _taskResourceManager;
 
-    public SkipTaskRequestHandler(ITaskService taskService)
+    public SkipTaskRequestHandler(ITaskResourceManager taskResourceManager)
     {
-        _taskService = taskService;
+        _taskResourceManager = taskResourceManager;
     }
     
     public async Task<MoneoCommandResult> Handle(SkipTaskRequest request, CancellationToken cancellationToken)
@@ -25,7 +25,7 @@ internal class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCo
         }
         
         // here we'll do a call to the Azure Function to complete the task
-        var skipResult = await _taskService.SkipTaskAsync(request.ConversationId, request.TaskName);
+        var skipResult = await _taskResourceManager.SkipTaskAsync(request.ConversationId, request.TaskName);
 
         return new MoneoCommandResult
         {
