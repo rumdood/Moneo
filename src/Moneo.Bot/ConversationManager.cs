@@ -6,7 +6,6 @@ using Moneo.Bot.Commands;
 using Moneo.Bot.UserRequests;
 using Moneo.Bot.Workflows.Chitchat;
 using Moneo.Core;
-using Telegram.Bot.Types;
 
 namespace Moneo.Bot;
 
@@ -15,10 +14,6 @@ internal enum MessageDirection
     UserToBot,
     BotToUser
 }
-
-internal record User(Guid Id, string FirstName, string? LastName, long ConversationId);
-
-internal record ConversationEntry(long ConversationId, User ForUser, string Message, MessageDirection Direction, DateTimeOffset TimeStamp);
 
 internal interface IConversationManager
 {

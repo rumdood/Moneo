@@ -1,16 +1,13 @@
-using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moneo.Core;
 using Moneo.Models;
 using Newtonsoft.Json;
 using RestSharp;
 
 namespace Moneo.Bot;
 
-public record MoneoTaskResult(bool IsSuccessful, string? ErrorMessage = null);
-
-public record MoneoTaskResult<T>(bool IsSuccessful, T Result, string? ErrorMessage = null);
+internal record MoneoTaskManagerDto(MoneoTaskState Task, long ChatId);
+internal class ConversationTaskStore : Dictionary<long, Dictionary<string, MoneoTaskDto>> { }
 
 internal interface IMoneoProxy
 {
@@ -19,10 +16,6 @@ internal interface IMoneoProxy
     Task<MoneoTaskResult> CompleteTaskAsync(long conversationId, string taskName);
     Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskName);
 }
-
-internal record MoneoTaskManagerDto(MoneoTaskState Task, long ChatId);
-
-internal class ConversationTaskStore : Dictionary<long, Dictionary<string, MoneoTaskDto>> { }
 
 internal class MoneoProxy : IMoneoProxy
 {
