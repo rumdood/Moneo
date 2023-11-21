@@ -2,10 +2,10 @@
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Moneo.Notify;
 using Moneo.Notify.Engines;
-using Moneo.Core;
 using Serilog;
 using Serilog.Events;
 using Microsoft.ApplicationInsights.Extensibility;
+using Moneo.Common;
 
 [assembly: FunctionsStartup(typeof(Moneo.Functions.Startup))]
 namespace Moneo.Functions

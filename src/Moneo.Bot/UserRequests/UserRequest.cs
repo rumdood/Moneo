@@ -1,4 +1,4 @@
-namespace Moneo.Bot.UserRequests;
+namespace Moneo.Chat.UserRequests;
 
 public interface IUserRequest
 {

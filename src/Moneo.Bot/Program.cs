@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Moneo.Bot;
-using Moneo.Bot.Commands;
+using Moneo.Chat;
+using Moneo.Chat.Commands;
+using Moneo.TaskManagement;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -21,7 +22,7 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 builder.Services.AddSingleton<ITaskResourceManager, TaskResourceManager>();
-builder.Services.AddSingleton<TaskManagerHttpClient, TaskManagerHttpClient>();
+builder.Services.AddSingleton<ITaskManagerClient, TaskManagerHttpClient>();
 builder.Services.Configure<BotClientConfiguration>(builder.Configuration.GetSection(nameof(BotClientConfiguration)));
 builder.Services.AddHostedService<BotService>();
 

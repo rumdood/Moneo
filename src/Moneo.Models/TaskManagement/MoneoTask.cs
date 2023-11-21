@@ -1,7 +1,7 @@
 ﻿using Moneo.Core;
 using Newtonsoft.Json;
 
-namespace Moneo.Models;
+namespace Moneo.Models.TaskManagement;
 
 public interface IMoneoTask
 {

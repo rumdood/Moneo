@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Moneo.Models;
+namespace Moneo.Models.TaskManagement;
 
 public class TaskBadger
 {

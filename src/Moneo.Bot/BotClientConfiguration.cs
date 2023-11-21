@@ -1,4 +1,4 @@
-namespace Moneo.Bot;
+namespace Moneo.Chat;
 
 public class BotClientConfiguration
 {

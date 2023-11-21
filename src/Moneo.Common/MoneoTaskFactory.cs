@@ -1,6 +1,8 @@
-﻿using Moneo.Models;
+﻿using Moneo.Core;
+using Moneo.Models;
+using Moneo.Models.TaskManagement;
 
-namespace Moneo.Core;
+namespace Moneo.Common;
 
 public interface IMoneoTaskFactory
 {

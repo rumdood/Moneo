@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -17,7 +17,10 @@
     <PackageReference Include="Telegram.Bot" Version="18.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Moneo.Common\Moneo.Common.csproj" />
+    <ProjectReference Include="..\Moneo.Contracts\Moneo.Contracts.csproj" />
     <ProjectReference Include="..\moneo.core\Moneo.Core.csproj" />
+    <ProjectReference Include="..\Moneo.Models\Moneo.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

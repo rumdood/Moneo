@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Moneo.Models;
+using Moneo.Models.TaskManagement;
 
 namespace Moneo.Functions
 {

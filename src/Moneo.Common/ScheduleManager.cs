@@ -1,7 +1,9 @@
-﻿using Moneo.Models;
+﻿using Moneo.Core;
+using Moneo.Models;
+using Moneo.Models.TaskManagement;
 using NCrontab;
 
-namespace Moneo.Core;
+namespace Moneo.Common;
 
 public interface IScheduleManager
 {

@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using Moneo.Common;
 using Moneo.Core;
 using Moneo.Models;
+using Moneo.Models.TaskManagement;
 using Moneo.Notify;
 using Newtonsoft.Json;
 

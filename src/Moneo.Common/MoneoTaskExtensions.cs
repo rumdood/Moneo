@@ -1,8 +1,10 @@
+using Moneo.Core;
 using Moneo.Models;
+using Moneo.Models.TaskManagement;
 using NCrontab;
 using static NCrontab.CrontabSchedule;
 
-namespace Moneo.Core;
+namespace Moneo.Common;
 
 public static class MoneoTaskExtensions
 {

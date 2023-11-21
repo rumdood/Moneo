@@ -1,4 +1,4 @@
-namespace Moneo.Bot.Exceptions;
+namespace Moneo.Chat.Exceptions;
 
 public class TaskManagementException : Exception
 {

@@ -1,4 +1,4 @@
-namespace Moneo.Bot;
+namespace Moneo.Models.Chat;
 
 public record ConversationEntry(
     long ConversationId, 

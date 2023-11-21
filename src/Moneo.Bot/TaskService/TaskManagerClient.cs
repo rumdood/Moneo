@@ -1,21 +1,14 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moneo.Models;
+using Moneo.Models.TaskManagement;
+using Moneo.TaskManagement;
 using Newtonsoft.Json;
 using RestSharp;
 
-namespace Moneo.Bot;
+namespace Moneo.Chat;
 
-public record MoneoTaskManagerDto(MoneoTaskState Task, long ChatId);
 internal class ConversationTaskStore : Dictionary<long, Dictionary<string, MoneoTaskDto>> { }
-
-public interface ITaskManagerClient
-{
-    Task<MoneoTaskResult<Dictionary<string, MoneoTaskManagerDto>>> GetAllTasksAsync();
-    Task<MoneoTaskResult<Dictionary<string, MoneoTaskDto>>> GetTasksForConversation(long conversationId);
-    Task<MoneoTaskResult> CompleteTaskAsync(long conversationId, string taskName);
-    Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskName);
-}
 
 internal class TaskManagerHttpClient : ITaskManagerClient
 {

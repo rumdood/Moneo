@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System;
 
-namespace Moneo.Models;
+namespace Moneo.Models.TaskManagement;
 
 public class TaskReminder
 {

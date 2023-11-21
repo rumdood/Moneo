@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace Moneo.Bot.Extensions;
+namespace Moneo.Chat.Extensions;
 
 public static class ServiceProviderExtensions
 {

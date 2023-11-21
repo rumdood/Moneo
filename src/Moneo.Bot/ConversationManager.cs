@@ -1,19 +1,14 @@
 using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Moneo.Bot.BotRequests;
-using Moneo.Bot.Commands;
-using Moneo.Bot.UserRequests;
-using Moneo.Bot.Workflows.Chitchat;
+using Moneo.Chat.BotRequests;
+using Moneo.Chat.Commands;
+using Moneo.Chat.UserRequests;
+using Moneo.Chat.Workflows.Chitchat;
 using Moneo.Core;
+using Moneo.Models.Chat;
 
-namespace Moneo.Bot;
-
-public enum MessageDirection
-{
-    UserToBot,
-    BotToUser
-}
+namespace Moneo.Chat;
 
 public interface IConversationManager
 {

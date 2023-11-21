@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Moneo.Bot.Commands;
+using Moneo.Chat.Commands;
 
-namespace Moneo.Bot.Workflows.Chitchat;
+namespace Moneo.Chat.Workflows.Chitchat;
 
 internal class ChitChatRequestHandler : IRequestHandler<ChitChatRequest, MoneoCommandResult>
 {

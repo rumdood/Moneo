@@ -1,7 +1,7 @@
 using MediatR;
-using Moneo.Bot.Commands;
+using Moneo.Chat.Commands;
 
-namespace Moneo.Bot.Workflows.Chitchat;
+namespace Moneo.Chat.Workflows.Chitchat;
 
 internal class ChitChatRequest : IRequest<MoneoCommandResult>
 {

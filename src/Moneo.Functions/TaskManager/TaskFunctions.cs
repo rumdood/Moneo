@@ -13,8 +13,10 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Moneo.Common;
 using Moneo.Core;
 using Moneo.Models;
+using Moneo.Models.TaskManagement;
 
 namespace Moneo.Functions;
 

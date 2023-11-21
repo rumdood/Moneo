@@ -1,18 +1,12 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Moneo.Bot.Exceptions;
+using Moneo.Chat.Exceptions;
 using Moneo.Core;
-using Moneo.Models;
+using Moneo.Common;
+using Moneo.TaskManagement;
+using Moneo.Models.TaskManagement;
 
-namespace Moneo.Bot;
-
-public interface ITaskResourceManager
-{
-    Task InitializeAsync();
-    Task<MoneoTaskResult<IEnumerable<MoneoTaskDto>>> GetAllTasksForUserAsync(long conversationId);
-    Task<MoneoTaskResult> CompleteTaskAsync(long conversationId, string taskId);
-    Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskId);
-}
+namespace Moneo.Chat;
 
 internal class TaskResourceManager : ITaskResourceManager
 {

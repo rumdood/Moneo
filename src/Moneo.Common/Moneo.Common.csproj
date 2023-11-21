@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Moneo.Contracts\Moneo.Contracts.csproj" />
+      <ProjectReference Include="..\moneo.core\Moneo.Core.csproj" />
+      <ProjectReference Include="..\Moneo.Models\Moneo.Models.csproj" />
+    </ItemGroup>
+
+</Project>

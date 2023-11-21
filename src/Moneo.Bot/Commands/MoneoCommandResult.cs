@@ -1,4 +1,4 @@
-namespace Moneo.Bot.Commands;
+namespace Moneo.Chat.Commands;
 
 public enum ResultType
 {

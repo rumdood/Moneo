@@ -1,7 +1,8 @@
 using MediatR;
-using Moneo.Bot.Commands;
+using Moneo.Chat.Commands;
+using Moneo.TaskManagement;
 
-namespace Moneo.Bot.UserRequests;
+namespace Moneo.Chat.UserRequests;
 
 internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest, MoneoCommandResult>
 {
