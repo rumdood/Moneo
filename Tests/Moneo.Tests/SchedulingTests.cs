@@ -1,7 +1,6 @@
-using Moneo.Common;
 using Moneo.Core;
-using Moneo.Models;
-using Moneo.Models.TaskManagement;
+using Moneo.TaskManagement;
+using Moneo.TaskManagement.Models;
 using NCrontab;
 
 namespace Moneo.Tests;

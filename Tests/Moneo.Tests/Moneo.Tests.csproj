@@ -24,10 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Moneo.Common\Moneo.Common.csproj" />
-    <ProjectReference Include="..\..\src\Moneo.Contracts\Moneo.Contracts.csproj" />
     <ProjectReference Include="..\..\src\moneo.core\Moneo.Core.csproj" />
-    <ProjectReference Include="..\..\src\Moneo.Models\Moneo.Models.csproj" />
+    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Models\Moneo.TaskManagement.Models.csproj" />
+    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement\Moneo.TaskManagement.csproj" />
   </ItemGroup>
 
 </Project>
