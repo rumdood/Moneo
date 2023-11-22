@@ -9,18 +9,12 @@ using Moneo.TaskManagement.Client;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+Console.WriteLine(AppContext.BaseDirectory);
+builder.Environment.ContentRootPath = AppContext.BaseDirectory;
+builder.Configuration.SetBasePath(AppContext.BaseDirectory);
+
 const string localJson = "appsettings.local.json";
-if (File.Exists(localJson))
-{
-    builder.Configuration.AddJsonFile(localJson, optional: true, reloadOnChange: true);
-    Console.WriteLine("Loaded {0}", localJson);
-}
-else
-{
-    Console.WriteLine("I didn't find the local file");
-    Console.WriteLine(System.IO.Directory.GetCurrentDirectory());
-    Console.ReadKey();
-}
+builder.Configuration.AddJsonFile(localJson, optional: true, reloadOnChange: true);
 
 builder.Services.AddMediatR(cfg =>
 {
@@ -40,4 +34,5 @@ builder.Services.AddSingleton<ITaskManagerClient, TaskManagerHttpClient>();
 builder.Services.AddHostedService<BotService>();
 
 var host = builder.Build();
+
 await host.RunAsync();
