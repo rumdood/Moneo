@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moneo.Chat.BotRequests;
 using Moneo.Chat.Models;
+using Moneo.Core;
 using Moneo.TaskManagement;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -15,7 +16,7 @@ namespace Moneo.Chat;
 
 internal class BotService : BackgroundService, IRequestHandler<BotTextMessageRequest>, IRequestHandler<BotGifMessageRequest>
 {
-    private readonly BotClientConfiguration _config;
+    private readonly IBotClientConfiguration _config;
     private readonly IConversationManager _conversationManager;
     private readonly TelegramBotClient _botClient;
     private readonly ITaskResourceManager _taskResourceManager;
@@ -57,10 +58,10 @@ internal class BotService : BackgroundService, IRequestHandler<BotTextMessageReq
         }
     }
 
-    public BotService(IConversationManager conversationManager, IOptions<BotClientConfiguration> config,
+    public BotService(IConversationManager conversationManager, IBotClientConfiguration config,
         ITaskResourceManager taskResourceManager, ILogger<BotService> logger)
     {
-        _config = config.Value;
+        _config = config;
         _conversationManager = conversationManager;
         _botClient = new TelegramBotClient(_config.Token);
         _taskResourceManager = taskResourceManager;

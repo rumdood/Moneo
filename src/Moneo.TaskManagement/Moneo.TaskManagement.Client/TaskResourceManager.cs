@@ -1,12 +1,11 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Moneo.Chat.Exceptions;
 using Moneo.Core;
-using Moneo.TaskManagement;
+using Moneo.Core.Exceptions;
 using Moneo.TaskManagement.Client.Models;
 using Moneo.TaskManagement.Models;
 
-namespace Moneo.Chat;
+namespace Moneo.TaskManagement.Client;
 
 public class TaskResourceManager : ITaskResourceManager
 {

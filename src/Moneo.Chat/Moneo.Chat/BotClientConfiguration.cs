@@ -1,6 +1,8 @@
+using Moneo.Core;
+
 namespace Moneo.Chat;
 
-public class BotClientConfiguration
+public class BotClientConfiguration : IBotClientConfiguration
 {
     public string Token { get; set; } = default!;
     public long MasterConversationId { get; set; }

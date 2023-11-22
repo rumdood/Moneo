@@ -1,12 +1,11 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moneo.TaskManagement;
+using Moneo.Core;
 using Moneo.TaskManagement.Client.Models;
 using Moneo.TaskManagement.Models;
 using Newtonsoft.Json;
 using RestSharp;
 
-namespace Moneo.Chat;
+namespace Moneo.TaskManagement.Client;
 
 internal class ConversationTaskStore : Dictionary<long, Dictionary<string, MoneoTaskDto>> { }
 
@@ -18,14 +17,14 @@ public class TaskManagerHttpClient : ITaskManagerClient
         Skip
     }
 
-    private readonly BotClientConfiguration _configuration;
+    private readonly IBotClientConfiguration _configuration;
     private readonly RestClient _client;
     private readonly ILogger<TaskManagerHttpClient> _logger;
     private const string FunctionKeyHeader = "x-functions-key";
 
-    public TaskManagerHttpClient(IOptions<BotClientConfiguration> configuration, ILogger<TaskManagerHttpClient> logger)
+    public TaskManagerHttpClient(IBotClientConfiguration configuration, ILogger<TaskManagerHttpClient> logger)
     {
-        _configuration = configuration.Value;
+        _configuration = configuration;
         _logger = logger;
 
         var options = new RestClientOptions(_configuration.ApiBase);

@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E9789803
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Tests", "Tests\Moneo.Tests\Moneo.Tests.csproj", "{32177902-B5A3-4E60-8B62-1272A5239403}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.TaskManagement.Client", "src\Moneo.TaskManagement\Moneo.TaskManagement.Client\Moneo.TaskManagement.Client.csproj", "{84C25881-A141-4139-BCCB-6501647B8663}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{32177902-B5A3-4E60-8B62-1272A5239403}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32177902-B5A3-4E60-8B62-1272A5239403}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32177902-B5A3-4E60-8B62-1272A5239403}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84C25881-A141-4139-BCCB-6501647B8663}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84C25881-A141-4139-BCCB-6501647B8663}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84C25881-A141-4139-BCCB-6501647B8663}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84C25881-A141-4139-BCCB-6501647B8663}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -107,5 +113,6 @@ Global
 		{6945A302-73B2-4CF8-97A8-F7F3D8C5B3CE} = {5760641D-8125-45C2-9AB7-A2CCF3D70D70}
 		{3F0469CE-084C-4FAB-A5B7-55654A1FC49A} = {5760641D-8125-45C2-9AB7-A2CCF3D70D70}
 		{32177902-B5A3-4E60-8B62-1272A5239403} = {E9789803-25DA-48D3-9181-DF34D79DC9A1}
+		{84C25881-A141-4139-BCCB-6501647B8663} = {BAC297B4-CBE2-403F-AD70-110B317BBE28}
 	EndGlobalSection
 EndGlobal

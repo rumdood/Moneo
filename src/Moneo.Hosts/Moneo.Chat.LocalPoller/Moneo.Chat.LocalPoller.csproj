@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj" />
     <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat.Models\Moneo.Chat.Models.csproj" />
     <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat\Moneo.Chat.csproj" />
+    <ProjectReference Include="..\..\Moneo.TaskManagement\Moneo.TaskManagement.Client\Moneo.TaskManagement.Client.csproj" />
     <ProjectReference Include="..\..\Moneo.TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
   </ItemGroup>
 
@@ -18,7 +19,17 @@
     <PackageReference Include="MediatR" Version="12.2.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Telegram.Bot" Version="19.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.local.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
