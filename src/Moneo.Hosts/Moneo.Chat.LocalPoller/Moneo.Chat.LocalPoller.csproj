@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj" />
     <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat.Models\Moneo.Chat.Models.csproj" />
+    <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj" />
     <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat\Moneo.Chat.csproj" />
     <ProjectReference Include="..\..\Moneo.TaskManagement\Moneo.TaskManagement.Client\Moneo.TaskManagement.Client.csproj" />
     <ProjectReference Include="..\..\Moneo.TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
