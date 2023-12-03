@@ -21,11 +21,11 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     private readonly ILogger<TelegramChatAdapter> _logger;
 
     public TelegramChatAdapter(IBotClientConfiguration configuration, IConversationManager conversationManager,
-        ILogger<TelegramChatAdapter> logger)
+        ILogger<TelegramChatAdapter> logger, ITelegramBotClient? botClient = null)
     {
         _logger = logger;
         _configuration = configuration;
-        _botClient = new TelegramBotClient(configuration.Token);
+        _botClient = botClient ?? new TelegramBotClient(configuration.Token);
         _conversationManager = conversationManager;
     }
     
@@ -63,6 +63,11 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         };
         
         _botClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, options, cancellationToken);
+    }
+
+    public async Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default)
+    {
+        await _botClient.SetWebhookAsync(callbackUrl, cancellationToken: cancellationToken);
     }
 
     public Task ReceiveMessageAsync(object message, CancellationToken cancellationToken)

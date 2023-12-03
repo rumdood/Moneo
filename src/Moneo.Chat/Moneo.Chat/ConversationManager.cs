@@ -44,9 +44,7 @@ public class ConversationManager : IConversationManager
             _ = AddUser(message.ConversationId, message.UserFirstName, message.UserLastName);
         }
 
-        var containsCommand = ContainsSlashCommand(message.Text);
-
-        var result = containsCommand
+        var result = ContainsSlashCommand(message.Text)
             ? await ProcessCommandAsync(message.ConversationId, message.Text)
             : await HandleChitChatAsync(message.ConversationId, message.Text);
 
@@ -111,19 +109,17 @@ public class ConversationManager : IConversationManager
     
     private void AddMessageEntry(long conversationId, string message, MessageDirection direction)
     {
-        if (!_usersByConversationId.ContainsKey(conversationId))
+        if (!_usersByConversationId.TryGetValue(conversationId, out var user))
         {
             throw new InvalidOperationException("Unknown User/Conversation");
         }
 
-        var user = _usersByConversationId[conversationId];
-        
-        if (!_conversationsById.ContainsKey(conversationId))
+        if (!_conversationsById.TryGetValue(conversationId, out var conversationHistory))
         {
-            _conversationsById[conversationId] = new FixedLengthList<ConversationEntry>(10);
+            conversationHistory = new FixedLengthList<ConversationEntry>(10);
+            _conversationsById[conversationId] = conversationHistory;
         }
-
-        var list = _conversationsById[conversationId];
-        list.Add(new ConversationEntry(conversationId, user, message, direction, DateTimeOffset.UtcNow));
+        
+        conversationHistory.Add(new ConversationEntry(conversationId, user, message, direction, DateTimeOffset.UtcNow));
     }
 }

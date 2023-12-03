@@ -19,7 +19,7 @@ builder.Configuration.AddJsonFile(localJson, optional: true, reloadOnChange: tru
 
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssemblies(typeof(CompleteTaskRequest).Assembly, typeof(BotService).Assembly);
+    cfg.RegisterServicesFromAssemblies(typeof(CompleteTaskRequest).Assembly, typeof(TelegramChatAdapter).Assembly);
 });
 builder.Services.AddMemoryCache();
 
