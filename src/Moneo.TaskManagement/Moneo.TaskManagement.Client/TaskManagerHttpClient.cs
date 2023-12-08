@@ -27,7 +27,7 @@ public class TaskManagerHttpClient : ITaskManagerClient
         _configuration = configuration;
         _logger = logger;
 
-        var options = new RestClientOptions(_configuration.ApiBase);
+        var options = new RestClientOptions(_configuration.TaskApiBase);
         _client = new RestClient(options);
     }
 

@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using Moneo.Functions;
-using System;
 using System.Threading.Tasks;
 using Telegram.Bot;
 
-namespace Moneo.Notify.Engines
+namespace Moneo.Functions.NotifyEngines
 {
     public class TelegramNotify : INotifyEngine
     {

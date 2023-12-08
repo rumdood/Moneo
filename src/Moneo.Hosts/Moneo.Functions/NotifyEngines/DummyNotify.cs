@@ -1,12 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Moneo.Notify;
 
 namespace Moneo.Functions.NotifyEngines
 {
     public class DummyNotify : INotifyEngine
     {
-        private ILogger<DummyNotify> _logger;
+        private readonly ILogger<DummyNotify> _logger;
 
         public DummyNotify(ILogger<DummyNotify> logger)
         {

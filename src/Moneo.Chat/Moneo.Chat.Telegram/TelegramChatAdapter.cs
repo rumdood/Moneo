@@ -25,7 +25,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     {
         _logger = logger;
         _configuration = configuration;
-        _botClient = botClient ?? new TelegramBotClient(configuration.Token);
+        _botClient = botClient ?? new TelegramBotClient(configuration.BotToken);
         _conversationManager = conversationManager;
     }
     
@@ -67,19 +67,37 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
     public async Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default)
     {
-        await _botClient.SetWebhookAsync(callbackUrl, cancellationToken: cancellationToken);
+        await _botClient.SetWebhookAsync(url: callbackUrl, secretToken: _configuration.CallbackToken, cancellationToken: cancellationToken);
     }
 
-    public Task ReceiveMessageAsync(object message, CancellationToken cancellationToken)
+    public Task ReceiveUserMessageAsync(object message, CancellationToken cancellationToken)
     {
-        var update = message as Update;
-
-        if (message is null)
+        if (message is not Update update)
         {
-            throw new InvalidOperationException("Message type is not supported by Telegram");
+            throw new UserMessageFormatException("Message type is not supported by Telegram (expecting Update)");
         }
 
-        return ReceiveMessageAsync(update!, cancellationToken);
+        return ReceiveMessageAsync(update, cancellationToken);
+    }
+
+    public async Task SendBotTextMessageAsync(IBotTextMessage botTextMessage, CancellationToken cancellationToken)
+    {
+        if (botTextMessage is not BotTextMessageRequest message)
+        {
+            throw new UserMessageFormatException("BotTextMessage is not in the correct format");
+        }
+        
+        await Handle(message, cancellationToken);
+    }
+
+    public async Task SendBotGifMessageAsync(IBotGifMessage botGifMessage, CancellationToken cancellationToken)
+    {
+        if (botGifMessage is not BotGifMessageRequest message)
+        {
+            throw new UserMessageFormatException("BotGifMessage is not in the correct format");
+        }
+        
+        await Handle(message, cancellationToken);
     }
 
     public Task ReceiveMessageAsync(Update message, CancellationToken cancellationToken) =>

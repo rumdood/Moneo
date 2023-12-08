@@ -7,37 +7,39 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BAC297B4-CBE
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Moneo.Chat", "Moneo.Chat", "{4624C493-4F8D-4D87-92F0-29E3A19CDE5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat", "src\Moneo.Chat\Moneo.Chat\Moneo.Chat.csproj", "{432EC526-0EC0-43CD-B772-1EF876CF3A41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Chat", "src\Moneo.Chat\Moneo.Chat\Moneo.Chat.csproj", "{432EC526-0EC0-43CD-B772-1EF876CF3A41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Contracts", "src\Moneo.Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj", "{4A156C25-FBFB-4F31-B27F-B49774AB07C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Chat.Contracts", "src\Moneo.Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj", "{4A156C25-FBFB-4F31-B27F-B49774AB07C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Models", "src\Moneo.Chat\Moneo.Chat.Models\Moneo.Chat.Models.csproj", "{4549432D-16DE-417D-AD39-F58AB2EEA296}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Chat.Models", "src\Moneo.Chat\Moneo.Chat.Models\Moneo.Chat.Models.csproj", "{4549432D-16DE-417D-AD39-F58AB2EEA296}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Core", "src\Moneo.Core\Moneo.Core.csproj", "{F9A41A3A-6A89-44DD-B65B-FDEE78DDD666}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Core", "src\Moneo.Core\Moneo.Core.csproj", "{F9A41A3A-6A89-44DD-B65B-FDEE78DDD666}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Moneo.Hosts", "Moneo.Hosts", "{C80150B3-C997-47FF-BE06-ED0709EA6DCB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.LocalPoller", "src\Moneo.Hosts\Moneo.Chat.LocalPoller\Moneo.Chat.LocalPoller.csproj", "{64FE387B-854D-47A1-A108-6F19F44D67F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Chat.LocalPoller", "src\Moneo.Hosts\Moneo.Chat.LocalPoller\Moneo.Chat.LocalPoller.csproj", "{64FE387B-854D-47A1-A108-6F19F44D67F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Functions", "src\Moneo.Hosts\Moneo.Functions\Moneo.Functions.csproj", "{7B11E400-130C-4B8E-8944-A591F4E3F804}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Functions", "src\Moneo.Hosts\Moneo.Functions\Moneo.Functions.csproj", "{7B11E400-130C-4B8E-8944-A591F4E3F804}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Moneo.TaskManagement", "Moneo.TaskManagement", "{5760641D-8125-45C2-9AB7-A2CCF3D70D70}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.TaskManagement", "src\Moneo.TaskManagement\Moneo.TaskManagement\Moneo.TaskManagement.csproj", "{C6316987-2CEA-4D4C-AB11-3E7EBCC6761A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.TaskManagement", "src\Moneo.TaskManagement\Moneo.TaskManagement\Moneo.TaskManagement.csproj", "{C6316987-2CEA-4D4C-AB11-3E7EBCC6761A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.TaskManagement.Client.Models", "src\Moneo.TaskManagement\Moneo.TaskManagement.Client.Models\Moneo.TaskManagement.Client.Models.csproj", "{A0B004E5-A55F-4505-BB24-F09869B6CFDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.TaskManagement.Client.Models", "src\Moneo.TaskManagement\Moneo.TaskManagement.Client.Models\Moneo.TaskManagement.Client.Models.csproj", "{A0B004E5-A55F-4505-BB24-F09869B6CFDF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.TaskManagement.Contracts", "src\Moneo.TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj", "{6945A302-73B2-4CF8-97A8-F7F3D8C5B3CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.TaskManagement.Contracts", "src\Moneo.TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj", "{6945A302-73B2-4CF8-97A8-F7F3D8C5B3CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.TaskManagement.Models", "src\Moneo.TaskManagement\Moneo.TaskManagement.Models\Moneo.TaskManagement.Models.csproj", "{3F0469CE-084C-4FAB-A5B7-55654A1FC49A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.TaskManagement.Models", "src\Moneo.TaskManagement\Moneo.TaskManagement.Models\Moneo.TaskManagement.Models.csproj", "{3F0469CE-084C-4FAB-A5B7-55654A1FC49A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E9789803-25DA-48D3-9181-DF34D79DC9A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Tests", "Tests\Moneo.Tests\Moneo.Tests.csproj", "{32177902-B5A3-4E60-8B62-1272A5239403}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Tests", "Tests\Moneo.Tests\Moneo.Tests.csproj", "{32177902-B5A3-4E60-8B62-1272A5239403}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.TaskManagement.Client", "src\Moneo.TaskManagement\Moneo.TaskManagement.Client\Moneo.TaskManagement.Client.csproj", "{84C25881-A141-4139-BCCB-6501647B8663}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.TaskManagement.Client", "src\Moneo.TaskManagement\Moneo.TaskManagement.Client\Moneo.TaskManagement.Client.csproj", "{84C25881-A141-4139-BCCB-6501647B8663}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Telegram", "src\Moneo.Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj", "{5FCE9C24-B027-4B60-91C6-BAF94A055EDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moneo.Chat.Telegram", "src\Moneo.Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj", "{5FCE9C24-B027-4B60-91C6-BAF94A055EDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Functions.Isolated", "src\Moneo.Hosts\Moneo.Functions.Isolated\Moneo.Functions.Isolated.csproj", "{B371629E-314E-471F-8E85-A1C50869673B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,12 +99,13 @@ Global
 		{5FCE9C24-B027-4B60-91C6-BAF94A055EDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FCE9C24-B027-4B60-91C6-BAF94A055EDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FCE9C24-B027-4B60-91C6-BAF94A055EDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B371629E-314E-471F-8E85-A1C50869673B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B371629E-314E-471F-8E85-A1C50869673B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B371629E-314E-471F-8E85-A1C50869673B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B371629E-314E-471F-8E85-A1C50869673B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {9A69730A-25AE-421F-A76A-39B03C0A0207}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{4624C493-4F8D-4D87-92F0-29E3A19CDE5C} = {BAC297B4-CBE2-403F-AD70-110B317BBE28}
@@ -121,5 +124,9 @@ Global
 		{32177902-B5A3-4E60-8B62-1272A5239403} = {E9789803-25DA-48D3-9181-DF34D79DC9A1}
 		{84C25881-A141-4139-BCCB-6501647B8663} = {5760641D-8125-45C2-9AB7-A2CCF3D70D70}
 		{5FCE9C24-B027-4B60-91C6-BAF94A055EDF} = {4624C493-4F8D-4D87-92F0-29E3A19CDE5C}
+		{B371629E-314E-471F-8E85-A1C50869673B} = {C80150B3-C997-47FF-BE06-ED0709EA6DCB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9A69730A-25AE-421F-A76A-39B03C0A0207}
 	EndGlobalSection
 EndGlobal

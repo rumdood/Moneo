@@ -4,7 +4,9 @@ public interface IChatAdapter
 {
     void StartReceiving(CancellationToken cancellationToken = default);
     Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default);
-    Task ReceiveMessageAsync(object message, CancellationToken cancellationToken);
+    Task ReceiveUserMessageAsync(object message, CancellationToken cancellationToken);
+    Task SendBotTextMessageAsync(IBotTextMessage botTextMessage, CancellationToken cancellationToken);
+    Task SendBotGifMessageAsync(IBotGifMessage botGifMessage, CancellationToken cancellationToken);
 }
 
 public interface IChatAdapter<in TUserMessage, in TBotTextMessage> : IChatAdapter
