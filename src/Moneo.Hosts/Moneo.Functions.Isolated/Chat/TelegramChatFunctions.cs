@@ -22,15 +22,15 @@ namespace Moneo.Functions.Isolated.Chat
         public async Task<HttpResponseData> ConfigureAsync(
             [HttpTrigger(AuthorizationLevel.Admin, "get", "post", Route = "configure")] HttpRequestData req)
         {
-            var callbackUrl = req.Url.AbsoluteUri.Replace(nameof(ConfigureAsync), nameof(ReceiveUpdateAsync),
+            var callbackUrl = req.Url.AbsoluteUri.Replace(nameof(ConfigureAsync), nameof(ReceiveMessageFromUser),
                 StringComparison.OrdinalIgnoreCase);
             await _chatAdapter.StartReceivingAsync(callbackUrl);
             var response = req.CreateResponse(HttpStatusCode.OK);
             return response;
         }
 
-        [Function(nameof(ReceiveUpdateAsync))]
-        public async Task<HttpResponseData> ReceiveUpdateAsync(
+        [Function(nameof(ReceiveMessageFromUser))]
+        public async Task<HttpResponseData> ReceiveMessageFromUser(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "receive")] HttpRequestData request)
         {
             var message = await request.ReadFromJsonAsync<object>();

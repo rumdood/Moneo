@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Moneo.Chat;
 using Moneo.Chat.Telegram;
 using Moneo.Chat.UserRequests;
+using Moneo.Chat.Workflows.CreateTask;
 using Moneo.Core;
 using Moneo.TaskManagement;
 using Moneo.TaskManagement.Client;
@@ -31,6 +32,7 @@ builder.Services.AddScoped<IBotClientConfiguration>(_ => botConfig);
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 builder.Services.AddSingleton<ITaskResourceManager, TaskResourceManager>();
 builder.Services.AddSingleton<ITaskManagerClient, TaskManagerHttpClient>();
+builder.Services.AddSingleton<ICreateTaskWorkflowManager, CreateTaskWorkflowManager>();
 builder.Services.AddSingleton<IChatAdapter, TelegramChatAdapter>();
 
 builder.Services.AddHostedService<BotService>();

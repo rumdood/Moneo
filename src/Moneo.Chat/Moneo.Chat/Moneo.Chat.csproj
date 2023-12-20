@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <Folder Include="TaskService\" />
-    <Folder Include="Workflows\" />
   </ItemGroup>
 
 </Project>

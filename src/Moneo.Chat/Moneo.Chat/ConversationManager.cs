@@ -6,6 +6,7 @@ using Moneo.Chat.Commands;
 using Moneo.Chat.Models;
 using Moneo.Chat.UserRequests;
 using Moneo.Chat.Workflows.Chitchat;
+using Moneo.Chat.Workflows.CreateTask;
 using Moneo.Core;
 
 namespace Moneo.Chat;
@@ -14,6 +15,7 @@ public class ConversationManager : IConversationManager
 {
     private readonly Dictionary<long, FixedLengthList<ConversationEntry>> _conversationsById = new ();
     private readonly Dictionary<long, User> _usersByConversationId = new();
+    private readonly Dictionary<long, ConversationState> _states = new();
     private readonly IMediator _mediator;
     private readonly ILogger<ConversationManager> _logger;
 
@@ -21,6 +23,11 @@ public class ConversationManager : IConversationManager
     {
         _mediator = mediator;
         _logger = logger;
+    }
+
+    public void SetConversationState(long conversationId, ConversationState state)
+    {
+        _states[conversationId] = state;
     }
 
     public IEnumerable<ConversationEntry> GetLastEntriesForConversation(long conversationId, int count)
@@ -46,7 +53,7 @@ public class ConversationManager : IConversationManager
 
         var result = ContainsSlashCommand(message.Text)
             ? await ProcessCommandAsync(message.ConversationId, message.Text)
-            : await HandleChitChatAsync(message.ConversationId, message.Text);
+            : await HandleNonCommandMessageAsync(message.ConversationId, message.Text);
 
         _logger.LogDebug("Handling {@Command}", message.Text);
         
@@ -84,8 +91,20 @@ public class ConversationManager : IConversationManager
         return Regex.IsMatch(input, pattern);
     }
 
-    private Task<MoneoCommandResult> HandleChitChatAsync(long conversationId, string text) =>
-        _mediator.Send(new ChitChatRequest(conversationId, text));
+    private Task<MoneoCommandResult> HandleNonCommandMessageAsync(long conversationId, string text)
+    {
+        if (!_states.TryGetValue(conversationId, out var state))
+        {
+            state = ConversationState.Waiting;
+            _states[conversationId] = state;
+        }
+
+        return state switch
+        {
+            ConversationState.CreateTask => _mediator.Send(new CreateTaskContinuationRequest(conversationId, text)),
+            _ => _mediator.Send(new ChitChatRequest(conversationId, text))
+        };
+    }
 
     private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, string text)
     {
@@ -98,6 +117,7 @@ public class ConversationManager : IConversationManager
         {
             CompleteTaskRequest.CommandKey => await _mediator.Send(new CompleteTaskRequest(conversationId, args)),
             SkipTaskRequest.CommandKey => await _mediator.Send(new SkipTaskRequest(conversationId, args)),
+            CreateTaskRequest.CommandKey => await _mediator.Send(new CreateTaskRequest(conversationId, args)),
             _ => new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
