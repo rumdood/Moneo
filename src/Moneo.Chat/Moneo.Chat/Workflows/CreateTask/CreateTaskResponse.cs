@@ -8,7 +8,6 @@ public class CreateTaskResponse
     public const string SkippableResponse = "Should this task be skippable?";
     public const string SkippedMessageResponse = "What should I say when you skip the task?";
     public const string RepeaterResponse = "Does this task repeat?";
-    public const string RepeaterCronResponse = "What's the repeating schedule?";
     public const string RepeaterExpiryResponse = "When should this task stop repeating?";
     public const string RepeaterCompletionThreshold = "How early can you complete the task and count it as completed?";
     public const string BadgerResponse = "Should I badger you about this?";

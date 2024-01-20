@@ -98,4 +98,16 @@ public class TaskManagerHttpClient : ITaskManagerClient
 
     public Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskName) =>
         ExecuteTaskFunctionAsync(conversationId, taskName, TaskAction.Skip);
+
+    public async Task<MoneoTaskResult> CreateTaskAsync(long conversationId, MoneoTaskDto task)
+    {
+        var taskName = task.Name.ToLowerInvariant().Replace(" ", "");
+        var request = new RestRequest($"{conversationId}/tasks/{taskName}");
+        request.AddHeader(FunctionKeyHeader, _configuration.FunctionKey);
+        request.AddJsonBody(task);
+
+        var response = await _client.ExecutePostAsync(request);
+
+        return new MoneoTaskResult(response.IsSuccessful, response.ErrorMessage);
+    }
 }

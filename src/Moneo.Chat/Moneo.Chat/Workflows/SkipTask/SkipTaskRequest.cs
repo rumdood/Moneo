@@ -3,19 +3,15 @@ using Moneo.Chat.Commands;
 
 namespace Moneo.Chat.UserRequests;
 
-public class SkipTaskRequest : IUserRequest, IRequest<MoneoCommandResult>
+[UserCommand("/skip")]
+public partial class SkipTaskRequest : UserRequestBase
 {
-    public const string CommandKey = "/skip";
+    public string TaskName { get; private set; }
     
-    public long ConversationId { get; init; }
-    public string Name => "Skip";
-    public string TaskName { get; init; }
-    
-    public SkipTaskRequest(long conversationId, params string[] args)
+    public SkipTaskRequest(long conversationId, params string[] args) : base(conversationId, args)
     {
-        ConversationId = conversationId;
         TaskName = args.Length > 0
-            ? string.Join(' ', args)
+            ? string.Join(" ", args)
             : "";
     }
 }

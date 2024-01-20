@@ -134,4 +134,7 @@ public class TaskResourceManager : ITaskResourceManager
 
     public Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskId) =>
         _proxy.SkipTaskAsync(conversationId, taskId);
+
+    public Task<MoneoTaskResult> CreateTaskAsync(long conversationId, MoneoTaskDto task) =>
+        _proxy.CreateTaskAsync(conversationId, task);
 }

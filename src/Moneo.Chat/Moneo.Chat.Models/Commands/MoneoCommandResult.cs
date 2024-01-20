@@ -21,4 +21,5 @@ public class MoneoCommandResult
     public string? UserMessageText { get; set; }
     public ResultType Type { get; set; }
     public ResponseType ResponseType { get; set; }
+    public HashSet<string> MenuOptions { get; set; }
 }

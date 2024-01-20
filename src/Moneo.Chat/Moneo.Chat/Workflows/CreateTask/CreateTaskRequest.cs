@@ -4,19 +4,15 @@ using Moneo.Chat.UserRequests;
 
 namespace Moneo.Chat.Workflows.CreateTask;
 
-public class CreateTaskRequest : IUserRequest, IRequest<MoneoCommandResult>
+[UserCommand("/create")]
+public partial class CreateTaskRequest : UserRequestBase
 {
-    public const string CommandKey = "/create";
-    
-    public long ConversationId { get; init; }
-    public string Name => "Create";
-    public string TaskName { get; init; }
+    public string TaskName { get; private set; }
 
-    public CreateTaskRequest(long conversationId, params string[] args)
+    public CreateTaskRequest(long conversationId, params string[] args) : base(conversationId, args)
     {
-        ConversationId = conversationId;
         TaskName = args.Length > 0
-            ? string.Join(' ', args)
+            ? string.Join(" ", args)
             : "";
     }
 }

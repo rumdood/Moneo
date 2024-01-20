@@ -1,21 +1,19 @@
-using MediatR;
-using Moneo.Chat.Commands;
+namespace Moneo.Chat;
 
-namespace Moneo.Chat.UserRequests;
-
-public class CompleteTaskRequest : IUserRequest, IRequest<MoneoCommandResult>
+[UserCommand("/complete")]
+public partial class CompleteTaskRequest : UserRequestBase
 {
-    public const string CommandKey = "/complete";
-    
-    public long ConversationId { get; init; }
-    public string Name => "Complete";
-    public string TaskName { get; init; }
+    public string TaskName { get; private set; }
 
-    public CompleteTaskRequest(long conversationId, params string[] args)
+    public CompleteTaskRequest(long conversationId, params string[] args) : base(conversationId, args)
     {
-        ConversationId = conversationId;
         TaskName = args.Length > 0
-            ? string.Join(' ', args)
+            ? string.Join(" ", args)
             : "";
+    }
+
+    public CompleteTaskRequest(long conversationId, string taskName) : base(conversationId, taskName)
+    {
+        TaskName = taskName;
     }
 }

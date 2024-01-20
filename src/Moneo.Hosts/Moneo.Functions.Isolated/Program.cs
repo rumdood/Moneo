@@ -23,7 +23,7 @@ builder.ConfigureFunctionsWorkerDefaults()
         });
         serviceCollection.AddMemoryCache();
         serviceCollection.AddBotConfiguration();
-        serviceCollection.AddSingleton<IConversationManager, ConversationManager>();
+        serviceCollection.AddSingleton<IChatManager, ChatManager>();
         serviceCollection.AddSingleton<ITaskResourceManager, TaskResourceManager>();
         serviceCollection.AddSingleton<IChatAdapter, TelegramChatAdapter>();
         

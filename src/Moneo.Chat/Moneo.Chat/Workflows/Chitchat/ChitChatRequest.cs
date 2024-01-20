@@ -1,17 +1,21 @@
 using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.UserRequests;
 
 namespace Moneo.Chat.Workflows.Chitchat;
 
-internal class ChitChatRequest : IRequest<MoneoCommandResult>
+[UserCommand("/chitchat")]
+public partial class ChitChatRequest : UserRequestBase
 {
-    public long ConversationId { get; init; }
-    public const string Name = "ChitChat";
-    public string UserText { get; init; }
+    public string UserText { get; private set; }
 
-    public ChitChatRequest(long conversationId, string userText)
+    public ChitChatRequest(long conversationId, params string[] args) : base(conversationId, args)
     {
-        ConversationId = conversationId;
+        UserText = string.Join(' ', args);
+    }
+
+    public ChitChatRequest(long conversationId, string userText) : base(conversationId, userText)
+    {
         UserText = userText;
     }
 }

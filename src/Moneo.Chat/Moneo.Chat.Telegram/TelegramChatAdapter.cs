@@ -8,19 +8,21 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Moneo.Chat.Telegram;
 
 public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>, 
     IRequestHandler<BotTextMessageRequest>,
-    IRequestHandler<BotGifMessageRequest>
+    IRequestHandler<BotGifMessageRequest>,
+    IRequestHandler<BotMenuMessageRequest>
 {
     private readonly IBotClientConfiguration _configuration;
     private readonly ITelegramBotClient _botClient;
-    private readonly IConversationManager _conversationManager;
+    private readonly IChatManager _conversationManager;
     private readonly ILogger<TelegramChatAdapter> _logger;
 
-    public TelegramChatAdapter(IBotClientConfiguration configuration, IConversationManager conversationManager,
+    public TelegramChatAdapter(IBotClientConfiguration configuration, IChatManager conversationManager,
         ILogger<TelegramChatAdapter> logger, ITelegramBotClient? botClient = null)
     {
         _logger = logger;
@@ -28,21 +30,43 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         _botClient = botClient ?? new TelegramBotClient(configuration.BotToken);
         _conversationManager = conversationManager;
     }
+
+    private async Task HandleMessageUpdate(Message message, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _conversationManager.ProcessUserMessageAsync(new UserMessage(message.Chat.Id, message.Text!,
+                message.Chat.FirstName ?? message.Chat.Username!, message.Chat.LastName));
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "An Error Occurred");
+        }
+    }
+
+    private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Received callback query: {@Data}", callbackQuery.Data);
+        await _conversationManager.ProcessUserMessageAsync(new UserMessage(callbackQuery.Message?.Chat.Id ?? 0,
+            callbackQuery.Data!, callbackQuery.From.FirstName ?? callbackQuery.From.Username!));
+    }
+
+    private Task HandleUnknownUpdateAsync(Update update, CancellationToken cancellationToken)
+    {
+        _logger.LogWarning("Unknown update received");
+        return Task.CompletedTask;
+    }
     
     private async Task HandleUpdateAsync(ITelegramBotClient _, Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is { } message && !string.IsNullOrEmpty(message.Text))
+        var handler = update switch
         {
-            try
-            {
-                await _conversationManager.ProcessUserMessageAsync(new UserMessage(message.Chat.Id, message.Text,
-                    message.Chat.FirstName ?? message.Chat.Username!, message.Chat.LastName));
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "An Error Occurred");
-            }
-        }
+            {Message: { } message} => HandleMessageUpdate(message, cancellationToken),
+            {CallbackQuery: { } callbackQuery} => HandleCallbackQueryAsync(callbackQuery, cancellationToken),
+            _ => HandleUnknownUpdateAsync(update, cancellationToken)
+        };
+
+        await handler;
     }
 
     private async Task HandleErrorAsync(ITelegramBotClient _, Exception exception, CancellationToken cancelToken)
@@ -112,5 +136,32 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     {
         var inputFile = new InputFileUrl(request.GifUrl);
         await _botClient.SendAnimationAsync(request.ConversationId, inputFile, cancellationToken: cancellationToken);
+    }
+
+    public async Task Handle(BotMenuMessageRequest request, CancellationToken cancellationToken)
+    {
+        var options = request.MenuOptions.Select(InlineKeyboardButton.WithCallbackData).ToArray();
+
+        IEnumerable<IEnumerable<InlineKeyboardButton>> GetRows(ICollection<InlineKeyboardButton> buttons,
+            int maxRowSize)
+        {
+            var queue = new Queue<InlineKeyboardButton>(buttons);
+            var currentRow = new List<InlineKeyboardButton>();
+
+            while (queue.TryPeek(out _))
+            {
+                while (currentRow.Count < maxRowSize)
+                {
+                    currentRow.Add(queue.Dequeue());
+                }
+
+                yield return currentRow;
+                currentRow = [];
+            }
+        }
+
+        var keyboard = new InlineKeyboardMarkup(GetRows(options, 2));
+        await _botClient.SendTextMessageAsync(chatId: request.ConversationId, text: request.Text, replyMarkup: keyboard,
+            cancellationToken: cancellationToken);
     }
 }

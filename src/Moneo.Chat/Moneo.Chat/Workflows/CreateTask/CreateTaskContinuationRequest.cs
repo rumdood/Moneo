@@ -4,15 +4,18 @@ using Moneo.Chat.UserRequests;
 
 namespace Moneo.Chat.Workflows.CreateTask;
 
-public class CreateTaskContinuationRequest : IRequest<MoneoCommandResult>, IUserRequest
+[UserCommand("/continueCreate")]
+public partial class CreateTaskContinuationRequest : UserRequestBase
 {
-    public long ConversationId { get; init; }
-    public string Name => "CreateContinue";
     public string Text { get; }
 
-    public CreateTaskContinuationRequest(long conversationId, string text)
+    public CreateTaskContinuationRequest(long conversationId, params string[] args) : base(conversationId, args)
     {
-        ConversationId = conversationId;
+        Text = string.Join(' ', args);
+    }
+
+    public CreateTaskContinuationRequest(long conversationId, string text) : base(conversationId, text)
+    {
         Text = text;
     }
 }

@@ -16,9 +16,9 @@ public class ChatFunctions
 {
     private readonly ILogger<ChatFunctions> _logger;
     private readonly ITelegramBotClient _botClient;
-    private readonly IConversationManager _conversationManager;
+    private readonly IChatManager _conversationManager;
 
-    public ChatFunctions(ILogger<ChatFunctions> logger, IConversationManager conversationManager)
+    public ChatFunctions(ILogger<ChatFunctions> logger, IChatManager conversationManager)
     {
         _logger = logger;
         _conversationManager = conversationManager;
