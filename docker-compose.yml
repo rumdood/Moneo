@@ -1,0 +1,6 @@
+version: "3.8"
+services:
+  poller:
+    image: moneo-poller
+    volumes:
+      - ./appsettings.json:/App/appsettings.json
