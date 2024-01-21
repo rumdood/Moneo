@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\moneo.core\Moneo.Core.csproj" />
+    <ProjectReference Include="..\..\src\Moneo.Core\Moneo.Core.csproj" />
     <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Models\Moneo.TaskManagement.Models.csproj" />
     <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement\Moneo.TaskManagement.csproj" />
   </ItemGroup>
