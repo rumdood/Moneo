@@ -5,14 +5,19 @@ This started as something of a simple "remind me and badger me" script for a sin
 
 Then I wanted a similar thing for checking my blood pressure and other tasks (remind me when it's due and then badger me until I say I've completed it), and so I complicated it to a ridiculous level, while trying to stay entirely within Azure Durable Functions/Entities because I thought it was kind of funny to do so (though it presents some challenges to do so).
 
-*Latest Update*: Added support for multiple users. Now I don't have to deploy a separate instance for each user. The next update will add some interactivity to the bot so that you can tell it from the chat to complete or skip a task, followed by support for creating or updating (those are more complicated so I'm deferring that).
+### *Latest Update* (2024-01-20):
+
+Greater interactivity with the bot. You can now skip, complete, or even create tasks from within Telegram.
+
+![image](https://github.com/rumdood/Moneo/assets/3585996/f1e795b1-2db9-4eb9-9f3d-a5622db8acc5)
 
 The bot has a set of HTTP-based triggers for CRUD with tasks as well as marking a given task as completed or skipped.
 
-For my personal setup I have a Flic Button in my medicine cabinet that, when pressed, marks my medication task as completed for the current interval (it's twice a day).
+For my personal setup I have a Flic Button in my medicine cabinet that, when pressed, marks my medication task as completed for the current interval (it's twice a day). Other tasks I now manage entirely through the Telegram interface.
 
 ## Developer Requirements
-* .NET 6 or higher
+* .NET 6 or higher (Azure Functions for managing tasks)
+* .NET 8 or higher (Azure Functions for interacting with Telegram, local hosting for Telegram interaction)
 * Azure Functions Runtime
 
 ### Optional
