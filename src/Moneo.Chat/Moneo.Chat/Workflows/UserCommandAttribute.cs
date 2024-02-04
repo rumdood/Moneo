@@ -10,3 +10,9 @@ public class UserCommandAttribute : Attribute
         CommandKey = commandKey;
     }
 }
+
+public enum UserCommandType
+{
+    Internal,
+    External,
+}

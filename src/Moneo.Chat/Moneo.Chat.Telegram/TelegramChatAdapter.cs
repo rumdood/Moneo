@@ -150,9 +150,10 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
             while (queue.TryPeek(out _))
             {
-                while (currentRow.Count < maxRowSize)
+                if (currentRow.Count < maxRowSize)
                 {
                     currentRow.Add(queue.Dequeue());
+                    continue;
                 }
 
                 yield return currentRow;
