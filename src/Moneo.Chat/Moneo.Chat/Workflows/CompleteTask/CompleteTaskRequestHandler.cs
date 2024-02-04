@@ -1,4 +1,5 @@
 using MediatR;
+using MediatR.Pipeline;
 using Moneo.Chat.Commands;
 using Moneo.TaskManagement;
 
@@ -6,10 +7,12 @@ namespace Moneo.Chat.UserRequests;
 
 internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest, MoneoCommandResult>
 {
+    private readonly IMediator _mediator;
     private readonly ITaskResourceManager _taskResourceManager;
     
-    public CompleteTaskRequestHandler(ITaskResourceManager taskResourceManager)
+    public CompleteTaskRequestHandler(IMediator mediator, ITaskResourceManager taskResourceManager)
     {
+        _mediator = mediator;
         _taskResourceManager = taskResourceManager;
     }
     
@@ -17,13 +20,7 @@ internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest,
     {
         if (string.IsNullOrEmpty(request.TaskName))
         {
-            // TODO: Change this to retrieve a list of tasks and send them as a menu
-            return new MoneoCommandResult
-            {
-                ResponseType = ResponseType.Text,
-                Type = ResultType.NeedMoreInfo,
-                UserMessageText = "You didn't tell me what task to complete. Send \"/complete taskName\""
-            };
+            return await _mediator.Send(new ListTasksRequest(request.ConversationId, true), cancellationToken);
         }
         
         // here we'll do a call to the Azure Function to complete the task

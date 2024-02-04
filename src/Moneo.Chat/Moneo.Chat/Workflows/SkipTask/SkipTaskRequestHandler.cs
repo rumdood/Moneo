@@ -6,10 +6,12 @@ namespace Moneo.Chat.UserRequests;
 
 internal class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCommandResult>
 {
+    private readonly IMediator _mediator;
     private readonly ITaskResourceManager _taskResourceManager;
 
-    public SkipTaskRequestHandler(ITaskResourceManager taskResourceManager)
+    public SkipTaskRequestHandler(IMediator mediator, ITaskResourceManager taskResourceManager)
     {
+        _mediator = mediator;
         _taskResourceManager = taskResourceManager;
     }
     
@@ -17,12 +19,10 @@ internal class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCo
     {
         if (string.IsNullOrEmpty(request.TaskName))
         {
-            return new MoneoCommandResult
+            if (string.IsNullOrEmpty(request.TaskName))
             {
-                ResponseType = ResponseType.Text,
-                Type = ResultType.NeedMoreInfo,
-                UserMessageText = "You didn't tell me what task to skip. Send \"/skip taskName\""
-            };
+                return await _mediator.Send(new ListTasksRequest(request.ConversationId, true), cancellationToken);
+            }
         }
         
         // here we'll do a call to the Azure Function to complete the task
