@@ -31,8 +31,8 @@ namespace Moneo.Functions
                 .CreateLogger();
 
             //builder.Services.AddLogging();
-            //builder.Services.AddScoped<INotifyEngine, TelegramNotify>();
-            builder.Services.AddScoped<INotifyEngine, HttpNotify>();
+            builder.Services.AddScoped<INotifyEngine, TelegramNotify>();
+            //builder.Services.AddScoped<INotifyEngine, HttpNotify>();
             builder.Services.AddSingleton<IScheduleManager, ScheduleManager>();
             builder.Services.AddSingleton<IMoneoTaskFactory, MoneoTaskFactory>();
 
