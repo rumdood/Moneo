@@ -137,4 +137,48 @@ public class TaskResourceManager : ITaskResourceManager
 
     public Task<MoneoTaskResult> CreateTaskAsync(long conversationId, MoneoTaskDto task) =>
         _proxy.CreateTaskAsync(conversationId, task);
+
+    public async Task<MoneoTaskResult<IEnumerable<MoneoTaskDto>>> GetTasksForUserAsync(long conversationId, MoneoTaskFilter filter)
+    {
+        var lookup = await GetTaskLookupForConversationAsync(conversationId);
+        
+        if (lookup is null || (string.IsNullOrEmpty(filter.TaskId) && string.IsNullOrEmpty(filter.SearchString)))
+        {
+            return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(false, Enumerable.Empty<MoneoTaskDto>(),
+                $"No tasks were found");
+        }
+        
+        if (!string.IsNullOrEmpty(filter.TaskId))
+        {
+            if (lookup.TryGetValue(filter.TaskId, out var match))
+            {
+                return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(true, [match]);
+            }
+
+            return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(false, Enumerable.Empty<MoneoTaskDto>(),
+                $"The task with an ID of {filter.TaskId} was not found");
+        }
+
+        var matches = FuzzySharp.Process.ExtractTop(filter.SearchString, lookup.Keys, cutoff: 75).ToArray();
+        if (matches.Length > 0)
+        {
+            return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(true,
+                lookup
+                    .Where(kv => matches.Select(x => x.Value).Contains(kv.Key))
+                    .Select(kv => kv.Value));
+        }
+
+        matches = FuzzySharp.Process
+            .ExtractTop(filter.SearchString, lookup.Values.Select(x => x.Description), cutoff: 75).ToArray();
+
+        if (matches.Length > 0)
+        {
+            return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(true,
+                lookup.Values.Where(v => 
+                    matches.Select(x => x.Value).Contains(v.Description)));
+        }
+
+        return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(false, Enumerable.Empty<MoneoTaskDto>(),
+            $"No tasks were found for the search string \"{filter.SearchString}\"");
+    }
 }
