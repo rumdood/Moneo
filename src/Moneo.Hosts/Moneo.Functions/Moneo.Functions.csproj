@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -27,7 +27,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Moneo.Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj" />
     <ProjectReference Include="..\..\Moneo.Core\Moneo.Core.csproj" />
     <ProjectReference Include="..\..\Moneo.TaskManagement\Moneo.TaskManagement.Models\Moneo.TaskManagement.Models.csproj" />
     <ProjectReference Include="..\..\Moneo.TaskManagement\Moneo.TaskManagement\Moneo.TaskManagement.csproj" />
