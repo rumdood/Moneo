@@ -5,6 +5,8 @@ namespace Moneo.TaskManagement.Models;
 
 public interface IMoneoTask
 {
+    string Id { get; }
+    long ConversationId { get; }
     string Name { get; }
     string? Description { get; }
     bool IsActive { get; }
@@ -34,6 +36,10 @@ public interface IMoneoTaskDto : IMoneoTask
 
 public abstract class MoneoTask : IMoneoTask
 {
+    [JsonProperty("id")]
+    public string Id { get; set; }
+    [JsonProperty("conversationId")]
+    public long ConversationId { get; set; }
     [JsonProperty("name")]
     public string Name { get; set; }
     [JsonProperty("description")]

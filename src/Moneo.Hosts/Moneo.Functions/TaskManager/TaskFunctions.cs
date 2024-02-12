@@ -54,13 +54,15 @@ public class TaskFunctions
         {
             var result = await client.ListEntitiesAsync(query, cancelToken);
 
-            if (!(bool)result?.Entities.Any())
+            if (result?.Entities != null && !(bool)result?.Entities.Any())
             {
                 break;
             }
 
-            return result!.Entities.Where(x => x.State is not null)
-                .ToDictionary(x => x.EntityId.EntityKey, x => x.State.ToObject<TaskManager>());
+            var durableEntityStatusEnumerable = result!.Entities;
+            if (durableEntityStatusEnumerable != null)
+                return durableEntityStatusEnumerable.Where(x => x.State is not null)
+                    .ToDictionary(x => x.EntityId.EntityKey, x => x.State.ToObject<TaskManager>());
         }
         while (query.ContinuationToken != null);
 
@@ -82,20 +84,23 @@ public class TaskFunctions
         {
             var result = await client.ListEntitiesAsync(query, cancelToken);
 
-            if (!(bool)result?.Entities.Any())
+            if (result?.Entities != null && !(bool)result?.Entities.Any())
             {
                 break;
             }
 
-            return result!.Entities
-                .Where(x => x.EntityId.EntityKey.Contains('_')) // since there's no way to delete the old ones...
-                .Select(x => new
-                {
-                    FullId = TaskFullId.CreateFromFullId(x.EntityId.EntityKey), 
-                    x.State
-                })
-                .Where(x => x.State is not null && x.FullId.ChatId.Equals(chatId))
-                .ToDictionary(x => x.FullId.TaskId, x => x.State.ToObject<TaskManager>().TaskState.ToMoneoTaskDto());
+            var durableEntityStatusEnumerable = result!.Entities;
+            if (durableEntityStatusEnumerable != null)
+                return durableEntityStatusEnumerable
+                    .Where(x => x.EntityId.EntityKey.Contains('_')) // since there's no way to delete the old ones...
+                    .Select(x => new
+                    {
+                        FullId = TaskFullId.CreateFromFullId(x.EntityId.EntityKey),
+                        x.State
+                    })
+                    .Where(x => x.State is not null && x.FullId.ChatId.Equals(chatId))
+                    .ToDictionary(x => x.FullId.TaskId,
+                        x => x.State.ToObject<TaskManager>().TaskState.ToMoneoTaskDto());
         }
         while (query.ContinuationToken != null);
 
@@ -390,26 +395,21 @@ public class TaskFunctions
 
         var succeeded = new List<string>();
         var failed = new List<string>();
+        var skipped = new List<string>();
 
         foreach (var (id, taskManager) in allTasks)
         {
-            if (taskManager is not { TaskState: var taskState } || taskState is not { IsActive: true } || taskManager.ChatId > 0)
+            if (!id.IsValidTaskFullId())
             {
+                skipped.Add(id);
                 continue;
             }
 
             try
             {
-                var state = taskManager.TaskState;
-                var stateDto = _taskFactory.CreateTaskDto(state);
-
-                var newId = new TaskFullId(MoneoConfiguration.LegacyChatId.ToString(), id);
-                var newEntityId = new EntityId(nameof(TaskManager), newId.FullId);
-
-                await client.SignalEntityAsync<ITaskManager>(new EntityId(nameof(TaskManager), id), x => x.DisableTask());
-
-                await client.SignalEntityAsync<ITaskManager>(
-                    newEntityId, x => x.InitializeTask(stateDto));
+                var taskFullId = TaskFullId.CreateFromFullId(id);
+                var entityId = new EntityId(nameof(TaskManager), taskFullId.FullId);
+                await client.SignalEntityAsync<ITaskManager>(entityId, r => r.PerformMigrationAction());
                 succeeded.Add(id);
             }
             catch (Exception ex)
@@ -419,6 +419,6 @@ public class TaskFunctions
             }
         }
 
-        return new OkObjectResult((succeeded, failed));
+        return new OkObjectResult((Succeeded: succeeded, Failed: failed, Skipped: skipped));
     }
 }

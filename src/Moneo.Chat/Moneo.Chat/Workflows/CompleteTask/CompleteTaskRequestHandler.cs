@@ -43,7 +43,7 @@ internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest,
         if (tasks.Length == 1)
         {
             // here we'll do a call to the Azure Function to complete the task
-            var completeTaskResult = await _taskResourceManager.CompleteTaskAsync(request.ConversationId, request.TaskName);
+            var completeTaskResult = await _taskResourceManager.CompleteTaskAsync(request.ConversationId, tasks.First().Id);
 
             return new MoneoCommandResult
             {
