@@ -42,7 +42,7 @@ internal class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCo
         if (tasks.Length == 1)
         {
             // here we'll do a call to the Azure Function to complete the task
-            var skipTaskResult = await _taskResourceManager.CompleteTaskAsync(request.ConversationId, tasks.First().Id);
+            var skipTaskResult = await _taskResourceManager.SkipTaskAsync(request.ConversationId, tasks.First().Id);
 
             return new MoneoCommandResult
             {
