@@ -11,7 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoFixture.AutoMoq" Version="4.18.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -25,6 +28,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Moneo.Core\Moneo.Core.csproj" />
+    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Client\Moneo.TaskManagement.Client.csproj" />
+    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Models\Moneo.TaskManagement.Models.csproj" />
     <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement\Moneo.TaskManagement.csproj" />
   </ItemGroup>

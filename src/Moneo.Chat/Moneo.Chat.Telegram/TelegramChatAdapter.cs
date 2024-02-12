@@ -148,7 +148,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
             var queue = new Queue<InlineKeyboardButton>(buttons);
             var currentRow = new List<InlineKeyboardButton>();
 
-            while (queue.TryPeek(out _))
+            while (queue.TryPeek(out _) || currentRow.Count > 0)
             {
                 if (currentRow.Count < maxRowSize)
                 {

@@ -29,6 +29,8 @@ public class MoneoTaskFactory : IMoneoTaskFactory
 
         var newTask = new MoneoTaskState
         {
+            Id = input.Id,
+            ConversationId = input.ConversationId,
             Name = input.Name,
             Description = input.Description,
             IsActive = true,
@@ -64,6 +66,8 @@ public class MoneoTaskFactory : IMoneoTaskFactory
     {
         return new MoneoTaskDto
         {
+            Id = input.Id,
+            ConversationId = input.ConversationId,
             Name = input.Name,
             Description = input.Description,
             IsActive = input.IsActive,

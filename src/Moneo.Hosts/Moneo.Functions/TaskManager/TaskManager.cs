@@ -72,7 +72,8 @@ public class TaskManager : ITaskManager
                 UpdateSchedule();
 
                 if (completedOrSkipped is not null
-                    && !threshold.HasValue || completedOrSkipped?.HoursSince(DateTime.UtcNow) < threshold.Value)
+                    && !threshold.HasValue || (threshold.HasValue &&
+                                               completedOrSkipped?.HoursSince(DateTime.UtcNow) < threshold.Value))
                 {
                     return; // don't continue to the badger
                 }
@@ -105,7 +106,7 @@ public class TaskManager : ITaskManager
 
     private void UpdateSchedule()
     {
-        _logger.LogTrace("Updating schedule for [{0}]", TaskState.Name);
+        _logger.LogTrace("Updating schedule for [{@Name}]", TaskState.Name);
 
         if (TaskState.Repeater is not null)
         {
@@ -119,7 +120,7 @@ public class TaskManager : ITaskManager
         foreach (var dueDate in TaskState.DueDates.Where(dueDate => !ScheduledDueDates.Contains(dueDate)))
         {
             // schedule and add new DueDates that aren't already scheduled
-            _logger.LogTrace("Scheduling CheckSend for DueDate [{0}]", dueDate);
+            _logger.LogTrace("Scheduling CheckSend for DueDate [{@DueDate}]", dueDate);
 
             ScheduledDueDates.Add(dueDate);
 
@@ -156,7 +157,7 @@ public class TaskManager : ITaskManager
 
     public Task InitializeTask(MoneoTaskDto task)
     {
-        _logger.LogTrace("Initializing new task [{0}]", task.Name);
+        _logger.LogTrace("Initializing new task [{@Name}]", task.Name);
 
         if (TaskState is { IsActive: true })
         {
@@ -164,26 +165,37 @@ public class TaskManager : ITaskManager
         }
 
         ChatId = Entity.Current.GetChatIdFromEntityId();
+        var fullId = TaskFullId.CreateFromFullId(Entity.Current.EntityId.EntityKey);
 
+        if (task.ConversationId == default)
+        {
+            task.ConversationId = ChatId;
+        }
+
+        if (string.IsNullOrEmpty(task.Id))
+        {
+            task.Id = fullId.TaskId;
+        }
+        
         return UpdateTask(task);
     }
 
     public Task UpdateTask(MoneoTaskDto task)
     {
-        _logger.LogTrace("Updating Task [{0}]", task.Name);
+        _logger.LogTrace("Updating Task [{@Name}]", task.Name);
 
         var existingReminders = TaskState?.Reminders;
 
         TaskState = _taskFactory.CreateTaskWithReminders(task, TaskState, MoneoConfiguration.MaxCompletionHistoryEventCount);
 
         UpdateSchedule();
-
+    
         foreach (var reminder in task.Reminders.EmptyIfNull())
         {
             if (existingReminders is not null && existingReminders.ContainsKey(reminder.UtcTicks) ||
                 reminder.UtcDateTime <= DateTime.UtcNow) continue;
 
-            _logger.LogTrace("    Scheduling Reminder for {0}", reminder.UtcDateTime);
+            _logger.LogTrace("    Scheduling Reminder for {@Reminder}", reminder.UtcDateTime);
 
             Entity.Current.SignalEntity<ITaskManager>(
                 Entity.Current.EntityId,
@@ -196,7 +208,7 @@ public class TaskManager : ITaskManager
 
     public async Task MarkCompleted(bool skipped = false)
     {
-        _logger.LogTrace("{0} Task [{1}]", skipped ? "Skipping" : "Completing", TaskState.Name);
+        _logger.LogTrace("{@Action} Task [{@Name}]", skipped ? "Skipping" : "Completing", TaskState.Name);
 
         if (!TaskState.IsActive)
         {
@@ -239,7 +251,7 @@ public class TaskManager : ITaskManager
 
     public Task CheckSendBadger()
     {
-        _logger.LogTrace("Sending Badger for [{0}]", TaskState.Name);
+        _logger.LogTrace("Sending Badger for [{@Name}]", TaskState.Name);
 
         if (TaskState?.Badger is null)
         {
@@ -276,6 +288,17 @@ public class TaskManager : ITaskManager
     public static Task Run([EntityTrigger] IDurableEntityContext context)
     {
         return context.DispatchAsync<TaskManager>();
+    }
+
+    public Task PerformMigrationAction()
+    {
+        var fullId = TaskFullId.CreateFromFullId(Entity.Current.EntityKey);
+        TaskState.Id = fullId.TaskId;
+        TaskState.ConversationId = long.Parse(fullId.ChatId);
+
+        _logger.LogInformation("Setting Task State Id: {@TaskId}", fullId.TaskId);
+
+        return Task.CompletedTask;
     }
 }
 

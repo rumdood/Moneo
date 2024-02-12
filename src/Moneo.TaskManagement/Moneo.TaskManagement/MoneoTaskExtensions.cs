@@ -52,6 +52,8 @@ public static class MoneoTaskExtensions
     {
         return new MoneoTaskDto
         {
+            Id = input.Id,
+            ConversationId = input.ConversationId,
             Name = input.Name,
             Description = input.Description,
             IsActive = input.IsActive,

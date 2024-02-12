@@ -14,5 +14,6 @@ namespace Moneo.Functions
         Task InitializeTask(MoneoTaskDto task);
         Task UpdateTask(MoneoTaskDto task);
         Task DisableTask();
+        Task PerformMigrationAction();
     }
 }
