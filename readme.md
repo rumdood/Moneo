@@ -5,9 +5,9 @@ This started as something of a simple "remind me and badger me" script for a sin
 
 Then I wanted a similar thing for checking my blood pressure and other tasks (remind me when it's due and then badger me until I say I've completed it), and so I complicated it to a ridiculous level, while trying to stay entirely within Azure Durable Functions/Entities because I thought it was kind of funny to do so (though it presents some challenges to do so).
 
-### *Latest Update* (2024-01-20):
+### Manage tasks via chat
 
-Greater interactivity with the bot. You can now skip, complete, or even create tasks from within Telegram.
+You can skip, complete, or even create tasks from within Telegram.
 
 ![image](https://github.com/rumdood/Moneo/assets/3585996/f1e795b1-2db9-4eb9-9f3d-a5622db8acc5)
 
