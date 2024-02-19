@@ -3,7 +3,7 @@ using Moneo.Chat.Commands;
 
 namespace Moneo.Chat.Workflows.CreateCronSchedule;
 
-[UserCommand("/continueCron")]
+[UserCommand(CommandKey = "/continueCron")]
 public partial class CreateCronContinuationRequest : UserRequestBase
 {
     public string Text { get; }

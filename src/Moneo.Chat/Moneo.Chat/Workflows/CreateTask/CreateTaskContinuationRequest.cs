@@ -1,10 +1,9 @@
 using MediatR;
 using Moneo.Chat.Commands;
-using Moneo.Chat.UserRequests;
 
 namespace Moneo.Chat.Workflows.CreateTask;
 
-[UserCommand("/continueCreate")]
+[UserCommand(CommandKey = "/continueCreate")]
 public partial class CreateTaskContinuationRequest : UserRequestBase
 {
     public string Text { get; }
