@@ -1,5 +1,4 @@
 using MediatR;
-using MediatR.Pipeline;
 using Moneo.Chat.Commands;
 using Moneo.TaskManagement;
 using Moneo.TaskManagement.Client.Models;

@@ -1,10 +1,6 @@
-using MediatR;
-using Moneo.Chat.Commands;
-using Moneo.Chat.UserRequests;
-
 namespace Moneo.Chat.Workflows.Chitchat;
 
-[UserCommand("/chitchat")]
+[UserCommand(CommandKey = "/chitchat")]
 public partial class ChitChatRequest : UserRequestBase
 {
     public string UserText { get; private set; }

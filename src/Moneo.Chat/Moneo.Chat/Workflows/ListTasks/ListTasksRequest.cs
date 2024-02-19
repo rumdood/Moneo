@@ -1,6 +1,9 @@
 namespace Moneo.Chat;
 
-[UserCommand("/listTasks")]
+[UserCommand(
+    CommandKey = "/listTasks",
+    HelpDescription = @"Gets a list of active tasks from the server
+example: /listTasks")]
 public partial class ListTasksRequest : UserRequestBase
 {
     public bool AsMenuFlag { get; private set; }

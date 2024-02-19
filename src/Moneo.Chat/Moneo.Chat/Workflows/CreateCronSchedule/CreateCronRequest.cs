@@ -3,7 +3,7 @@ using Moneo.Chat.Commands;
 
 namespace Moneo.Chat.Workflows.CreateCronSchedule;
 
-[UserCommand("/createCron")]
+[UserCommand(CommandKey = "/createCron")]
 public partial class CreateCronRequest : UserRequestBase
 {
     public string TaskName { get; init; }
