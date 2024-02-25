@@ -14,13 +14,13 @@ internal static class ServiceProviderExtensions
         botConfig.CallbackToken = Environment.GetEnvironmentVariable("callbackToken", EnvironmentVariableTarget.Process) 
                                   ?? throw new ArgumentException("Callback Token Not Found");
         botConfig.FunctionKey = Environment.GetEnvironmentVariable("taskManagerKey", EnvironmentVariableTarget.Process)
-                                ?? throw new ArgumentException("Telegram Token Not Found");
-        botConfig.MasterConversationId = Convert.ToInt64(Environment.GetEnvironmentVariable("chatId", EnvironmentVariableTarget.Process) 
-                                                         ?? throw new ArgumentException("Telegram Token Not Found"));
+                                ?? throw new ArgumentException("Task Manager Token Not Found");
+        botConfig.MasterConversationId = Convert.ToInt64(Environment.GetEnvironmentVariable("telegramChatId", EnvironmentVariableTarget.Process) 
+                                                         ?? throw new ArgumentException("Telegram Chat Id Not Found"));
         botConfig.TaskApiBase = Environment.GetEnvironmentVariable("taskManagerApiBase", EnvironmentVariableTarget.Process) 
                                 ?? throw new ArgumentException("Telegram Token Not Found");
 
-        serviceCollection.AddScoped<IBotClientConfiguration>(_ => botConfig);
+        serviceCollection.AddScoped(_ => botConfig);
 
         return serviceCollection;
     }
