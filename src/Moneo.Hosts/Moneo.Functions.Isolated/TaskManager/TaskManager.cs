@@ -97,15 +97,6 @@ namespace Moneo.Functions.Isolated.TaskManager
                 {
                     SignalTime = DateTime.UtcNow.AddMinutes(State.Badger!.BadgerFrequencyMinutes)
                 });
-
-            /*
-            Context.ScheduleNewOrchestration(
-                nameof(CheckSendBadger),
-                new StartOrchestrationOptions
-                {
-                    StartAt = DateTime.UtcNow.AddMinutes(State.Badger!.BadgerFrequencyMinutes)
-                });
-            */
         }
 
         private void UpdateSchedule()
@@ -128,7 +119,7 @@ namespace Moneo.Functions.Isolated.TaskManager
 
                 State.ScheduledChecks.Add(dueDate);
 
-                /* why doesn't this work? why am i doing this orc thing?
+                /*  for some reason, this doesn't send the dueDate as input to the signalled function
                 Context.SignalEntity(
                     id: Context.Id,
                     operationName: nameof(CheckTaskCompleted),
@@ -142,7 +133,7 @@ namespace Moneo.Functions.Isolated.TaskManager
 
                 Context.ScheduleNewOrchestration(
                     nameof(CheckTaskCompletedOrc),
-                    new CheckCompletedRequest(Context.Id, dueDate)
+                    new SchedulingRequest(Context.Id, dueDate)
                 );
             }
         }
@@ -218,9 +209,9 @@ namespace Moneo.Functions.Isolated.TaskManager
                 _logger.LogTrace("    Scheduling Reminder for {@Reminder}", reminder.UtcDateTime);
 
                 Context.ScheduleNewOrchestration(
-                    nameof(SendScheduledReminder),
-                    reminder.UtcDateTime.Ticks,
-                    new Microsoft.DurableTask.StartOrchestrationOptions
+                    nameof(SendScheduledReminderOrc),
+                    reminder.UtcDateTime,
+                    new StartOrchestrationOptions
                     {
                         StartAt = reminder.UtcDateTime
                     });
@@ -272,20 +263,6 @@ namespace Moneo.Functions.Isolated.TaskManager
             return Task.CompletedTask;
         }
 
-        [Function(nameof(CheckSendBadgerOrc))]
-        public async Task CheckSendBadgerOrc([OrchestrationTrigger] TaskOrchestrationContext context)
-        {
-            var id = context.GetInput<string>();
-
-            if (string.IsNullOrEmpty(id))
-            {
-                throw new InvalidOperationException("Id is null or empty");
-            }
-
-            var entityId = new EntityInstanceId(nameof(MoneoTaskState), id);
-            await context.Entities.SignalEntityAsync(entityId, nameof(CheckSendBadger));
-        }
-
         public Task CheckSendBadger()
         {
             _logger.LogTrace("Sending Badger for [{@Name}]", State.Name);
@@ -303,7 +280,7 @@ namespace Moneo.Functions.Isolated.TaskManager
         [Function(nameof(CheckTaskCompletedOrc))]
         public async static Task CheckTaskCompletedOrc([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var request = context.GetInput<CheckCompletedRequest>();
+            var request = context.GetInput<SchedulingRequest>();
 
             if (request is null)
             {
@@ -325,6 +302,21 @@ namespace Moneo.Functions.Isolated.TaskManager
             return !State.ScheduledChecks.Contains(dueDate)
                 ? Task.CompletedTask
                 : CheckSend(GetTaskDueMessage(State), true);
+        }
+
+        [Function(nameof(SendScheduledReminderOrc))]
+        public async static Task SendScheduledReminderOrc([OrchestrationTrigger] TaskOrchestrationContext context)
+        {
+            var inputs = context.GetInput<SchedulingRequest>();
+
+            if (inputs is null)
+            {
+                throw new InvalidOperationException("Request is null");
+            }
+
+            var (entityId, dueDate) = inputs;
+
+            await context.Entities.SignalEntityAsync(entityId, nameof(SendScheduledReminder), dueDate.Ticks);
         }
 
         public Task SendScheduledReminder(long id)
@@ -367,4 +359,4 @@ internal static class TaskEntityContextExtensions
     }
 }
 
-internal record CheckCompletedRequest(EntityInstanceId EntityInstanceId, DateTime DueDate);
+internal record SchedulingRequest(EntityInstanceId EntityInstanceId, DateTime DueDate);
