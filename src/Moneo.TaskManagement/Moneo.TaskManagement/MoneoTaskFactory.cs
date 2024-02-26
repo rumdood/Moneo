@@ -48,6 +48,7 @@ public class MoneoTaskFactory : IMoneoTaskFactory
                     d => new TaskReminder { DueAt = d.UtcDateTime, IsActive = true }),
             TimeZone = input.TimeZone,
             DueDates = _scheduleManager.GetDueDates(input).ToHashSet(),
+            ScheduledChecks = previousVersion?.ScheduledChecks ?? new HashSet<DateTime>(),
             Created = previousVersion is { Created: var created }
                 ? created
                 : DateTime.UtcNow,

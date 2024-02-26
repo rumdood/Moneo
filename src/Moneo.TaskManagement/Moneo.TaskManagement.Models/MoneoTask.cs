@@ -25,6 +25,7 @@ public interface IMoneoTaskState : IMoneoTask
     Dictionary<long, TaskReminder> Reminders { get; }
     FixedLengthList<DateTime?> CompletedHistory { get; }
     FixedLengthList<DateTime?> SkippedHistory { get; }
+    HashSet<DateTime> ScheduledChecks { get; }
 }
 
 public interface IMoneoTaskDto : IMoneoTask
@@ -70,19 +71,23 @@ public class MoneoTaskState : MoneoTask, IMoneoTaskState
     public FixedLengthList<DateTime?> CompletedHistory { get; set; } = new(5);
     [JsonProperty("lastSkippedOn")]
     public FixedLengthList<DateTime?> SkippedHistory { get; set; } = new(5);
+    [JsonProperty("scheduledChecks")]
+    public HashSet<DateTime> ScheduledChecks { get; set; } = new();
 
     public void Deconstruct(
         out bool isActive, 
         out FixedLengthList<DateTime?> lastCompletedOn, 
         out FixedLengthList<DateTime?> lastSkippedOn, 
         out TaskRepeater? repeater, 
-        out TaskBadger? badger)
+        out TaskBadger? badger,
+        out HashSet<DateTime> scheduledChecks)
     {
         isActive = IsActive;
         lastCompletedOn = CompletedHistory;
         lastSkippedOn = SkippedHistory;
         repeater = Repeater;
         badger = Badger;
+        scheduledChecks = ScheduledChecks;
     }
 }
 
