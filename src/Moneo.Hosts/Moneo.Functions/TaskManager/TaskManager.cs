@@ -52,7 +52,7 @@ public class TaskManager : ITaskManager
             return;
         }
 
-        var (_, _, _, repeater, badger) = TaskState;
+        var (_, _, _, repeater, badger, _) = TaskState;
         var completedOrSkipped = TaskState.GetLastCompletedOrSkippedDate();
 
         if (repeater is { EarlyCompletionThresholdHours: var threshold, Expiry: var expiry })
