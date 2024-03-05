@@ -7,6 +7,10 @@ public record CreateTaskWorkflowStartedEvent(long ChatId) : IRequest;
 
 public record CreateTaskWorkflowCompletedEvent(long ChatId) : IRequest;
 
+public record ConfirmCommandWorkflowStartedEvent(long ChatId) : IRequest;
+
+public record ConfirmCommandWorkflowCompletedEvent(long ChatId, string? userInput = null) : IRequest;
+
 public record CreateCronWorkflowStartedEvent(long ChatId) : IRequest;
 
 public record CreateCronWorkflowCompletedEvent(long ChatId, string CronStatement) : IRequest;
@@ -42,6 +46,32 @@ internal class CreateTaskWorkflowCompletedEventHandler : WorkflowStartedOrComple
     }
 
     public async Task Handle(CreateTaskWorkflowCompletedEvent request, CancellationToken cancellationToken)
+    {
+        await ChatStateRepository.RevertChatStateAsync(request.ChatId);
+    }
+}
+
+internal class ConfirmCommandWorkflowStartedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
+    IRequestHandler<ConfirmCommandWorkflowStartedEvent>
+{
+    public ConfirmCommandWorkflowStartedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
+    {
+    }
+
+    public async Task Handle(ConfirmCommandWorkflowStartedEvent request, CancellationToken cancellationToken)
+    {
+        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.ConfirmCommand);
+    }
+}
+
+internal class ConfirmCommandWorkflowCompletedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
+    IRequestHandler<ConfirmCommandWorkflowCompletedEvent>
+{
+    public ConfirmCommandWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
+    {
+    }
+
+    public async Task Handle(ConfirmCommandWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.RevertChatStateAsync(request.ChatId);
     }

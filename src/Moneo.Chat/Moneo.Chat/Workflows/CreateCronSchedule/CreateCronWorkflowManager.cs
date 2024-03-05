@@ -14,10 +14,9 @@ internal enum DayRepeatMode
     DayOfMonth,
 }
 
-public class CreateCronManager : ICreateCronManager
+public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflowManager
 {
-    private readonly IMediator _mediator;
-    private readonly ILogger<CreateCronManager> _logger;
+    private readonly ILogger<CreateCronWorkflowManager> _logger;
     private readonly Dictionary<long, CronStateMachine> _chatStates = new();
     private readonly
         Dictionary<CronWorkflowState, Func<CronDraft, string, (bool Success, string? FailureMessage)>>
@@ -245,9 +244,8 @@ public class CreateCronManager : ICreateCronManager
         return await _mediator.Send(new CreateTaskContinuationRequest(chatId, draft!.GenerateCronStatement()));
     }
 
-    public CreateCronManager(IMediator mediator, ILogger<CreateCronManager> logger)
+    public CreateCronWorkflowManager(IMediator mediator, ILogger<CreateCronWorkflowManager> logger) : base(mediator)
     {
-        _mediator = mediator;
         _logger = logger;
         InitWorkflow();
         InitResponses();

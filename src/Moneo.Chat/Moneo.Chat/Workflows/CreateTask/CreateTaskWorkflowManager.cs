@@ -13,9 +13,8 @@ public interface ICreateTaskWorkflowManager
     Task AbandonWorkflowAsync(long chatId);
 }
 
-public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
+public class CreateTaskWorkflowManager : WorkflowManagerBase, ICreateTaskWorkflowManager
 {
-    private readonly IMediator _mediator;
     private readonly ILogger<CreateTaskWorkflowManager> _logger;
     private readonly Dictionary<long, TaskCreationStateMachine> _chatStates = new();
     private readonly Dictionary<TaskCreationState, string> _responseStore = new();
@@ -193,9 +192,8 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
     }
 
     public CreateTaskWorkflowManager(IMediator mediator, ILogger<CreateTaskWorkflowManager> logger,
-        ITaskResourceManager taskResourceManager)
+        ITaskResourceManager taskResourceManager) : base(mediator)
     {
-        _mediator = mediator;
         _logger = logger;
         _resourceManager = taskResourceManager;
         InitializeResponses();

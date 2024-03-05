@@ -78,49 +78,10 @@ public class ChatManager : IChatManager
         return _usersByConversationId.TryAdd(conversationId, new User(Guid.NewGuid(), firstName, lastName, conversationId));
     }
 
-    private async Task<MoneoCommandResult> HandleNonCommandMessageAsync(long conversationId, string text)
-    {
-        var state = await _chatStateRepository.GetChatStateAsync(conversationId);
-
-        return state switch
-        {
-            ChatState.CreateTask => await _mediator.Send(new CreateTaskContinuationRequest(conversationId, text)),
-            _ => await _mediator.Send(new ChitChatRequest(conversationId, text))
-        };
-    }
-
-    private CommandContext GetCommandContext(long conversationId, ChatState state, string text)
-    {        
-        var context = new CommandContext
-        {
-            ConversationId = conversationId,
-            CurrentState = state,
-        };
-
-        if (text.StartsWith("/"))
-        {
-            var parts = text.Split(' ');
-            context.CommandKey = parts[0].ToLowerInvariant();
-            context.Args = parts[1..];
-
-            return context;
-        }
-
-        context.CommandKey = state switch
-        {
-            ChatState.CreateTask => CreateTaskContinuationRequest.CommandKey,
-            ChatState.CreateCron => CreateCronContinuationRequest.CommandKey,
-            _ => ChitChatRequest.CommandKey
-        };
-        context.Args = [text];
-
-        return context;
-    }
-
     private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, string text)
     {
         var state = await _chatStateRepository.GetChatStateAsync(conversationId);
-        var context = GetCommandContext(conversationId, state, text);
+        var context = CommandContext.Get(conversationId, state, text);
         var userRequest = UserRequestFactory.GetUserRequest(context);
 
         if (userRequest is IRequest<MoneoCommandResult> request)
@@ -134,21 +95,5 @@ public class ChatManager : IChatManager
             Type = ResultType.Error,
             UserMessageText = $"Unknown command: {context.CommandKey}"
         };
-    }
-    
-    private void AddMessageEntry(long conversationId, string message, MessageDirection direction)
-    {
-        if (!_usersByConversationId.TryGetValue(conversationId, out var user))
-        {
-            throw new InvalidOperationException("Unknown User/Conversation");
-        }
-
-        if (!_conversationsById.TryGetValue(conversationId, out var conversationHistory))
-        {
-            conversationHistory = new FixedLengthList<ChatEntry>(10);
-            _conversationsById[conversationId] = conversationHistory;
-        }
-        
-        conversationHistory.Add(new ChatEntry(conversationId, user, message, direction, DateTimeOffset.UtcNow));
     }
 }

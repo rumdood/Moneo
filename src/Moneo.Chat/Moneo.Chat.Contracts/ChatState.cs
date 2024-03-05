@@ -7,4 +7,5 @@ public enum ChatState
     CreateCron,
     CompleteTask,
     SkipTask,
+    ConfirmCommand,
 }
