@@ -21,9 +21,9 @@ public partial class CreateCronContinuationRequest : UserRequestBase
 
 internal class CreateCronContinuationRequestHandler : IRequestHandler<CreateCronContinuationRequest, MoneoCommandResult>
 {
-    private readonly ICreateCronManager _manager;
+    private readonly ICreateCronWorkflowManager _manager;
 
-    public CreateCronContinuationRequestHandler(ICreateCronManager manager)
+    public CreateCronContinuationRequestHandler(ICreateCronWorkflowManager manager)
     {
         _manager = manager;
     }
