@@ -26,11 +26,7 @@ public class UnitTest1
         
         long conversationId = 1;
         var userString = "/complete";
-        var context = new CommandContext()
-        {
-            ConversationId = 1,
-            CurrentState = ChatState.Waiting
-        };
+        var context = CommandContext.Get(1, ChatState.Waiting, userString);
         
         var parts = userString.Split(' ');
         context.CommandKey = parts[0].ToLowerInvariant();

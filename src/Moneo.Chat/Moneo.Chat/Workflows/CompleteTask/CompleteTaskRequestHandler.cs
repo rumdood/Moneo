@@ -37,7 +37,7 @@ internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest,
             };
         }
 
-        var tasks = tasksMatchingName.Result.ToArray();
+        var tasks = tasksMatchingName.Result.Where(t => t.IsActive).ToArray();
 
         if (tasks.Length == 1)
         {
