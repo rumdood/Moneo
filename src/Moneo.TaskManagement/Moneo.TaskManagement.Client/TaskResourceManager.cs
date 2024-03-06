@@ -163,6 +163,12 @@ public class TaskResourceManager : ITaskResourceManager
         var matches = FuzzySharp.Process.ExtractTop(filter.SearchString, lookup.Keys, cutoff: 75).ToArray();
         if (matches.Length > 0)
         {
+            var perfectMatch = matches.SingleOrDefault(match => match.Score == 100);
+            if (perfectMatch is not null)
+            {
+                return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(true, [lookup[perfectMatch.Value]]);
+            }
+            
             return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(true,
                 lookup
                     .Where(kv => matches.Select(x => x.Value).Contains(kv.Key))
