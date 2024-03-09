@@ -76,7 +76,7 @@ internal static class BotResponseHelper
         "I'm sorry, but I'm specifically seeking a yes or no answer."
     ];
     
-    public static string GetBoxResponse(BotResponseType type)
+    public static string GetBotResponse(BotResponseType type)
     {
         return type switch
         {

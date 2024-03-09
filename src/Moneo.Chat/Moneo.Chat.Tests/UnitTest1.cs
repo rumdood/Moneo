@@ -2,6 +2,7 @@ using MediatR;
 using Moneo.Chat.Commands;
 using Moq;
 using Moneo.Chat.UserRequests;
+using Moneo.Chat.Workflows;
 using Moneo.TaskManagement;
 
 namespace Moneo.Chat.Tests;
@@ -32,12 +33,13 @@ public class UnitTest1
         context.CommandKey = parts[0].ToLowerInvariant();
         context.Args = parts[1..];
 
-        var request = UserRequestFactory.GetUserRequest(context);
+        var request = UserRequestFactory.GetUserRequest(context) as CompleteTaskRequest;
 
         Assert.IsType<CompleteTaskRequest>(request);
-
-        var handler = new CompleteTaskRequestHandler(mediator.Object, mgr.Object);
-        var result = await handler.Handle(request as CompleteTaskRequest, CancellationToken.None);
+        
+        var manager = new CompleteTaskWorkflowManager(mediator.Object, mgr.Object);
+        var result =
+            await manager.StartWorkflowAsync(request.ConversationId, request.TaskName, CompleteTaskOption.Complete);
         
         Assert.NotNull(result);
         Assert.Equal(ResponseType.Menu, result!.ResponseType);

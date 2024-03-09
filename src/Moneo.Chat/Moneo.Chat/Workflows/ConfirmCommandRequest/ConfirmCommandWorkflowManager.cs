@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Moneo.Chat.BotResponses;
 using Moneo.Chat.Commands;
 
 namespace Moneo.Chat;
@@ -23,8 +24,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText =
-                    "I'm sorry, I don't understand what you're trying to say. Please respond with a yes or no."
+                UserMessageText = BotResponseHelper.GetBotResponse(BotResponseType.RequestYesOrNo)
             };
         }
         
@@ -38,7 +38,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText = "I'm sorry - I'm not sure what to do then"
+                UserMessageText = BotResponseHelper.GetBotResponse(BotResponseType.UnsureHowToProceed)
             };
         }
 
@@ -51,7 +51,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText = "I'm sorry, I don't know what you're trying to confirm"
+                UserMessageText = "I'm sorry, something went wrong. What was it you wanted to do?"
             };
         }
 
