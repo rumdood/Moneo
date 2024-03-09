@@ -1,10 +1,11 @@
 ﻿using MediatR;
 using Moneo.Chat.BotResponses;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Workflows;
 
 namespace Moneo.Chat;
 
-public interface IConfirmCommandWorkflowManager
+public interface IConfirmCommandWorkflowManager : IWorkflowManager
 {
     Task<MoneoCommandResult> StartWorkflowAsync(ConfirmCommandRequest request);
     Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, string userInput);
@@ -30,7 +31,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
         
         // the workflow completes regardless of what the user says at this point. Either we confirm the command and
         // run it, or we're unclear on what they meant to do
-        await _mediator.Send(new ConfirmCommandWorkflowCompletedEvent(chatId));
+        await Mediator.Send(new ConfirmCommandWorkflowCompletedEvent(chatId));
 
         if (confirmation == UserConfirmation.Negative)
         {
@@ -61,7 +62,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
 
         if (userRequest is IRequest<MoneoCommandResult> request)
         {
-            return await _mediator.Send(request);
+            return await Mediator.Send(request);
         }
 
         return new MoneoCommandResult
@@ -77,7 +78,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
     {
         _userCommandsLookup[request.ConversationId] = $"{request.PotentialCommand} {request.PotentialArguments}";
 
-        await _mediator.Send(new ConfirmCommandWorkflowStartedEvent(request.ConversationId));
+        await Mediator.Send(new ConfirmCommandWorkflowStartedEvent(request.ConversationId));
         return new MoneoCommandResult
         {
             ResponseType = ResponseType.Text,

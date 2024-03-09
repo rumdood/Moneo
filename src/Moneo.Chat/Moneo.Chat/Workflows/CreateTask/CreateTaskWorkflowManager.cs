@@ -6,7 +6,7 @@ using Moneo.TaskManagement;
 
 namespace Moneo.Chat.Workflows.CreateTask;
 
-public interface ICreateTaskWorkflowManager
+public interface ICreateTaskWorkflowManager : IWorkflowManager
 {
     Task<MoneoCommandResult> StartWorkflowAsync(long chatId, string? taskName = null);
     Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, string userInput);
@@ -202,7 +202,7 @@ public class CreateTaskWorkflowManager : WorkflowManagerBase, ICreateTaskWorkflo
 
     public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, string? taskName = null)
     {
-        await _mediator.Send(new CreateTaskWorkflowStartedEvent(chatId));
+        await Mediator.Send(new CreateTaskWorkflowStartedEvent(chatId));
         
         if (_chatStates.ContainsKey(chatId))
         {
@@ -298,7 +298,7 @@ public class CreateTaskWorkflowManager : WorkflowManagerBase, ICreateTaskWorkflo
         }
         else if (machine.CurrentState == TaskCreationState.WaitingForRepeaterCron)
         {
-            return await _mediator.Send(new CreateCronRequest(machine.ConversationId));
+            return await Mediator.Send(new CreateCronRequest(machine.ConversationId));
         }
 
         return new MoneoCommandResult
@@ -313,7 +313,7 @@ public class CreateTaskWorkflowManager : WorkflowManagerBase, ICreateTaskWorkflo
     {
         await _resourceManager.CreateTaskAsync(chatId, draft.Task);
         _chatStates.Remove(chatId);
-        await _mediator.Send(new CreateTaskWorkflowCompletedEvent(chatId));
+        await Mediator.Send(new CreateTaskWorkflowCompletedEvent(chatId));
     }
 
     public Task AbandonWorkflowAsync(long chatId)

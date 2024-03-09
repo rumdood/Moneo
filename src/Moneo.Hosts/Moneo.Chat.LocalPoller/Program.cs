@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moneo.Chat;
+using Moneo.Chat.ServiceCollectionExtensions;
 using Moneo.Chat.Telegram;
 using Moneo.Chat.Workflows;
 using Moneo.Chat.Workflows.CreateCronSchedule;
@@ -34,11 +35,8 @@ builder.Services.AddSingleton<IChatManager, ChatManager>();
 builder.Services.AddSingleton<ITaskResourceManager, TaskResourceManager>();
 builder.Services.AddSingleton<ITaskManagerClient, TaskManagerHttpClient>();
 builder.Services.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
-builder.Services.AddSingleton<ICreateTaskWorkflowManager, CreateTaskWorkflowManager>();
-builder.Services.AddSingleton<ICreateCronWorkflowManager, CreateCronWorkflowManager>();
 builder.Services.AddSingleton<IChatAdapter, TelegramChatAdapter>();
-builder.Services.AddSingleton<IConfirmCommandWorkflowManager, ConfirmCommandWorkflowManager>();
-builder.Services.AddSingleton<ICompleteTaskWorkflowManager, CompleteTaskWorkflowManager>();
+builder.Services.AddWorkflowManagers();
 
 builder.Services.AddHostedService<BotService>();
 

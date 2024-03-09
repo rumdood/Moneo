@@ -176,7 +176,7 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
 
     public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId)
     {
-        await _mediator.Send(new CreateCronWorkflowStartedEvent(chatId));
+        await Mediator.Send(new CreateCronWorkflowStartedEvent(chatId));
 
         // save the machine
         _chatStates[chatId] = new CronStateMachine();
@@ -229,7 +229,7 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
     private async Task<MoneoCommandResult> CompleteWorkflowAsync(long chatId, CronDraft? draft = null)
     {
         _chatStates.Remove(chatId);
-        await _mediator.Send(new CreateCronWorkflowCompletedEvent(chatId, draft?.GenerateCronStatement() ?? ""));
+        await Mediator.Send(new CreateCronWorkflowCompletedEvent(chatId, draft?.GenerateCronStatement() ?? ""));
 
         if (draft is null || draft.DayRepeatMode == DayRepeatMode.Undefined)
         {
@@ -241,7 +241,7 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
             };
         }
         
-        return await _mediator.Send(new CreateTaskContinuationRequest(chatId, draft!.GenerateCronStatement()));
+        return await Mediator.Send(new CreateTaskContinuationRequest(chatId, draft!.GenerateCronStatement()));
     }
 
     public CreateCronWorkflowManager(IMediator mediator, ILogger<CreateCronWorkflowManager> logger) : base(mediator)
