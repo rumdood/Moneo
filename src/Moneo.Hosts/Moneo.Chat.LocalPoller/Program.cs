@@ -4,9 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Moneo.Chat;
 using Moneo.Chat.ServiceCollectionExtensions;
 using Moneo.Chat.Telegram;
-using Moneo.Chat.Workflows;
-using Moneo.Chat.Workflows.CreateCronSchedule;
-using Moneo.Chat.Workflows.CreateTask;
 using Moneo.Core;
 using Moneo.TaskManagement;
 using Moneo.TaskManagement.Client;
@@ -29,7 +26,7 @@ builder.Services.AddMemoryCache();
 IBotClientConfiguration botConfig = new BotClientConfiguration();
 builder.Configuration.GetSection(nameof(BotClientConfiguration)).Bind(botConfig);
 
-builder.Services.AddScoped<IBotClientConfiguration>(_ => botConfig);
+builder.Services.AddScoped(_ => botConfig);
 
 builder.Services.AddSingleton<IChatManager, ChatManager>();
 builder.Services.AddSingleton<ITaskResourceManager, TaskResourceManager>();
