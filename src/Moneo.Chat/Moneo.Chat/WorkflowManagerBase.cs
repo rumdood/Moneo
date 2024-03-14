@@ -4,11 +4,11 @@ namespace Moneo.Chat
 {
     public abstract class WorkflowManagerBase
     {
-        protected readonly IMediator _mediator;
+        protected readonly IMediator Mediator;
 
         protected WorkflowManagerBase(IMediator mediator)
         {
-            _mediator = mediator;
+            Mediator = mediator;
         }
     }
 }

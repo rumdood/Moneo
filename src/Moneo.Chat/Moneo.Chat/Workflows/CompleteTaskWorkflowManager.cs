@@ -11,22 +11,21 @@ public enum CompleteTaskOption
     Skip
 }
 
-public interface ICompleteTaskWorkflowManager
+public interface ICompleteTaskWorkflowManager : IWorkflowManager
 {
     Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CompleteTaskOption option,
         CancellationToken cancellationToken = default);
 }
 
-public class CompleteTaskWorkflowManager : ICompleteTaskWorkflowManager
+public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWorkflowManager
 {
-    private readonly IMediator _mediator;
     private readonly ITaskResourceManager _taskResourceManager;
     
     public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CompleteTaskOption option, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(taskName))
         {
-            return await _mediator.Send(new ListTasksRequest(conversationId, true), cancellationToken);
+            return await Mediator.Send(new ListTasksRequest(conversationId, true), cancellationToken);
         }
 
         var tasksMatchingName =
@@ -80,9 +79,8 @@ public class CompleteTaskWorkflowManager : ICompleteTaskWorkflowManager
         };
     }
 
-    public CompleteTaskWorkflowManager(IMediator mediator, ITaskResourceManager taskResourceManager)
+    public CompleteTaskWorkflowManager(IMediator mediator, ITaskResourceManager taskResourceManager) : base(mediator)
     {
-        _mediator = mediator;
         _taskResourceManager = taskResourceManager;
     }
 }
