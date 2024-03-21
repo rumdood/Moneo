@@ -17,6 +17,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Azure.Core.Serialization;
+using Moneo.Chat.ServiceCollectionExtensions;
 
 var builder = new HostBuilder();
 
@@ -57,13 +58,15 @@ builder.ConfigureFunctionsWorkerDefaults(opts =>
         });
         serviceCollection.AddMemoryCache();
         serviceCollection.AddBotConfiguration();
-        serviceCollection.AddSingleton<IChatManager, ChatManager>();
         serviceCollection.AddSingleton<ITaskResourceManager, TaskResourceManager>();
-        serviceCollection.AddSingleton<IChatAdapter, TelegramChatAdapter>();
         serviceCollection.AddSingleton<IMoneoTaskFactory, MoneoTaskFactory>();
         serviceCollection.AddSingleton<INotifyEngine, NotifyEngine>();
         serviceCollection.AddSingleton<IScheduleManager, ScheduleManager>();
+
+        serviceCollection.AddSingleton<IChatManager, ChatManager>();
+        serviceCollection.AddSingleton<IChatAdapter, TelegramChatAdapter>();
         serviceCollection.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
+        serviceCollection.AddWorkflowManagers();
 
         // Register named HttpClient to get benefits of IHttpClientFactory
         // and consume it with ITelegramBotClient typed client.
