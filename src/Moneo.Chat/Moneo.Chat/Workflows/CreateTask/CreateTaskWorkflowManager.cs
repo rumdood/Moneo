@@ -79,6 +79,7 @@ public class CreateTaskWorkflowManager : WorkflowManagerBase, ICreateTaskWorkflo
     private (bool Success, string? FailureMessage) HandleTaskRepeaterExpiryInput(TaskCreationStateMachine machine,
         string userInput)
     {
+        var noExpiry = new HashSet<string> { "none", "never", "no", "n/a", "it doesn't"};
         try
         {
             machine.Draft.Task.Repeater!.Expiry = DateTime.Parse(userInput);

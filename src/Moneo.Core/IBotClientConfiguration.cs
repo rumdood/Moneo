@@ -7,4 +7,5 @@ public interface IBotClientConfiguration
     string FunctionKey { get; set; }
     string CallbackToken {  get; set; }
     string TaskApiBase { get; set; }
+    bool IsDetailedErrorsEnabled { get; set; }
 }

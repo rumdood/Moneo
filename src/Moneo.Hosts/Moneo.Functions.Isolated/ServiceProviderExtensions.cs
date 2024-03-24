@@ -19,8 +19,10 @@ internal static class ServiceProviderExtensions
                                                          ?? throw new ArgumentException("Telegram Chat Id Not Found"));
         botConfig.TaskApiBase = Environment.GetEnvironmentVariable("taskManagerApiBase", EnvironmentVariableTarget.Process) 
                                 ?? throw new ArgumentException("Telegram Token Not Found");
+        botConfig.IsDetailedErrorsEnabled = Convert.ToBoolean(Environment.GetEnvironmentVariable("isDetailedErrorsEnabled", EnvironmentVariableTarget.Process) 
+                                                                       ?? "false");
 
-        serviceCollection.AddScoped(_ => botConfig);
+        serviceCollection.AddSingleton(_ => botConfig);
 
         return serviceCollection;
     }

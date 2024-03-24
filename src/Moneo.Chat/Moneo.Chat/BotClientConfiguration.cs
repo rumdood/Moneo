@@ -9,4 +9,5 @@ public class BotClientConfiguration : IBotClientConfiguration
     public string FunctionKey { get; set; } = default!;
     public string CallbackToken { get; set; } = default!;
     public string TaskApiBase { get; set; } = default!;
+    public bool IsDetailedErrorsEnabled { get; set; }
 }

@@ -245,6 +245,16 @@ public class TaskManager : ITaskManager
 
     public Task Delete()
     {
+        if (TaskState is null)
+        {
+            throw new InvalidOperationException("Task is not initialized");
+        }
+
+        if (TaskState.IsActive)
+        {
+            _ = DisableTask();
+        }
+
         Entity.Current.DeleteState();
         return Task.CompletedTask;
     }
