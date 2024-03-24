@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Moneo.Chat;
 using Moneo.Chat.BotRequests;
 using Moneo.Core;
+using Telegram.Bot.Types;
 
 namespace Moneo.Functions.Isolated.Chat
 {
@@ -47,7 +48,7 @@ namespace Moneo.Functions.Isolated.Chat
                 return request.CreateResponse(HttpStatusCode.Unauthorized);
             }
 
-            var message = await request.ReadFromJsonAsync<object>();
+            var message = await request.ReadFromJsonAsync<Update>();
 
             if (message is null)
             {
