@@ -92,8 +92,12 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         }
     }
 
-    public void StartReceiving(CancellationToken cancellationToken = default)
+    public async Task StartReceivingAsync(CancellationToken cancellationToken = default)
     {
+        // delete any existing webhook
+        await DeleteExistingWebhook(cancellationToken);
+        _isUsingWebhook = false;
+
         var options = new ReceiverOptions
         {
             AllowedUpdates = new[] { UpdateType.Message, UpdateType.CallbackQuery },

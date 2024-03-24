@@ -20,8 +20,7 @@ internal class BotService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await _taskResourceManager.InitializeAsync();
-        await _chatAdapter.StopReceivingAsync(stoppingToken);
-        _chatAdapter.StartReceiving(stoppingToken);
+        await _chatAdapter.StartReceivingAsync(stoppingToken);
         _logger.LogInformation("Moneo Bot Service Is Running");
 
         while (!stoppingToken.IsCancellationRequested)

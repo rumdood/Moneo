@@ -2,7 +2,7 @@ namespace Moneo.Chat;
 
 public interface IChatAdapter
 {
-    void StartReceiving(CancellationToken cancellationToken = default);
+    Task StartReceivingAsync(CancellationToken cancellationToken = default);
     Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default);
     Task StopReceivingAsync(CancellationToken cancellationToken = default);
     Task ReceiveUserMessageAsync(object message, CancellationToken cancellationToken);
