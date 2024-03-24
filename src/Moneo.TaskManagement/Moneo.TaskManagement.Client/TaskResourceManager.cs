@@ -95,9 +95,9 @@ public class TaskResourceManager : ITaskResourceManager
         _cache.Set(conversationId, taskLookup, cacheOptions);
     }
 
-    private async Task<Dictionary<string, MoneoTaskDto>?> GetTaskLookupForConversationAsync(long conversationId)
+    private async Task<Dictionary<string, MoneoTaskDto>?> GetTaskLookupForConversationAsync(long conversationId, bool forceRefresh = false)
     {
-        if (!_cache.TryGetValue(conversationId, out _))
+        if (forceRefresh || !_cache.TryGetValue(conversationId, out _))
         {
             await UpdateCacheForConversationAsync(conversationId);
         }
@@ -112,13 +112,13 @@ public class TaskResourceManager : ITaskResourceManager
             return;
         }
         
-        await GetAllTasksStoreAsync();
+        await RefreshAllTasksAsync();
         _isInitialized = true;
     }
     
     public async Task<MoneoTaskResult<IEnumerable<MoneoTaskDto>>> GetAllTasksForUserAsync(long conversationId)
     {
-        var items = await GetTaskLookupForConversationAsync(conversationId);
+        var items = await GetTaskLookupForConversationAsync(conversationId, true);
 
         if (items is null)
         {

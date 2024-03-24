@@ -231,8 +231,8 @@ internal class TaskManagerApi
         return request.CreateResponse(HttpStatusCode.OK);
     }
 
-    [Function(nameof(DeleteTask))]
-    public async Task<HttpResponseData> DeleteTask(
+    [Function(nameof(DeactivateTask))]
+    public async Task<HttpResponseData> DeactivateTask(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Delete, Route = "{chatId}/tasks/{taskId}")] HttpRequestData request,
         [DurableClient] DurableTaskClient client,
         FunctionContext context,

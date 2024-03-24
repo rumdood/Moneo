@@ -12,6 +12,27 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Moneo.Chat.Telegram;
 
+/*
+"update_id": 492336862, "message": {
+  "message_id": 8610,
+  "from": {
+    "id": 122243374,
+    "is_bot": false,
+    "first_name": "RumDood",
+    "username": "rumdood",
+    "language_code": "en"
+  },
+  "chat": {
+    "id": 122243374,
+    "first_name": "RumDood",
+    "username": "rumdood",
+    "type": "private"
+  },
+  "date": 1711059807,
+  "text": "Hello?"
+}
+*/
+
 public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>, 
     IRequestHandler<BotTextMessageRequest>,
     IRequestHandler<BotGifMessageRequest>,
@@ -21,6 +42,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     private readonly ITelegramBotClient _botClient;
     private readonly IChatManager _conversationManager;
     private readonly ILogger<TelegramChatAdapter> _logger;
+    private bool _isUsingWebhook = false;
 
     public TelegramChatAdapter(IBotClientConfiguration configuration, IChatManager conversationManager,
         ILogger<TelegramChatAdapter> logger, ITelegramBotClient? botClient = null)
@@ -29,6 +51,19 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         _configuration = configuration;
         _botClient = botClient ?? new TelegramBotClient(configuration.BotToken);
         _conversationManager = conversationManager;
+    }
+
+    private async Task DeleteExistingWebhook(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _botClient.DeleteWebhookAsync(cancellationToken: cancellationToken);
+            _isUsingWebhook = false;
+        }
+        catch (ApiRequestException e)
+        {
+            _logger.LogError(e, "Error occurred while deleting existing webhook");
+        }
     }
 
     private async Task HandleMessageUpdate(Message message, CancellationToken cancellationToken)
@@ -91,7 +126,24 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
     public async Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default)
     {
+        _isUsingWebhook = true;
         await _botClient.SetWebhookAsync(url: callbackUrl, secretToken: _configuration.CallbackToken, cancellationToken: cancellationToken);
+    }
+
+    public async Task StopReceivingAsync(CancellationToken cancellationToken = default)
+    {
+        if (_isUsingWebhook)
+        {
+            await DeleteExistingWebhook(cancellationToken);
+        }
+    }
+
+    public async Task<ChatAdapterStatus> GetStatusAsync(CancellationToken cancellationToken)
+    {
+        var webhookInfo = await _botClient.GetWebhookInfoAsync(cancellationToken);
+        return new ChatAdapterStatus(nameof(TelegramChatAdapter), _isUsingWebhook, new WebhookInfo(Url: webhookInfo.Url,
+                       LastErrorDate: webhookInfo.LastErrorDate, LastErrorMessage: webhookInfo.LastErrorMessage,
+                                  PendingUpdateCount: webhookInfo.PendingUpdateCount));
     }
 
     public Task ReceiveUserMessageAsync(object message, CancellationToken cancellationToken)

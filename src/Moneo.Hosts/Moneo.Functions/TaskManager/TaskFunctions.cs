@@ -129,6 +129,36 @@ public class TaskFunctions
         return new OkResult();
     }
 
+    private async Task<(List<string> Deleted, List<string> Failed)> DeleteInactiveTasksAsync(IDurableEntityClient client)
+    {
+        var allTasks = await GetAllTasksAsync(client);
+
+        var deleted = new List<string>();
+        var failed = new List<string>();
+
+        foreach (var (id, taskManager) in allTasks)
+        {
+            if (taskManager.TaskState.IsActive)
+            {
+                continue;
+            }
+
+            try
+            {
+                var entityId = new EntityId(nameof(TaskManager), id);
+                await client.SignalEntityAsync<ITaskManager>(entityId, r => r.Delete());
+                deleted.Add(id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete task: {Id}", id);
+                failed.Add(id);
+            }
+        }
+
+        return (Deleted: deleted, Failed: failed);
+    }
+
     [OpenApiOperation(operationId: "MoneoCreateTask",
         tags: new[] { "CreateTask" },
         Summary = "Create new task",
@@ -318,8 +348,8 @@ public class TaskFunctions
         bodyType: typeof(string),
         Summary = "If the request is missing the Task ID",
         Description = "If the request is missing the Task ID")]
-    [FunctionName(nameof(DeleteTaskAsync))]
-    public async Task<HttpResponseMessage> DeleteTaskAsync(
+    [FunctionName(nameof(DeactivateTask))]
+    public async Task<HttpResponseMessage> DeactivateTask(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Delete, Route = "{chatId}/tasks/{taskId}")] HttpRequestMessage request,
         string chatId,
         string taskId,
@@ -384,6 +414,34 @@ public class TaskFunctions
     {
         var allTasks = await GetAllTasksAsync(client);
         return new OkObjectResult(allTasks);
+    }
+
+    [OpenApiOperation(operationId: "CleanupInactiveMoneoTasks",
+        tags: new[] { "CleanupTasks" },
+        Summary = "Cleans up existing tasks that are currently inactive",
+        Description = "Cleans up existing tasks that are currently inactive and returns a list of tasks that have been deleted or that failed to be deleted",
+        Visibility = OpenApiVisibilityType.Important)]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK,
+        contentType: "application/json",
+        bodyType: typeof((List<string> Deleted, List<string> Failed)),
+        Summary = "The list of successfully deleted tasks and the list of tasks that failed to be deleted",
+        Description = "The list of successfully deleted tasks and the list of tasks that failed to be deleted")]
+    [FunctionName(nameof(CleanupInactiveTasksViaHttp))]
+    public async Task<ActionResult> CleanupInactiveTasksViaHttp(
+               [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Delete, Route = "tasks/cleanup")] HttpRequestMessage request,
+                      [DurableClient] IDurableEntityClient client)
+    {
+        var result = await DeleteInactiveTasksAsync(client);
+        return new OkObjectResult(result);
+    }
+
+    [FunctionName(nameof(CleanupInactiveTasksViaCron))]
+    public async Task CleanupInactiveTasksViaCron(
+               [TimerTrigger("0 0 2 15 * *")] TimerInfo timer,
+                      [DurableClient] IDurableEntityClient client)
+    {
+        var result = await DeleteInactiveTasksAsync(client);
+        _logger.LogInformation("Cleanup Inactive Tasks: {Deleted} Deleted, {Failed} Failed", result.Deleted.Count, result.Failed.Count);
     }
 
     [FunctionName(nameof(MigrateTasksAsync))]
