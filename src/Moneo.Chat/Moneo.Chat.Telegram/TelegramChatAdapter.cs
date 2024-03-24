@@ -12,27 +12,6 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Moneo.Chat.Telegram;
 
-/*
-"update_id": 492336862, "message": {
-  "message_id": 8610,
-  "from": {
-    "id": 122243374,
-    "is_bot": false,
-    "first_name": "RumDood",
-    "username": "rumdood",
-    "language_code": "en"
-  },
-  "chat": {
-    "id": 122243374,
-    "first_name": "RumDood",
-    "username": "rumdood",
-    "type": "private"
-  },
-  "date": 1711059807,
-  "text": "Hello?"
-}
-*/
-
 public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>, 
     IRequestHandler<BotTextMessageRequest>,
     IRequestHandler<BotGifMessageRequest>,
