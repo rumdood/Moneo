@@ -25,11 +25,9 @@ internal record TaskFunctionResult(bool Success, string? Message = null);
 internal class TaskManagerApi
 {
     private readonly ILogger<TaskManagerApi> _logger;
-    private readonly IMoneoTaskFactory _taskFactory;
 
-    public TaskManagerApi(IMoneoTaskFactory taskFactory, ILogger<TaskManagerApi> log)
+    public TaskManagerApi(ILogger<TaskManagerApi> log)
     {
-        _taskFactory = taskFactory;
         _logger = log;
     }
 
@@ -57,12 +55,9 @@ internal class TaskManagerApi
                 break;
             }
 
-            if (entities != null)
-            {
-                var tasks = entities
-                    .Where(x => x.State is not null);
-                return tasks.ToDictionary(x => x.Id.Key, x => x.State.ReadAs<MoneoTaskState>().ToMoneoTaskDto());
-            }
+            var tasks = entities
+                .Where(x => x.State is not null);
+            return tasks.ToDictionary(x => x.Id.Key, x => x.State.ReadAs<MoneoTaskState>().ToMoneoTaskDto());
         }
         while (query.ContinuationToken != null);
 
@@ -93,17 +88,16 @@ internal class TaskManagerApi
                 break;
             }
 
-            if (entities != null)
-                return entities
-                    .Where(x => x.Id.Key.Contains('_')) // since there's no way to delete the old ones...
-                    .Select(x => new
-                    {
-                        FullId = TaskFullId.CreateFromFullId(x.Id.Key),
-                        x.State
-                    })
-                    .Where(x => x.State is not null && x.FullId.ChatId.Equals(chatId))
-                    .ToDictionary(x => x.FullId.TaskId,
-                        x => x.State.ReadAs<MoneoTaskState>().ToMoneoTaskDto());
+            return entities
+                .Where(x => x.Id.Key.Contains('_')) // since there's no way to delete the old ones...
+                .Select(x => new
+                {
+                    FullId = TaskFullId.CreateFromFullId(x.Id.Key),
+                    x.State
+                })
+                .Where(x => x.State is not null && x.FullId.ChatId.Equals(chatId))
+                .ToDictionary(x => x.FullId.TaskId,
+                    x => x.State.ReadAs<MoneoTaskState>().ToMoneoTaskDto());
         }
         while (query.ContinuationToken != null);
 

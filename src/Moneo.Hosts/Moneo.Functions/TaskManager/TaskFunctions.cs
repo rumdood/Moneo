@@ -435,15 +435,6 @@ public class TaskFunctions
         return new OkObjectResult(result);
     }
 
-    [FunctionName(nameof(CleanupInactiveTasksViaCron))]
-    public async Task CleanupInactiveTasksViaCron(
-               [TimerTrigger("0 0 2 15 * *")] TimerInfo timer,
-                      [DurableClient] IDurableEntityClient client)
-    {
-        var result = await DeleteInactiveTasksAsync(client);
-        _logger.LogInformation("Cleanup Inactive Tasks: {Deleted} Deleted, {Failed} Failed", result.Deleted.Count, result.Failed.Count);
-    }
-
     [FunctionName(nameof(MigrateTasksAsync))]
     public async Task<IActionResult> MigrateTasksAsync(
         [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Patch, Route = "tasks/migrate")] HttpRequestMessage request,

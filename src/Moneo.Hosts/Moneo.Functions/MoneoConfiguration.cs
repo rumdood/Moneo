@@ -11,7 +11,6 @@ namespace Moneo.Functions
             public string TimeZone { get; init; }
         }
 
-        private const int DefaultDefuseThresholdHours = 4;
         private const int DefaultOldDueDatesMaxDays = 7;
         private const int DefaultCompletionHistoryEventCount = 5;
 
@@ -19,37 +18,25 @@ namespace Moneo.Functions
         public static string DefaultSkippedMessage { get => Environment.GetEnvironmentVariable("defaulteSkippedMessage"); }
         public static string DefaultTaskDueMessage { get => Environment.GetEnvironmentVariable("defaultTaskDueMessage"); }
         public static string DefaultReminderMessage { get => Environment.GetEnvironmentVariable("defaultReminderMessage"); }
-        public static int DefuseThresholdHours { get => GetIntFromEnvironment("defuseThresholdHours", DefaultDefuseThresholdHours); }
         public static int OldDueDatesMaxDays { get => GetIntFromEnvironment("oldDueDatesMaxDays", DefaultOldDueDatesMaxDays); }
         public static int MaxCompletionHistoryEventCount { get => GetIntFromEnvironment("completionHistoryEventCount", DefaultCompletionHistoryEventCount); }
         public static string TelegramBotToken { get 
                 => Environment.GetEnvironmentVariable("telegramBotToken", EnvironmentVariableTarget.Process) 
                 ?? throw new ArgumentException("Telegram Token Not Found"); }
-        public static string BotUri { get => Environment.GetEnvironmentVariable("botUri"); }
-        public static string BotClientId { get => Environment.GetEnvironmentVariable("botClientId"); }
-        public static long LegacyChatId { get => GetLongFromEnvironment("telegramChatId", -1); }
+        public static string ChatServiceEndpoint { get => Environment.GetEnvironmentVariable("chatServiceEndpoint"); }
+        public static string ChatServiceApiKey { get => Environment.GetEnvironmentVariable("chatServiceApiKey"); }
 
-        public static QuietHoursSetting QuietHours
-        {
-            get
+        public static QuietHoursSetting QuietHours =>
+            new()
             {
-                return new QuietHoursSetting
-                {
-                    Start = DateTime.Parse(Environment.GetEnvironmentVariable("quietHours__start")),
-                    End = DateTime.Parse(Environment.GetEnvironmentVariable("quietHours__end")),
-                    TimeZone = Environment.GetEnvironmentVariable("quietHours__timezone")
-                };
-            }
-        }
+                Start = DateTime.Parse(Environment.GetEnvironmentVariable("quietHours__start") ?? string.Empty),
+                End = DateTime.Parse(Environment.GetEnvironmentVariable("quietHours__end") ?? string.Empty),
+                TimeZone = Environment.GetEnvironmentVariable("quietHours__timezone")
+            };
 
         private static int GetIntFromEnvironment(string key, int defaultValue)
         {
-            if (int.TryParse(Environment.GetEnvironmentVariable(key), out var value))
-            {
-                return value;
-            }
-
-            return defaultValue;
+            return int.TryParse(Environment.GetEnvironmentVariable(key), out var value) ? value : defaultValue;
         }
 
         private static long GetLongFromEnvironment(string key, int defaultValue)

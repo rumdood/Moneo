@@ -99,7 +99,7 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
         {
             ResponseType = ResponseType.Menu,
             Type = ResultType.NeedMoreInfo,
-            UserMessageText = "When do you want this to repeat? this is a menu",
+            UserMessageText = "When do you want this to repeat?",
             MenuOptions = ["Daily", "Choose Days"]
         };
     }

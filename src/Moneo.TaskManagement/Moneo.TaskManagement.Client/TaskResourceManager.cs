@@ -140,7 +140,6 @@ public class TaskResourceManager : ITaskResourceManager
 
     public async Task<MoneoTaskResult<IEnumerable<MoneoTaskDto>>> GetTasksForUserAsync(long conversationId, MoneoTaskFilter filter)
     {
-        // TODO: Need to return the lookup id of the task (e.g. "Take Medication" has an id of "meds" but that isn't in the actual entity anywhere
         var lookup = await GetTaskLookupForConversationAsync(conversationId);
         
         if (lookup is null || (string.IsNullOrEmpty(filter.TaskId) && string.IsNullOrEmpty(filter.SearchString)))

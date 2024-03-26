@@ -72,11 +72,11 @@ namespace Moneo.Functions.Isolated.Chat
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "send/{messageType:alpha}")]
             HttpRequestData request, string messageType)
         {
-            var response = messageType.ToUpperInvariant() switch
+            var response = messageType.ToLowerInvariant() switch
             {
-                "TEXT" => await ProcessSendMessageRequest<BotTextMessageRequest>(request,
+                "text" => await ProcessSendMessageRequest<BotTextMessageRequest>(request,
                     (message) => _chatAdapter.SendBotTextMessageAsync(message, CancellationToken.None)),
-                "GIF" => await ProcessSendMessageRequest<BotGifMessageRequest>(request,
+                "gif" => await ProcessSendMessageRequest<BotGifMessageRequest>(request,
                     (message) => _chatAdapter.SendBotGifMessageAsync(message, CancellationToken.None)),
                 _ => request.CreateResponse(HttpStatusCode.NotFound)
             };
