@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 
@@ -12,7 +11,7 @@ internal interface IChatServiceProxy
     Task SendGifMessageToUserAsync(long chatId, string gifUrl);
 }
 
-internal record ChatMessage(long ConversationId, string Message, bool IsError = false);
+internal record ChatMessage(long ConversationId, string Text, bool IsError = false);
 
 internal class ChatServiceProxy: IChatServiceProxy
 {

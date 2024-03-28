@@ -39,7 +39,7 @@ public class TaskFunctions
         _logger = log;
     }
 
-    private static async Task<Dictionary<string, TaskManager>> GetAllTasksAsync(IDurableEntityClient client)
+    private async Task<Dictionary<string, TaskManager>> GetAllTasksAsync(IDurableEntityClient client)
     {
         using var tokenSource = new CancellationTokenSource();
         var cancelToken = tokenSource.Token;
@@ -60,51 +60,53 @@ public class TaskFunctions
             }
 
             var durableEntityStatusEnumerable = result!.Entities;
-            if (durableEntityStatusEnumerable != null)
-                return durableEntityStatusEnumerable.Where(x => x.State is not null)
-                    .ToDictionary(x => x.EntityId.EntityKey, x => x.State.ToObject<TaskManager>());
+
+            if (durableEntityStatusEnumerable is null)
+            {
+                return new Dictionary<string, TaskManager>();
+            }
+
+            var results = new Dictionary<string, TaskManager>();
+
+            foreach (var entity in durableEntityStatusEnumerable)
+            {
+                try
+                {
+                    var taskManager = entity.State.ToObject<TaskManager>();
+                    _ = results.TryAdd(entity.EntityId.EntityKey, taskManager);
+                }
+                catch (Exception)
+                {
+                    _logger.LogWarning("Failed to deserialize entity: {EntityId}", entity.EntityId.EntityKey);
+                    continue;
+                }
+            }
+
+            return results;
         }
         while (query.ContinuationToken != null);
 
         return new Dictionary<string, TaskManager>();
     }
 
-    private static async Task<Dictionary<string, MoneoTaskDto>> GetAllTasksForConversationAsync(string chatId, IDurableEntityClient client)
+    private async Task<Dictionary<string, MoneoTaskDto>> GetAllTasksForConversationAsync(string chatId, IDurableEntityClient client)
     {
-        using var tokenSource = new CancellationTokenSource();
-        var cancelToken = tokenSource.Token;
+        var allTasks = await GetAllTasksAsync(client);
+        var result = new Dictionary<string, MoneoTaskDto>();
 
-        var query = new EntityQuery
+        foreach (var kv in allTasks)
         {
-            FetchState = true,
-            EntityName = nameof(TaskManager)
-        };
-
-        do
-        {
-            var result = await client.ListEntitiesAsync(query, cancelToken);
-
-            if (result?.Entities != null && !(bool)result?.Entities.Any())
+            if (kv.Key.Contains('_'))
             {
-                break;
+                var id = TaskFullId.CreateFromFullId(kv.Key);
+                if (id.ChatId.Equals(chatId))
+                {
+                    _ = result.TryAdd(id.TaskId, kv.Value.TaskState.ToMoneoTaskDto());
+                }
             }
-
-            var durableEntityStatusEnumerable = result!.Entities;
-            if (durableEntityStatusEnumerable != null)
-                return durableEntityStatusEnumerable
-                    .Where(x => x.EntityId.EntityKey.Contains('_')) // since there's no way to delete the old ones...
-                    .Select(x => new
-                    {
-                        FullId = TaskFullId.CreateFromFullId(x.EntityId.EntityKey),
-                        x.State
-                    })
-                    .Where(x => x.State is not null && x.FullId.ChatId.Equals(chatId))
-                    .ToDictionary(x => x.FullId.TaskId,
-                        x => x.State.ToObject<TaskManager>().TaskState.ToMoneoTaskDto());
         }
-        while (query.ContinuationToken != null);
 
-        return new Dictionary<string, MoneoTaskDto>();
+        return result;
     }
 
     private async Task<IActionResult> CreateOrModifyTaskAsync(TaskFullId taskFullId, IDurableEntityClient client, Action<ITaskManager> doWork)
