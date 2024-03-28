@@ -18,7 +18,7 @@ public class GarbageCollection
 
     [FunctionName("GarbageCollection")]
     public static async Task<IActionResult> PerformGarbageCollection(
-        [HttpTrigger(AuthorizationLevel.Admin, HttpVerbs.Post, Route = "garbage")]
+        [HttpTrigger(AuthorizationLevel.Admin, HttpVerbs.Post, Route = "tasks/garbage")]
         HttpRequest request
         )
     {
