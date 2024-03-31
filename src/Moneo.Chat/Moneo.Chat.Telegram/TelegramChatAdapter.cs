@@ -97,6 +97,8 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         // delete any existing webhook
         await DeleteExistingWebhook(cancellationToken);
         _isUsingWebhook = false;
+        
+        _botClient.Timeout = TimeSpan.FromSeconds(30);
 
         var options = new ReceiverOptions
         {
