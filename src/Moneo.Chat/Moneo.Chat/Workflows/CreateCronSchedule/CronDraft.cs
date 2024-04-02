@@ -60,7 +60,7 @@ internal sealed class CronDraft
 
     public void AddRepeatDayOfWeek(DayOfWeek day)
     {
-        if (DayRepeatMode != DayRepeatMode.DayOfMonth)
+        if (DayRepeatMode != DayRepeatMode.DayOfWeek)
         {
             throw new InvalidOperationException("Cannot add a weekly repeat day");
         }

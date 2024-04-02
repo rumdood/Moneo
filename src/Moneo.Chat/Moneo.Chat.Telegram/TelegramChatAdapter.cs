@@ -97,6 +97,8 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         // delete any existing webhook
         await DeleteExistingWebhook(cancellationToken);
         _isUsingWebhook = false;
+        
+        _botClient.Timeout = TimeSpan.FromSeconds(30);
 
         var options = new ReceiverOptions
         {
@@ -183,7 +185,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
             var queue = new Queue<InlineKeyboardButton>(buttons);
             var currentRow = new List<InlineKeyboardButton>();
 
-            while (queue.TryPeek(out _) || currentRow.Count > 0)
+            while (queue.TryPeek(out _))
             {
                 if (currentRow.Count < maxRowSize)
                 {
@@ -193,6 +195,11 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
                 yield return currentRow;
                 currentRow = [];
+            }
+
+            if (currentRow.Count > 0)
+            {
+                yield return currentRow;
             }
         }
 

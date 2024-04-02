@@ -9,14 +9,14 @@ namespace Moneo.TaskManagement.Client;
 
 internal class ConversationTaskStore : Dictionary<long, Dictionary<string, MoneoTaskDto>> { }
 
+internal enum TaskAction
+{
+    Complete,
+    Skip
+}
+
 public class TaskManagerHttpClient : ITaskManagerClient
 {
-    private enum TaskAction
-    {
-        Complete,
-        Skip
-    }
-
     private readonly IBotClientConfiguration _configuration;
     private readonly RestClient _client;
     private readonly ILogger<TaskManagerHttpClient> _logger;

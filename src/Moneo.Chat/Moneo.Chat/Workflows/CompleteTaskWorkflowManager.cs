@@ -42,7 +42,17 @@ public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWor
             };
         }
 
-        var tasks = tasksMatchingName.Result.Where(t => t.IsActive).ToArray();
+        var tasks = tasksMatchingName.Result.Where(t => t.IsActive && !string.IsNullOrEmpty(t.Id)).ToArray();
+
+        if (!tasks.Any())
+        {
+            return new MoneoCommandResult
+            {
+                ResponseType = ResponseType.Text,
+                Type = ResultType.Error,
+                UserMessageText = $"There was a problem working with {taskName} and I can't clear it."
+            };
+        }
 
         if (tasks.Length == 1)
         {

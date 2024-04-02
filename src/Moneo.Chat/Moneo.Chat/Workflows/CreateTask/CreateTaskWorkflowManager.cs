@@ -274,19 +274,22 @@ public class CreateTaskWorkflowManager : WorkflowManagerBase, ICreateTaskWorkflo
 
         while (string.IsNullOrEmpty(responseText))
         {
-            if (machine.CurrentState == TaskCreationState.WaitingForTimezone)
+            switch (machine.CurrentState)
             {
-                _logger.LogDebug("Setting Timezone");
-                draft.Task.TimeZone = "Pacific Standard Time";
-            }
-            else if (machine.CurrentState == TaskCreationState.WaitingForBadgerMessages)
-            {
-                draft.Task.Badger!.BadgerMessages = new[]
-                {
-                    $"Hey! You need to do the {draft.Task.Name} thing",
-                    $"You still haven't finished your task: {draft.Task.Name}",
-                    $"Dude. {draft.Task.Name}. It's past due."
-                };
+                case TaskCreationState.WaitingForTimezone:
+                    _logger.LogDebug("Setting Timezone");
+                    draft.Task.TimeZone = "Pacific Standard Time";
+                    break;
+                case TaskCreationState.WaitingForBadgerMessages:
+                    draft.Task.Badger!.BadgerMessages = new[]
+                    {
+                        $"Hey! You need to do the {draft.Task.Name} thing",
+                        $"You still haven't finished your task: {draft.Task.Name}",
+                        $"Dude. {draft.Task.Name}. It's past due."
+                    };
+                    break;
+                case TaskCreationState.WaitingForRepeaterCron:
+                    return await Mediator.Send(new CreateCronRequest(machine.ConversationId));
             }
 
             // do a thing and advance again

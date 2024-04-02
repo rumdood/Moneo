@@ -59,6 +59,7 @@ builder.ConfigureFunctionsWorkerDefaults(opts =>
         serviceCollection.AddMemoryCache();
         serviceCollection.AddBotConfiguration();
         serviceCollection.AddSingleton<ITaskResourceManager, TaskResourceManager>();
+        serviceCollection.AddSingleton<ITaskManagerClient, TaskManagerHttpClient>();
         serviceCollection.AddSingleton<IMoneoTaskFactory, MoneoTaskFactory>();
         serviceCollection.AddSingleton<INotifyEngine, NotifyEngine>();
         serviceCollection.AddSingleton<IScheduleManager, ScheduleManager>();

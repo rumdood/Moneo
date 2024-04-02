@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
 using Microsoft.ApplicationInsights.Extensibility;
+using Moneo.Functions.Chat;
 using Moneo.Functions.NotifyEngines;
 using Moneo.TaskManagement;
 
@@ -31,10 +32,19 @@ namespace Moneo.Functions
                 .CreateLogger();
 
             //builder.Services.AddLogging();
-            builder.Services.AddScoped<INotifyEngine, TelegramNotify>();
-            //builder.Services.AddScoped<INotifyEngine, HttpNotify>();
+
+            if (string.IsNullOrEmpty(MoneoConfiguration.ChatServiceEndpoint))
+            {
+                builder.Services.AddScoped<INotifyEngine, TelegramNotify>();
+            }
+            else
+            {
+                builder.Services.AddScoped<INotifyEngine, HttpNotify>();
+            }
+            
             builder.Services.AddSingleton<IScheduleManager, ScheduleManager>();
             builder.Services.AddSingleton<IMoneoTaskFactory, MoneoTaskFactory>();
+            builder.Services.AddSingleton<IChatServiceProxy, ChatServiceProxy>();
 
             builder.Services.AddLogging(cfg =>
             {
