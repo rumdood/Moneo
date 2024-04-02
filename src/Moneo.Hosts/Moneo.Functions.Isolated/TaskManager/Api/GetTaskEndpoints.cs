@@ -12,7 +12,7 @@ namespace Moneo.Functions.Isolated.TaskManager;
 
 internal class GetTaskEndpoints : TaskManagerEndpointBase
 {
-    public GetTaskEndpoints(IDurableEntityTasksService tasksService, ILogger<TaskManagerEndpointBase> log) : base(tasksService, log)
+    public GetTaskEndpoints(IDurableEntityTasksService tasksService, ILogger<GetTaskEndpoints> log) : base(tasksService, log)
     {
     }
 
@@ -45,7 +45,7 @@ internal class GetTaskEndpoints : TaskManagerEndpointBase
         FunctionContext context,
         string chatId)
     {
-        var tasks = await _durableEntityTasksService.GetAllTasksDictionaryForConversationAsync(chatId, client);
+        var tasks = await DurableEntityTasksService.GetAllTasksDictionaryForConversationAsync(chatId, client);
 
         if (tasks.Count == 0)
         {
@@ -63,7 +63,7 @@ internal class GetTaskEndpoints : TaskManagerEndpointBase
                [DurableClient] DurableTaskClient client,
                       FunctionContext context)
     {
-        var tasks = await _durableEntityTasksService.GetAllTasksDictionaryAsync(client);
+        var tasks = await DurableEntityTasksService.GetAllTasksDictionaryAsync(client);
 
         if (tasks.Count == 0)
         {

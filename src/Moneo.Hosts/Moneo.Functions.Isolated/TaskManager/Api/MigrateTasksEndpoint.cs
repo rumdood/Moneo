@@ -11,7 +11,7 @@ namespace Moneo.Functions.Isolated.TaskManager;
 
 internal class MigrateTasksEndpoint : TaskManagerEndpointBase
 {
-    public MigrateTasksEndpoint(IDurableEntityTasksService tasksService, ILogger<TaskManagerEndpointBase> log) : base(tasksService, log)
+    public MigrateTasksEndpoint(IDurableEntityTasksService tasksService, ILogger<MigrateTasksEndpoint> log) : base(tasksService, log)
     {
     }
 
@@ -21,7 +21,7 @@ internal class MigrateTasksEndpoint : TaskManagerEndpointBase
         [DurableClient] DurableTaskClient client,
         FunctionContext context)
     {
-        var allTasks = await _durableEntityTasksService.GetAllTasksDictionaryAsync(client);
+        var allTasks = await DurableEntityTasksService.GetAllTasksDictionaryAsync(client);
 
         if (allTasks.Count == 0)
         {
@@ -50,7 +50,7 @@ internal class MigrateTasksEndpoint : TaskManagerEndpointBase
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to migrate task: {Id}", id);
+                Logger.LogError(ex, "Failed to migrate task: {Id}", id);
                 failed.Add(id);
             }
         }

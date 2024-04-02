@@ -11,7 +11,7 @@ namespace Moneo.Functions.Isolated.TaskManager;
 
 internal class UpdateTaskEndpoint : TaskManagerEndpointBase
 {
-    public UpdateTaskEndpoint(IDurableEntityTasksService tasksService, ILogger<TaskManagerEndpointBase> log) : base(tasksService, log)
+    public UpdateTaskEndpoint(IDurableEntityTasksService tasksService, ILogger<UpdateTaskEndpoint> log) : base(tasksService, log)
     {
     }
 

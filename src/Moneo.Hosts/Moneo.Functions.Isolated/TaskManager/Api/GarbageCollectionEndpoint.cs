@@ -8,10 +8,10 @@ namespace Moneo.Functions.Isolated.TaskManager;
 
 internal class GarbageCollectionEndpoint : TaskManagerEndpointBase
 {
-    private static readonly HttpClient client = new HttpClient();
-    private const string entityName = "taskmanager";
+    private static readonly HttpClient Client = new();
+    private const string EntityName = "taskmanager";
 
-    public GarbageCollectionEndpoint(IDurableEntityTasksService tasksService, ILogger<TaskManagerEndpointBase> log) : base(tasksService, log)
+    public GarbageCollectionEndpoint(IDurableEntityTasksService tasksService, ILogger<GarbageCollectionEndpoint> log) : base(tasksService, log)
     {
     }
 
@@ -20,16 +20,18 @@ internal class GarbageCollectionEndpoint : TaskManagerEndpointBase
         var listEntitiesUri = $"{baseUrl}/runtime/webhooks/durabletask/entities/{entityName}";
         Console.WriteLine(listEntitiesUri);
 
-        client.DefaultRequestHeaders.Add("x-ms-continuation-token", continuationToken);
-        var response = await client.GetAsync(listEntitiesUri);
+        Client.DefaultRequestHeaders.Add("x-ms-continuation-token", continuationToken);
+        var response = await Client.GetAsync(listEntitiesUri);
         var body = JArray.Parse(await response.Content.ReadAsStringAsync());
 
         if (response.Headers.TryGetValues("x-ms-continuation-token", out var values))
         {
-            continuationToken = values.FirstOrDefault();
+            continuationToken = values.FirstOrDefault() ?? "";
         }
 
-        var keys = body.SelectTokens("$..entityId.key").Values<string>().Where(key => !string.IsNullOrEmpty(key)).ToList();
+        var keys = body?.SelectTokens("$..entityId.key").Values<string>().Where(key => !string.IsNullOrEmpty(key))
+            .Select(k => k!)
+            .ToList() ?? [];
 
         return (continuationToken, keys);
     }
@@ -42,21 +44,21 @@ internal class GarbageCollectionEndpoint : TaskManagerEndpointBase
     {
         var baseUrl = $"{request.Url.Scheme}://{request.Url.Host}";
         var code = MoneoConfiguration.DurableTaskFunctionKey;
-        client.DefaultRequestHeaders.Add("x-functions-key", code);
+        Client.DefaultRequestHeaders.Add("x-functions-key", code);
 
-        var result = await GetEntities(baseUrl, entityName, "");
+        var result = await GetEntities(baseUrl, EntityName, "");
         var keys = result.Keys;
 
         while (!string.IsNullOrEmpty(result.ContinuationToken))
         {
-            result = await GetEntities(baseUrl, entityName, result.ContinuationToken);
+            result = await GetEntities(baseUrl, EntityName, result.ContinuationToken);
             keys.AddRange(result.Keys);
         }
 
         foreach (var key in keys)
         {
-            var purgeSingleInstanceHistoryUri = $"{baseUrl}/runtime/webhooks/durabletask/instances/@{entityName}@{key}";
-            await client.DeleteAsync(purgeSingleInstanceHistoryUri);
+            var purgeSingleInstanceHistoryUri = $"{baseUrl}/runtime/webhooks/durabletask/instances/@{EntityName}@{key}";
+            await Client.DeleteAsync(purgeSingleInstanceHistoryUri);
         }
 
         var response = request.CreateResponse(HttpStatusCode.OK);

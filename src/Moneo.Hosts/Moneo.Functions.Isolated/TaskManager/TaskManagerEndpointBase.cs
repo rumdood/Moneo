@@ -18,12 +18,12 @@ internal record DurableEntityEntry(string Key, MoneoTaskDto TaskDto);
 
 internal abstract class TaskManagerEndpointBase
 {
-    protected readonly IDurableEntityTasksService _durableEntityTasksService;
-    protected readonly ILogger<TaskManagerEndpointBase> _logger;
+    protected readonly IDurableEntityTasksService DurableEntityTasksService;
+    protected readonly ILogger<TaskManagerEndpointBase> Logger;
 
     protected TaskManagerEndpointBase(IDurableEntityTasksService tasksService, ILogger<TaskManagerEndpointBase> log)
     {
-        _durableEntityTasksService = tasksService;
-        _logger = log;
+        DurableEntityTasksService = tasksService;
+        Logger = log;
     }
 }

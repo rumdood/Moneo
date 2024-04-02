@@ -11,7 +11,10 @@ namespace Moneo.Functions.Isolated.TaskManager;
 internal interface IDurableEntityTasksService
 {
     Task<TaskFunctionResult> CompleteOrSkipTaskAsync(TaskFullId taskFullId, bool isSkipped, DurableTaskClient client);
-    Task CreateOrModifyTaskAsync(TaskFullId taskFullId, DurableTaskClient client, string method, MoneoTaskDto task);
+    Task<TaskFunctionResult> DeactivateTaskAsync(TaskFullId taskFullId, DurableTaskClient client);
+    Task<TaskFunctionResult> DeleteTaskAsync(TaskFullId taskFullId, DurableTaskClient client);
+    Task<TaskFunctionResult> CreateTaskAsync(TaskFullId taskFullId, DurableTaskClient client, MoneoTaskDto task);
+    Task<TaskFunctionResult> UpdateTaskAsync(TaskFullId taskFullId, DurableTaskClient client, MoneoTaskDto task);
     Task<Dictionary<string, MoneoTaskDto>> GetAllTasksDictionaryAsync(DurableTaskClient client);
     Task<Dictionary<string, MoneoTaskDto>> GetAllTasksDictionaryForConversationAsync(string chatId, DurableTaskClient client);
     Task<MoneoTaskDto?> GetTaskDtoAsync(TaskFullId taskFullId, DurableTaskClient client);
@@ -79,10 +82,64 @@ internal class DurableEntityTasksService : IDurableEntityTasksService
                     x => x.TaskDto);
     }
 
-    public async Task CreateOrModifyTaskAsync(TaskFullId taskFullId, DurableTaskClient client, string method, MoneoTaskDto task)
+    public async Task<TaskFunctionResult> DeactivateTaskAsync(TaskFullId taskFullId, DurableTaskClient client)
+    {
+        if (taskFullId is null)
+        {
+            return new TaskFunctionResult(false, "Task ID Is Required");
+        }
+
+        var entityId = new EntityInstanceId(nameof(MoneoTaskState), taskFullId.FullId);
+        await client.Entities.SignalEntityAsync(entityId, nameof(TaskManager.DisableTask));
+        _logger.LogInformation("{TaskId} Deactivated", taskFullId.TaskId);
+
+        return new TaskFunctionResult(true);
+    }
+
+    public async Task<TaskFunctionResult> DeleteTaskAsync(TaskFullId taskFullId, DurableTaskClient client)
+    {
+        if (taskFullId is null)
+        {
+            return new TaskFunctionResult(false, "Task ID Is Required");
+        }
+        
+        var entityId = new EntityInstanceId(nameof(MoneoTaskState), taskFullId.FullId);
+        await client.Entities.SignalEntityAsync(entityId, nameof(TaskManager.Delete));
+        _logger.LogInformation("{TaskId} State Deleted", taskFullId.TaskId);
+        
+        return new TaskFunctionResult(true);
+    }
+
+    public async Task<TaskFunctionResult> CreateTaskAsync(TaskFullId taskFullId, DurableTaskClient client, MoneoTaskDto task)
     {
         var entityId = new EntityInstanceId(nameof(MoneoTaskState), taskFullId.FullId);
-        await client.Entities.SignalEntityAsync(entityId, method, task);
+
+        var existing = await client.Entities.GetEntityAsync<MoneoTaskState>(entityId);
+
+        if (existing is not null)
+        {
+            return new TaskFunctionResult(false, "Task ID Conflict");
+        }
+
+        await client.Entities.SignalEntityAsync(entityId, nameof(TaskManager.InitializeTask), task);
+
+        return new TaskFunctionResult(true);
+    }
+    
+    public async Task<TaskFunctionResult> UpdateTaskAsync(TaskFullId taskFullId, DurableTaskClient client, MoneoTaskDto task)
+    {
+        var entityId = new EntityInstanceId(nameof(MoneoTaskState), taskFullId.FullId);
+
+        var existing = await client.Entities.GetEntityAsync<MoneoTaskState>(entityId);
+
+        if (existing is null)
+        {
+            return new TaskFunctionResult(false, "Task Not Found");
+        }
+
+        await client.Entities.SignalEntityAsync(entityId, nameof(TaskManager.UpdateTask), task);
+
+        return new TaskFunctionResult(true);
     }
 
     public async Task<MoneoTaskDto?> GetTaskDtoAsync(TaskFullId taskFullId, DurableTaskClient client)

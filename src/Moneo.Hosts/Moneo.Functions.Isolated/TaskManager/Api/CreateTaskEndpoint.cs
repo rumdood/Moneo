@@ -31,18 +31,21 @@ internal class CreateTaskEndpoint : TaskManagerEndpointBase
         }
 
         var taskFullId = new TaskFullId(chatId, taskId);
-        var entityId = new EntityInstanceId(nameof(MoneoTaskState), taskFullId.FullId);
+        var result = await DurableEntityTasksService.CreateTaskAsync(taskFullId, client, task);
 
-        var existing = await client.Entities.GetEntityAsync<MoneoTaskState>(entityId);
-
-        if (existing is not null)
+        if (result.Success)
         {
-            return request.CreateResponse(HttpStatusCode.Conflict);
+            return request.CreateResponse(HttpStatusCode.OK);
+        }
+        
+        var response = request.CreateResponse(HttpStatusCode.BadRequest);
+
+        if (!string.IsNullOrEmpty(result.Message))
+        {
+            await response.WriteStringAsync(result.Message);
         }
 
-        var operationName = nameof(TaskManager.InitializeTask);
+        return response;
 
-        await client.Entities.SignalEntityAsync(entityId, operationName, task);
-        return request.CreateResponse(HttpStatusCode.OK);
     }
 }
