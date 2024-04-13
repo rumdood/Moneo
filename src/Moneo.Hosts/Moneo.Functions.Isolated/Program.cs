@@ -63,6 +63,7 @@ builder.ConfigureFunctionsWorkerDefaults(opts =>
         serviceCollection.AddSingleton<IMoneoTaskFactory, MoneoTaskFactory>();
         serviceCollection.AddSingleton<INotifyEngine, NotifyEngine>();
         serviceCollection.AddSingleton<IScheduleManager, ScheduleManager>();
+        serviceCollection.AddScoped<IDurableEntityTasksService, DurableEntityTasksService>();
 
         serviceCollection.AddSingleton<IChatManager, ChatManager>();
         serviceCollection.AddSingleton<IChatAdapter, TelegramChatAdapter>();
