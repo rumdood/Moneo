@@ -11,6 +11,7 @@ public interface IMoneoTask
     string? Description { get; }
     bool IsActive { get; }
     HashSet<DateTime> DueDates { get; }
+    
     string TimeZone { get; }
     string? CompletedMessage { get; }
     string? SkippedMessage { get; }
