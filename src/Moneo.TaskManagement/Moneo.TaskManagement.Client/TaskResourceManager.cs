@@ -187,4 +187,7 @@ public class TaskResourceManager : ITaskResourceManager
         return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(false, Enumerable.Empty<MoneoTaskDto>(),
             $"No tasks were found for the search string \"{filter.SearchString}\"");
     }
+
+    public Task<MoneoTaskResult> DisableTaskAsync(long conversationId, string taskId) =>
+        _proxy.DisableTaskAsync(conversationId, taskId);
 }

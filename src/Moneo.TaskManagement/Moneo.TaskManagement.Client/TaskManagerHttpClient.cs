@@ -12,7 +12,8 @@ internal class ConversationTaskStore : Dictionary<long, Dictionary<string, Moneo
 internal enum TaskAction
 {
     Complete,
-    Skip
+    Skip,
+    Disable,
 }
 
 public class TaskManagerHttpClient : ITaskManagerClient
@@ -34,7 +35,12 @@ public class TaskManagerHttpClient : ITaskManagerClient
     private async Task<MoneoTaskResult> ExecuteTaskFunctionAsync(long conversationId, string taskName,
         TaskAction action)
     {
-        var actionString = action is TaskAction.Complete ? "complete" : "skip";
+        var actionString = action switch
+        {
+            TaskAction.Complete => "complete",
+            TaskAction.Skip => "skip",
+            _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
+        };
 
         var request = new RestRequest($"{conversationId}/tasks/{taskName}/{actionString}");
         request.AddHeader(FunctionKeyHeader, _configuration.FunctionKey);
@@ -107,6 +113,21 @@ public class TaskManagerHttpClient : ITaskManagerClient
         request.AddJsonBody(task);
 
         var response = await _client.ExecutePostAsync(request);
+
+        return new MoneoTaskResult(response.IsSuccessful, response.ErrorMessage);
+    }
+
+    public async Task<MoneoTaskResult> DisableTaskAsync(long conversationId, string taskName)
+    {
+        var request = new RestRequest($"{conversationId}/tasks/{taskName}");
+        request.AddHeader(FunctionKeyHeader, _configuration.FunctionKey);
+
+        var response = await _client.DeleteAsync(request);
+
+        if (!response.IsSuccessful)
+        {
+            _logger.LogError("Failed to DISABLE task: {@Error}", response.ErrorMessage);
+        }
 
         return new MoneoTaskResult(response.IsSuccessful, response.ErrorMessage);
     }
