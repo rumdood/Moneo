@@ -190,4 +190,7 @@ public class TaskResourceManager : ITaskResourceManager
 
     public Task<MoneoTaskResult> DisableTaskAsync(long conversationId, string taskId) =>
         _proxy.DisableTaskAsync(conversationId, taskId);
+
+    public Task<MoneoTaskResult> UpdateTaskAsync(long conversationId, string taskId, MoneoTaskDto task) =>
+        _proxy.UpdateTaskAsync(conversationId, taskId, task);
 }

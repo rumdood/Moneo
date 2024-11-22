@@ -11,5 +11,6 @@ public interface ITaskResourceManager
     Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskId);
     Task<MoneoTaskResult> CreateTaskAsync(long conversationId, MoneoTaskDto task);
     Task<MoneoTaskResult> DisableTaskAsync(long conversationId, string taskId);
+    Task<MoneoTaskResult> UpdateTaskAsync(long conversationId, string taskId, MoneoTaskDto task);
     Task<MoneoTaskResult<IEnumerable<MoneoTaskDto>>> GetTasksForUserAsync(long conversationId, MoneoTaskFilter filter);
 }

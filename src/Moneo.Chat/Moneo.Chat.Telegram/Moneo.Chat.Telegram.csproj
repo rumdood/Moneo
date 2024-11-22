@@ -14,8 +14,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="12.2.0" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+      <PackageReference Include="MediatR" Version="12.4.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
       <PackageReference Include="Telegram.Bot" Version="19.0.0" />
     </ItemGroup>
 

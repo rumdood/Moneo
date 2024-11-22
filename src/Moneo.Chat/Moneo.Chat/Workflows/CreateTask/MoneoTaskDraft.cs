@@ -29,4 +29,13 @@ public class MoneoTaskDraft
     {
         Task.Badger = null;
     }
+
+    public MoneoTaskDraft()
+    {
+    }
+
+    public MoneoTaskDraft(MoneoTaskDto dto)
+    {
+        Task = dto;
+    }
 }

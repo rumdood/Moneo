@@ -1,15 +1,15 @@
 namespace Moneo.Chat.Workflows.CreateTask;
 
-internal class TaskCreationStateMachine : IWorkflowStateMachine<TaskCreationState>
+public class TaskCreationStateMachine : IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>
 {
-    public TaskCreationState CurrentState { get; private set; }
+    public TaskCreateOrUpdateState CurrentState { get; private set; }
     public MoneoTaskDraft Draft { get; } = new();
     public long ConversationId { get; private set; }
 
     public TaskCreationStateMachine(long conversationId, string? name = null)
     {
         ConversationId = conversationId;
-        CurrentState = string.IsNullOrEmpty(name) ? TaskCreationState.Start : TaskCreationState.WaitingForName;
+        CurrentState = string.IsNullOrEmpty(name) ? TaskCreateOrUpdateState.Start : TaskCreateOrUpdateState.WaitingForName;
 
         if (!string.IsNullOrEmpty(name))
         {
@@ -17,57 +17,57 @@ internal class TaskCreationStateMachine : IWorkflowStateMachine<TaskCreationStat
         }
     }
 
-    public TaskCreationState GoToNext()
+    public TaskCreateOrUpdateState GoToNext()
     {
         switch (CurrentState)
         {
-            case TaskCreationState.Start:
-                CurrentState = TaskCreationState.WaitingForName;
+            case TaskCreateOrUpdateState.Start:
+                CurrentState = TaskCreateOrUpdateState.WaitingForName;
                 break;
-            case TaskCreationState.WaitingForName:
-                CurrentState = TaskCreationState.WaitingForDescription;
+            case TaskCreateOrUpdateState.WaitingForName:
+                CurrentState = TaskCreateOrUpdateState.WaitingForDescription;
                 break;
-            case TaskCreationState.WaitingForDescription:
-                CurrentState = TaskCreationState.WaitingForTimezone;
+            case TaskCreateOrUpdateState.WaitingForDescription:
+                CurrentState = TaskCreateOrUpdateState.WaitingForTimezone;
                 break;
-            case TaskCreationState.WaitingForTimezone:
-                CurrentState = TaskCreationState.WaitingForCompletedMessage;
+            case TaskCreateOrUpdateState.WaitingForTimezone:
+                CurrentState = TaskCreateOrUpdateState.WaitingForCompletedMessage;
                 break;
-            case TaskCreationState.WaitingForCompletedMessage:
-                CurrentState = TaskCreationState.WaitingForSkippedMessage;
+            case TaskCreateOrUpdateState.WaitingForCompletedMessage:
+                CurrentState = TaskCreateOrUpdateState.WaitingForSkippedMessage;
                 break;
-            case TaskCreationState.WaitingForSkippedMessage:
-                CurrentState = TaskCreationState.WaitingForRepeater;
+            case TaskCreateOrUpdateState.WaitingForSkippedMessage:
+                CurrentState = TaskCreateOrUpdateState.WaitingForRepeater;
                 break;
-            case TaskCreationState.WaitingForRepeater:
+            case TaskCreateOrUpdateState.WaitingForRepeater:
                 CurrentState = Draft.IsRepeaterEnabled
-                    ? TaskCreationState.WaitingForRepeaterCron
-                    : TaskCreationState.WaitingForBadger;
+                    ? TaskCreateOrUpdateState.WaitingForRepeaterCron
+                    : TaskCreateOrUpdateState.WaitingForBadger;
                 break;
-            case TaskCreationState.WaitingForRepeaterCron:
-                CurrentState = TaskCreationState.WaitingForRepeaterExpiry;
+            case TaskCreateOrUpdateState.WaitingForRepeaterCron:
+                CurrentState = TaskCreateOrUpdateState.WaitingForRepeaterExpiry;
                 break;
-            case TaskCreationState.WaitingForRepeaterExpiry:
-                CurrentState = TaskCreationState.WaitingForRepeaterCompletionThreshold;
+            case TaskCreateOrUpdateState.WaitingForRepeaterExpiry:
+                CurrentState = TaskCreateOrUpdateState.WaitingForRepeaterCompletionThreshold;
                 break;
-            case TaskCreationState.WaitingForRepeaterCompletionThreshold:
-                CurrentState = TaskCreationState.WaitingForBadger;
+            case TaskCreateOrUpdateState.WaitingForRepeaterCompletionThreshold:
+                CurrentState = TaskCreateOrUpdateState.WaitingForBadger;
                 break;
-            case TaskCreationState.WaitingForBadger:
+            case TaskCreateOrUpdateState.WaitingForBadger:
                 CurrentState = Draft.IsBadgerEnabled
-                    ? TaskCreationState.WaitingForBadgerFrequency
-                    : Draft.IsRepeaterEnabled ? TaskCreationState.End : TaskCreationState.WaitingForDueDates;
+                    ? TaskCreateOrUpdateState.WaitingForBadgerFrequency
+                    : Draft.IsRepeaterEnabled ? TaskCreateOrUpdateState.End : TaskCreateOrUpdateState.WaitingForDueDates;
                 break;
-            case TaskCreationState.WaitingForBadgerFrequency:
-                CurrentState = TaskCreationState.WaitingForBadgerMessages;
+            case TaskCreateOrUpdateState.WaitingForBadgerFrequency:
+                CurrentState = TaskCreateOrUpdateState.WaitingForBadgerMessages;
                 break;
-            case TaskCreationState.WaitingForBadgerMessages:
-                CurrentState = Draft.IsRepeaterEnabled ? TaskCreationState.End : TaskCreationState.WaitingForDueDates;
+            case TaskCreateOrUpdateState.WaitingForBadgerMessages:
+                CurrentState = Draft.IsRepeaterEnabled ? TaskCreateOrUpdateState.End : TaskCreateOrUpdateState.WaitingForDueDates;
                 break;
-            case TaskCreationState.WaitingForDueDates:
-                CurrentState = TaskCreationState.End;
+            case TaskCreateOrUpdateState.WaitingForDueDates:
+                CurrentState = TaskCreateOrUpdateState.End;
                 break;
-            case TaskCreationState.End:
+            case TaskCreateOrUpdateState.End:
             default:
                 break;
         }

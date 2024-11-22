@@ -131,4 +131,22 @@ public class TaskManagerHttpClient : ITaskManagerClient
 
         return new MoneoTaskResult(response.IsSuccessful, response.ErrorMessage);
     }
+
+    public async Task<MoneoTaskResult> UpdateTaskAsync(long conversationId, string taskName, MoneoTaskDto task)
+    {
+        var taskNameLower = taskName.ToLowerInvariant().Replace(" ", "");
+        var request = new RestRequest($"{conversationId}/tasks/{taskNameLower}");
+        request.AddHeader(FunctionKeyHeader, _configuration.FunctionKey);
+        request.AddJsonBody(task);
+        
+        // the update is performed via PATCH - should be changed to PUT because it's a full replacement
+        var response = await _client.PatchAsync(request);
+        
+        if (!response.IsSuccessful)
+        {
+            _logger.LogError("Failed to UPDATE task: {@Error}", response.ErrorMessage);
+        }
+        
+        return new MoneoTaskResult(response.IsSuccessful, response.ErrorMessage);
+    }
 }
