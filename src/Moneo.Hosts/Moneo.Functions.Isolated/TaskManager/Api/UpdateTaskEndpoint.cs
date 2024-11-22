@@ -17,11 +17,12 @@ internal class UpdateTaskEndpoint : TaskManagerEndpointBase
 
     [Function(nameof(UpdateTask))]
     public async Task<HttpResponseData> UpdateTask(
-               [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Put, Route = "{chatId}/tasks/{taskId}")] HttpRequestData request,
-                      [DurableClient] DurableTaskClient client,
-                             FunctionContext context,
-                                    string chatId,
-                                           string taskId)
+        [HttpTrigger(AuthorizationLevel.Function, HttpVerbs.Put, Route = "{chatId}/tasks/{taskId}")]
+        HttpRequestData request,
+        [DurableClient] DurableTaskClient client,
+        FunctionContext context,
+        string chatId,
+        string taskId)
     {
         var task = await request.ReadFromJsonAsync<MoneoTaskDto>();
 

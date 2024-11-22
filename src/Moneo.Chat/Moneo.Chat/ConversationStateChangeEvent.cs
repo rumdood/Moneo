@@ -7,6 +7,10 @@ public record CreateTaskWorkflowStartedEvent(long ChatId) : IRequest;
 
 public record CreateTaskWorkflowCompletedEvent(long ChatId) : IRequest;
 
+public record ChangeTaskWorkflowStartedEvent(long ChatId) : IRequest;
+
+public record ChangeTaskWorkflowCompletedEvent(long ChatId) : IRequest;
+
 public record ConfirmCommandWorkflowStartedEvent(long ChatId) : IRequest;
 
 public record ConfirmCommandWorkflowCompletedEvent(long ChatId, string? userInput = null) : IRequest;
@@ -46,6 +50,19 @@ internal class CreateTaskWorkflowCompletedEventHandler : WorkflowStartedOrComple
     }
 
     public async Task Handle(CreateTaskWorkflowCompletedEvent request, CancellationToken cancellationToken)
+    {
+        await ChatStateRepository.RevertChatStateAsync(request.ChatId);
+    }
+}
+
+internal class ChangeTaskWorkflowStartedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
+    IRequestHandler<ChangeTaskWorkflowStartedEvent>
+{
+    public ChangeTaskWorkflowStartedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
+    {
+    }
+
+    public async Task Handle(ChangeTaskWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.RevertChatStateAsync(request.ChatId);
     }

@@ -10,4 +10,6 @@ public interface ITaskManagerClient
     Task<MoneoTaskResult> CompleteTaskAsync(long conversationId, string taskName);
     Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskName);
     Task<MoneoTaskResult> CreateTaskAsync(long conversationId, MoneoTaskDto task);
+    Task<MoneoTaskResult> DisableTaskAsync(long conversationId, string taskName);
+    Task<MoneoTaskResult> UpdateTaskAsync(long conversationId, string taskName, MoneoTaskDto task);
 }

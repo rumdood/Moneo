@@ -29,3 +29,4 @@ For my personal setup I have a Flic Button in my medicine cabinet that, when pre
 ## Chat Requirements
 * While I had originally planned to make which channel the bot works in be configurable, right now I've leaned into using Telegram because I have that on all my devices, meaning that my reminders and badgers can follow me from device to device rather than sitting unseen on my phone.
 * At some point in the future I will probably look at redoing this using Microsoft's Azure Bot Framework, which will give it greater flexibility in channel, but at this point this project is kind of ridiculous on purpose.
+djdjdjd

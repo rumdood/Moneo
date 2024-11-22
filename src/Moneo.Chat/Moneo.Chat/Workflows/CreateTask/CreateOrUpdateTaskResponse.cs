@@ -1,10 +1,10 @@
 namespace Moneo.Chat.Workflows.CreateTask;
 
-public class CreateTaskResponse
+public class CreateOrUpdateTaskResponse
 {
     public const string AskForNameResponse = "What do you want to call this task?";
     public const string AskForDescriptionResponse = "Provide a description for the task.";
-    public const string EndOfWorkflowResponse = "I've created the task!";
+    public const string EndOfWorkflowResponse = "Done";
     public const string SkippableResponse = "Should this task be skippable?";
     public const string SkippedMessageResponse = "What should I say when you skip the task?";
     public const string RepeaterResponse = "Does this task repeat?";
