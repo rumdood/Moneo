@@ -32,7 +32,7 @@ public class ChatManager : IChatManager
 
     public async Task ProcessUserMessageAsync(UserMessage message)
     {
-        _logger.LogInformation("Received: {@Message}", message.Text);
+        _logger.LogDebug("Received From User: {@Message}", message.Text);
         
         if (!_usersByConversationId.ContainsKey(message.ConversationId))
         {
@@ -70,6 +70,12 @@ public class ChatManager : IChatManager
         }
     }
 
+    public Task<ChatState> GetChatStateForConversationAsync(long conversationId)
+    {
+        return _chatStateRepository.GetChatStateAsync(conversationId);
+    }
+
+
     public bool AddUser(long conversationId, string firstName, string? lastName)
     {
         return _usersByConversationId.TryAdd(conversationId, new User(Guid.NewGuid(), firstName, lastName, conversationId));
@@ -78,6 +84,9 @@ public class ChatManager : IChatManager
     private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, string text)
     {
         var state = await _chatStateRepository.GetChatStateAsync(conversationId);
+        
+        _logger.LogDebug("Current Chat State for conversation {@Conversation} is {@State}", conversationId, state);
+
         var context = CommandContext.Get(conversationId, state, text);
         var userRequest = UserRequestFactory.GetUserRequest(context);
 

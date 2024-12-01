@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Moneo.Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj" />
+    <ProjectReference Include="..\src\Moneo.Chat\Moneo.Chat\Moneo.Chat.csproj" />
+    <ProjectReference Include="..\src\Moneo.Core\Moneo.Core.csproj" />
+  </ItemGroup>
+
+</Project>

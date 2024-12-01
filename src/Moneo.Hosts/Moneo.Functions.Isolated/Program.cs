@@ -47,11 +47,6 @@ builder.ConfigureFunctionsWorkerDefaults(opts =>
     })
     .ConfigureServices(serviceCollection =>
     {
-        serviceCollection.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblies(typeof(BotTextMessageRequest).Assembly,
-                typeof(TelegramChatAdapter).Assembly);
-        });
         serviceCollection.AddLogging(cfg =>
         {
             cfg.AddSerilog();
@@ -64,9 +59,11 @@ builder.ConfigureFunctionsWorkerDefaults(opts =>
         serviceCollection.AddSingleton<INotifyEngine, NotifyEngine>();
         serviceCollection.AddSingleton<IScheduleManager, ScheduleManager>();
         serviceCollection.AddSingleton<IDurableEntityTasksService, DurableEntityTasksService>();
-
+        
+        // this could get changed to use configuration in the future, but right now only support one chat adapter
+        serviceCollection.AddChatAdapter<TelegramChatAdapter>();
+        
         serviceCollection.AddSingleton<IChatManager, ChatManager>();
-        serviceCollection.AddSingleton<IChatAdapter, TelegramChatAdapter>();
         serviceCollection.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
         serviceCollection.AddWorkflowManagers();
 

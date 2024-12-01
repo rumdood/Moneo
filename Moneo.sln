@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Generators", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Tests", "src\Moneo.Chat\Moneo.Chat.Tests\Moneo.Chat.Tests.csproj", "{62069D22-999D-4C1C-B877-2344B1678D30}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Console", "Moneo.Chat.Console\Moneo.Chat.Console.csproj", "{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,10 @@ Global
 		{62069D22-999D-4C1C-B877-2344B1678D30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62069D22-999D-4C1C-B877-2344B1678D30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62069D22-999D-4C1C-B877-2344B1678D30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -139,6 +145,7 @@ Global
 		{B371629E-314E-471F-8E85-A1C50869673B} = {C80150B3-C997-47FF-BE06-ED0709EA6DCB}
 		{EB79A1C5-9C44-433F-A0F6-0594F6B01165} = {4624C493-4F8D-4D87-92F0-29E3A19CDE5C}
 		{62069D22-999D-4C1C-B877-2344B1678D30} = {4624C493-4F8D-4D87-92F0-29E3A19CDE5C}
+		{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A} = {4624C493-4F8D-4D87-92F0-29E3A19CDE5C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A69730A-25AE-421F-A76A-39B03C0A0207}

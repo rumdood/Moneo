@@ -31,6 +31,8 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         _botClient = botClient ?? new TelegramBotClient(configuration.BotToken);
         _conversationManager = conversationManager;
     }
+    
+    public bool IsActive { get; private set; } = false;
 
     private async Task DeleteExistingWebhook(CancellationToken cancellationToken)
     {
@@ -105,14 +107,15 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
             AllowedUpdates = new[] { UpdateType.Message, UpdateType.CallbackQuery },
             ThrowPendingUpdates = true,
         };
-        
         _botClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, options, cancellationToken);
+        IsActive = true;
     }
 
     public async Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default)
     {
         _isUsingWebhook = true;
         await _botClient.SetWebhookAsync(url: callbackUrl, secretToken: _configuration.CallbackToken, cancellationToken: cancellationToken);
+        IsActive = true;
     }
 
     public async Task StopReceivingAsync(CancellationToken cancellationToken = default)
@@ -120,15 +123,21 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         if (_isUsingWebhook)
         {
             await DeleteExistingWebhook(cancellationToken);
-        }
+        } 
+
+        IsActive = false;
     }
 
     public async Task<ChatAdapterStatus> GetStatusAsync(CancellationToken cancellationToken)
     {
         var webhookInfo = await _botClient.GetWebhookInfoAsync(cancellationToken);
-        return new ChatAdapterStatus(nameof(TelegramChatAdapter), _isUsingWebhook, new WebhookInfo(Url: webhookInfo.Url,
-                       LastErrorDate: webhookInfo.LastErrorDate, LastErrorMessage: webhookInfo.LastErrorMessage,
-                                  PendingUpdateCount: webhookInfo.PendingUpdateCount));
+        return new ChatAdapterStatus(
+            nameof(TelegramChatAdapter),
+            _isUsingWebhook,
+            new WebhookInfo(Url: webhookInfo.Url,
+            LastErrorDate: webhookInfo.LastErrorDate,
+            LastErrorMessage: webhookInfo.LastErrorMessage,
+            PendingUpdateCount: webhookInfo.PendingUpdateCount));
     }
 
     public Task ReceiveUserMessageAsync(object message, CancellationToken cancellationToken)

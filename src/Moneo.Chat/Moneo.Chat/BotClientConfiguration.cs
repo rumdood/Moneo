@@ -10,4 +10,5 @@ public class BotClientConfiguration : IBotClientConfiguration
     public string CallbackToken { get; set; } = default!;
     public string TaskApiBase { get; set; } = default!;
     public bool IsDetailedErrorsEnabled { get; set; }
+    public string ChatAdapter { get; set; }
 }
