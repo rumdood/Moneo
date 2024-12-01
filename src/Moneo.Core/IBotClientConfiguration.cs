@@ -8,4 +8,5 @@ public interface IBotClientConfiguration
     string CallbackToken {  get; set; }
     string TaskApiBase { get; set; }
     bool IsDetailedErrorsEnabled { get; set; }
+    string ChatAdapter { get; set; }
 }

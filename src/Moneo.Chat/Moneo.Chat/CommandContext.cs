@@ -1,3 +1,4 @@
+using Moneo.Chat.Workflows.ChangeTask;
 using Moneo.Chat.Workflows.Chitchat;
 using Moneo.Chat.Workflows.CreateCronSchedule;
 using Moneo.Chat.Workflows.CreateTask;
@@ -23,7 +24,7 @@ public class CommandContext
             CurrentState = state,
         };
 
-        if (text.StartsWith("/"))
+        if (text.StartsWith('/'))
         {
             var parts = text.Split(' ');
             context.CommandKey = parts[0].ToLowerInvariant();
@@ -35,6 +36,7 @@ public class CommandContext
         context.CommandKey = state switch
         {
             ChatState.CreateTask => CreateTaskContinuationRequest.CommandKey,
+            ChatState.ChangeTask => ChangeTaskContinuationRequest.CommandKey,
             ChatState.CreateCron => CreateCronContinuationRequest.CommandKey,
             ChatState.ConfirmCommand => ConfirmCommandContinuationRequest.CommandKey,
             _ => GetCommandKeyForDefaultState(text)

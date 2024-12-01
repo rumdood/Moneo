@@ -9,6 +9,7 @@ public interface IChatAdapter
     Task SendBotTextMessageAsync(IBotTextMessage botTextMessage, CancellationToken cancellationToken);
     Task SendBotGifMessageAsync(IBotGifMessage botGifMessage, CancellationToken cancellationToken);
     Task<ChatAdapterStatus> GetStatusAsync(CancellationToken cancellationToken);
+    bool IsActive { get; }
 }
 
 public interface IChatAdapter<in TUserMessage, in TBotTextMessage> : IChatAdapter

@@ -98,7 +98,7 @@ public class ServiceCollectionExtensionsGenerator : IIncrementalGenerator
 
         sourceBuilder.AppendLine($"namespace {ServiceCollectionExtensionsNamespace}");
         sourceBuilder.AppendLine("{");
-        sourceBuilder.AppendLine("    public static class ServiceCollectionExtensions");
+        sourceBuilder.AppendLine("    public static partial class ServiceCollectionExtensions");
         sourceBuilder.AppendLine("    {");
         sourceBuilder.AppendLine("        public static IServiceCollection AddWorkflowManagers(this IServiceCollection services) =>");
         sourceBuilder.AppendLine("            services");

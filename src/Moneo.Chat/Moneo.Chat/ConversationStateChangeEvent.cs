@@ -64,6 +64,19 @@ internal class ChangeTaskWorkflowStartedEventHandler : WorkflowStartedOrComplete
 
     public async Task Handle(ChangeTaskWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
+        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.ChangeTask);
+    }
+}
+
+internal class ChangeTaskWorkflowCompletedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
+    IRequestHandler<ChangeTaskWorkflowCompletedEvent>
+{
+    public ChangeTaskWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
+    {
+    }
+
+    public async Task Handle(ChangeTaskWorkflowCompletedEvent request, CancellationToken cancellationToken)
+    {
         await ChatStateRepository.RevertChatStateAsync(request.ChatId);
     }
 }
