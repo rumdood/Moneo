@@ -45,7 +45,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Generators", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Tests", "src\Moneo.Chat\Moneo.Chat.Tests\Moneo.Chat.Tests.csproj", "{62069D22-999D-4C1C-B877-2344B1678D30}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Console", "Moneo.Chat.Console\Moneo.Chat.Console.csproj", "{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Chat.Console", "src\Moneo.Chat\Moneo.Chat.Console\Moneo.Chat.Console.csproj", "{EB2299BC-74A8-4F16-9DEE-9535BF5C5E7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
