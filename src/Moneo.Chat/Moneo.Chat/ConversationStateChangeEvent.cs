@@ -19,102 +19,75 @@ public record CreateCronWorkflowStartedEvent(long ChatId) : IRequest;
 
 public record CreateCronWorkflowCompletedEvent(long ChatId, string CronStatement) : IRequest;
 
-internal abstract class WorkflowStartedOrCompletedEventHandlerBase
+internal abstract class WorkflowStartedOrCompletedEventHandlerBase(IChatStateRepository chatStateRepository)
 {
-    protected readonly IChatStateRepository ChatStateRepository;
-
-    public WorkflowStartedOrCompletedEventHandlerBase(IChatStateRepository chatStateRepository)
-    {
-        ChatStateRepository = chatStateRepository;
-    }
+    protected readonly IChatStateRepository ChatStateRepository = chatStateRepository;
 }
 
-internal class CreateTaskWorklowStartedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
-    IRequestHandler<CreateTaskWorkflowStartedEvent>
+internal class CreateTaskWorkflowStartedEventHandler(IChatStateRepository chatStateRepository)
+    : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
+        IRequestHandler<CreateTaskWorkflowStartedEvent>
 {
-    public CreateTaskWorklowStartedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
-    {
-    }
-
     public async Task Handle(CreateTaskWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.CreateTask);
     }
 }
 
-internal class CreateTaskWorkflowCompletedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
-    IRequestHandler<CreateTaskWorkflowCompletedEvent>
+internal class CreateTaskWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository)
+    : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
+        IRequestHandler<CreateTaskWorkflowCompletedEvent>
 {
-    public CreateTaskWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
-    {
-    }
-
     public async Task Handle(CreateTaskWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.RevertChatStateAsync(request.ChatId);
     }
 }
 
-internal class ChangeTaskWorkflowStartedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
-    IRequestHandler<ChangeTaskWorkflowStartedEvent>
+internal class ChangeTaskWorkflowStartedEventHandler(IChatStateRepository chatStateRepository)
+    : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
+        IRequestHandler<ChangeTaskWorkflowStartedEvent>
 {
-    public ChangeTaskWorkflowStartedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
-    {
-    }
-
     public async Task Handle(ChangeTaskWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.ChangeTask);
     }
 }
 
-internal class ChangeTaskWorkflowCompletedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
-    IRequestHandler<ChangeTaskWorkflowCompletedEvent>
+internal class ChangeTaskWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository)
+    : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
+        IRequestHandler<ChangeTaskWorkflowCompletedEvent>
 {
-    public ChangeTaskWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
-    {
-    }
-
     public async Task Handle(ChangeTaskWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.RevertChatStateAsync(request.ChatId);
     }
 }
 
-internal class ConfirmCommandWorkflowStartedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
-    IRequestHandler<ConfirmCommandWorkflowStartedEvent>
+internal class ConfirmCommandWorkflowStartedEventHandler(IChatStateRepository chatStateRepository)
+    : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
+        IRequestHandler<ConfirmCommandWorkflowStartedEvent>
 {
-    public ConfirmCommandWorkflowStartedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
-    {
-    }
-
     public async Task Handle(ConfirmCommandWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.ConfirmCommand);
     }
 }
 
-internal class ConfirmCommandWorkflowCompletedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
-    IRequestHandler<ConfirmCommandWorkflowCompletedEvent>
+internal class ConfirmCommandWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository)
+    : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
+        IRequestHandler<ConfirmCommandWorkflowCompletedEvent>
 {
-    public ConfirmCommandWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository) : base(chatStateRepository)
-    {
-    }
-
     public async Task Handle(ConfirmCommandWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.RevertChatStateAsync(request.ChatId);
     }
 }
 
-internal class CreateCronWorkflowStartedOrStartedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
-    IRequestHandler<CreateCronWorkflowStartedEvent>
+internal class CreateCronWorkflowStartedOrStartedEventHandler(IChatStateRepository chatStateRepository)
+    : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
+        IRequestHandler<CreateCronWorkflowStartedEvent>
 {
-    public CreateCronWorkflowStartedOrStartedEventHandler(IChatStateRepository chatStateRepository) : base(
-        chatStateRepository)
-    {
-    }
-
     public async Task Handle(CreateCronWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
         await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.CreateCron);

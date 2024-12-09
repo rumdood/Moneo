@@ -23,6 +23,8 @@ internal sealed class CronDraft
         string[] formats = {
             "h:mmtt", "h:mmt", // 1:41pm or 1:41p
             "hh:mmtt", "hh:mmt", // 01:41pm or 01:41p
+            "h:mm tt", "h:mm t", // 1:41 PM or 1:41 P
+            "hh:mm tt", "hh:mm t", // 01:41 PM or 01:41 P
             "H:mm", "HH:mm" // 13:41 or 01:41
         };
         
