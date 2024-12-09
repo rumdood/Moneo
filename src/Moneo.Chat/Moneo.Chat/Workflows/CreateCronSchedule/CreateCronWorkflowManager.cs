@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Workflows.ChangeTask;
 using Moneo.Chat.Workflows.CreateTask;
 
 namespace Moneo.Chat.Workflows.CreateCronSchedule;
@@ -17,6 +18,7 @@ internal enum DayRepeatMode
 public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflowManager
 {
     private readonly ILogger<CreateCronWorkflowManager> _logger;
+    private readonly Dictionary<long, ChatState?> _outerChatStates = new();
     private readonly Dictionary<long, CronStateMachine> _chatStates = new();
     private readonly
         Dictionary<CronWorkflowState, Func<CronDraft, string, (bool Success, string? FailureMessage)>>
@@ -174,9 +176,12 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
         return null;
     }
 
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, ChatState? outerChatState = null)
     {
         await Mediator.Send(new CreateCronWorkflowStartedEvent(chatId));
+        
+        // mark where we came from
+        _outerChatStates[chatId] = outerChatState;
 
         // save the machine
         _chatStates[chatId] = new CronStateMachine();
@@ -229,7 +234,8 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
     private async Task<MoneoCommandResult> CompleteWorkflowAsync(long chatId, CronDraft? draft = null)
     {
         _chatStates.Remove(chatId);
-        await Mediator.Send(new CreateCronWorkflowCompletedEvent(chatId, draft?.GenerateCronStatement() ?? ""));
+        var cronStatement = draft?.GenerateCronStatement() ?? "";
+        await Mediator.Send(new CreateCronWorkflowCompletedEvent(chatId, cronStatement));
 
         if (draft is null || draft.DayRepeatMode == DayRepeatMode.Undefined)
         {
@@ -240,8 +246,21 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
                 UserMessageText = "Weird thing that shouldn't have happened?"
             };
         }
-        
-        return await Mediator.Send(new CreateTaskContinuationRequest(chatId, draft!.GenerateCronStatement()));
+
+        var currentOuterState = _outerChatStates[chatId];
+
+        return currentOuterState switch
+        {
+            ChatState.CreateTask => await Mediator.Send(new CreateTaskContinuationRequest(chatId, cronStatement)),
+            ChatState.ChangeTask => await Mediator.Send(new ChangeTaskContinuationRequest(chatId, cronStatement)),
+            _ => new MoneoCommandResult
+            {
+                ResponseType = ResponseType.Text,
+                Type = ResultType.Error,
+                UserMessageText =
+                    "I'm not sure what you were trying to do, but it didn't work (invalid outer chat state: {currentOuterState})"
+            }
+        };
     }
 
     public CreateCronWorkflowManager(IMediator mediator, ILogger<CreateCronWorkflowManager> logger) : base(mediator)

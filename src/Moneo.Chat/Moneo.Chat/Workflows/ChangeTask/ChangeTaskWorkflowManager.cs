@@ -32,7 +32,7 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
         _innerWorkflowManager =
         new CreateOrUpdateTaskWorkflowManager(
             logger,
-            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId)),
+            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId, ChatState.ChangeTask)),
             CompleteWorkflowAsync);
         
         _innerWorkflowManager.SetResponseHandler(TaskCreateOrUpdateState.WaitingForUserDirection, HandleWaitingForUserSelection);

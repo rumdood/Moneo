@@ -21,7 +21,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
         _innerWorkflowManager =
         new CreateOrUpdateTaskWorkflowManager(
             logger,
-            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId)),
+            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId, ChatState.CreateTask)),
             CompleteWorkflowAsync);
         
         _innerWorkflowManager.SetResponse(TaskCreateOrUpdateState.End, new MoneoCommandResult
