@@ -84,7 +84,7 @@ internal class ConfirmCommandWorkflowCompletedEventHandler(IChatStateRepository 
     }
 }
 
-internal class CreateCronWorkflowStartedOrStartedEventHandler(IChatStateRepository chatStateRepository)
+internal class CreateCronWorkflowStartedEventHandler(IChatStateRepository chatStateRepository)
     : WorkflowStartedOrCompletedEventHandlerBase(chatStateRepository),
         IRequestHandler<CreateCronWorkflowStartedEvent>
 {
@@ -94,10 +94,10 @@ internal class CreateCronWorkflowStartedOrStartedEventHandler(IChatStateReposito
     }
 }
 
-internal class CreateCronWorkflowStartedOrCompletedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
+internal class CreateCronWorkflowCompletedEventHandler : WorkflowStartedOrCompletedEventHandlerBase,
     IRequestHandler<CreateCronWorkflowCompletedEvent>
 {
-    public CreateCronWorkflowStartedOrCompletedEventHandler(IChatStateRepository chatStateRepository, IMediator mediator) : base(
+    public CreateCronWorkflowCompletedEventHandler(IChatStateRepository chatStateRepository, IMediator mediator) : base(
         chatStateRepository)
     {
     }

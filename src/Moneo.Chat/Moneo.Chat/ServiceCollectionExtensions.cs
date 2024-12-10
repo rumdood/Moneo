@@ -53,4 +53,16 @@ public static partial class ServiceCollectionExtensions
         
         return services;
     }
+    
+    public static IServiceCollection AddInMemoryChatStateManagement(this IServiceCollection services)
+    {
+        services.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
+        return services;
+    }
+    
+    public static IServiceCollection AddChatManager(this IServiceCollection services)
+    {
+        services.AddSingleton<IChatManager, ChatManager>();
+        return services;
+    }
 }

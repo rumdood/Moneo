@@ -7,7 +7,7 @@ using Moneo.Core;
 
 namespace Moneo.Chat;
 
-public class ChatManager : IChatManager
+internal class ChatManager : IChatManager
 {
     private readonly Dictionary<long, FixedLengthList<ChatEntry>> _conversationsById = new ();
     private readonly Dictionary<long, User> _usersByConversationId = new();
@@ -27,7 +27,7 @@ public class ChatManager : IChatManager
     {
         return _conversationsById.TryGetValue(conversationId, out var messages)
             ? messages.Take(count)
-            : Enumerable.Empty<ChatEntry>();
+            : [];
     }
 
     public async Task ProcessUserMessageAsync(UserMessage message)
