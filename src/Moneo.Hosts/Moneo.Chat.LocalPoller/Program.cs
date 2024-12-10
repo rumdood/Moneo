@@ -20,15 +20,14 @@ IBotClientConfiguration botConfig = new BotClientConfiguration();
 builder.Configuration.GetSection(nameof(BotClientConfiguration)).Bind(botConfig);
 
 builder.Services.AddChatAdapter<ConsoleChatAdapter>();
+builder.Services.AddInMemoryChatStateManagement();
+builder.Services.AddChatManager();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped(_ => botConfig);
-builder.Services.AddSingleton<IChatManager, ChatManager>();
 builder.Services.AddSingleton<ITaskResourceManager, TaskResourceManager>();
 builder.Services.AddSingleton<ITaskManagerClient, TaskManagerHttpClient>();
-builder.Services.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
 
-// builder.Services.AddSingleton<IChatAdapter, TelegramChatAdapter>();
 builder.Services.AddWorkflowManagers();
 
 builder.Services.AddHostedService<BotService>();

@@ -62,9 +62,9 @@ builder.ConfigureFunctionsWorkerDefaults(opts =>
         
         // this could get changed to use configuration in the future, but right now only support one chat adapter
         serviceCollection.AddChatAdapter<TelegramChatAdapter>();
-        
-        serviceCollection.AddSingleton<IChatManager, ChatManager>();
-        serviceCollection.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
+
+        serviceCollection.AddChatManager();
+        serviceCollection.AddInMemoryChatStateManagement();
         serviceCollection.AddWorkflowManagers();
 
         // Register named HttpClient to get benefits of IHttpClientFactory
