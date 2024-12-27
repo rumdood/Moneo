@@ -5,9 +5,9 @@ using Moneo.Chat;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Workflows.ChangeTask;
 using Moneo.Chat.Workflows.CreateTask;
-using Moneo.TaskManagement;
-using Moneo.TaskManagement.Client.Models;
-using Moneo.TaskManagement.Models;
+using Moneo.Obsolete.TaskManagement;
+using Moneo.Obsolete.TaskManagement.Client.Models;
+using Moneo.Obsolete.TaskManagement.Models;
 
 namespace Moneo.Tests;
 

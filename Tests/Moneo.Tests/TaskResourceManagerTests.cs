@@ -3,10 +3,10 @@ using Moq;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using Moneo.Core;
-using Moneo.TaskManagement;
-using Moneo.TaskManagement.Client;
-using Moneo.TaskManagement.Client.Models;
-using Moneo.TaskManagement.Models;
+using Moneo.Obsolete.TaskManagement;
+using Moneo.Obsolete.TaskManagement.Client;
+using Moneo.Obsolete.TaskManagement.Client.Models;
+using Moneo.Obsolete.TaskManagement.Models;
 
 namespace Moneo.Tests;
 

@@ -4,3 +4,8 @@ services:
     image: moneo-poller
     volumes:
       - ./appsettings.json:/App/appsettings.json
+  moneo.taskmanagment.api:
+    image: moneo.taskmanagment.api
+    build:
+      context: .
+      dockerfile: src/Moneo.Hosts/Moneo.TaskManagment.Api/Dockerfile

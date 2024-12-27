@@ -27,12 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Moneo.Chat\Moneo.Chat\Moneo.Chat.csproj" />
+    <ProjectReference Include="..\..\src\Chat\Moneo.Chat\Moneo.Chat.csproj" />
     <ProjectReference Include="..\..\src\Moneo.Core\Moneo.Core.csproj" />
-    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Client\Moneo.TaskManagement.Client.csproj" />
-    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement.Models\Moneo.TaskManagement.Models.csproj" />
-    <ProjectReference Include="..\..\src\Moneo.TaskManagement\Moneo.TaskManagement\Moneo.TaskManagement.csproj" />
+    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Client\Moneo.Obsolete.TaskManagement.Client.csproj" />
+    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Contracts\Moneo.Obsolete.TaskManagement.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Models\Moneo.Obsolete.TaskManagement.Models.csproj" />
+    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement\Moneo.Obsolete.TaskManagement.csproj" />
   </ItemGroup>
 
 </Project>
