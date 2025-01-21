@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using System.Text.Json;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.BotRequests;
 using Moneo.Chat.Models;
@@ -147,6 +148,18 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
             throw new UserMessageFormatException("Message type is not supported by Telegram (expecting Update)");
         }
 
+        return ReceiveMessageAsync(update, cancellationToken);
+    }
+    
+    public Task ReceiveUserMessageAsJsonAsync(string json, CancellationToken cancellationToken)
+    {
+        var update = JsonSerializer.Deserialize<Update>(json);
+        
+        if (update is null)
+        {
+            throw new UserMessageFormatException("Message type is not supported by Telegram (expecting Update)");
+        }
+        
         return ReceiveMessageAsync(update, cancellationToken);
     }
 

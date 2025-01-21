@@ -5,6 +5,7 @@ public interface IChatAdapter
     Task StartReceivingAsync(CancellationToken cancellationToken = default);
     Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default);
     Task StopReceivingAsync(CancellationToken cancellationToken = default);
+    Task ReceiveUserMessageAsJsonAsync(string message, CancellationToken cancellationToken);
     Task ReceiveUserMessageAsync(object message, CancellationToken cancellationToken);
     Task SendBotTextMessageAsync(IBotTextMessage botTextMessage, CancellationToken cancellationToken);
     Task SendBotGifMessageAsync(IBotGifMessage botGifMessage, CancellationToken cancellationToken);

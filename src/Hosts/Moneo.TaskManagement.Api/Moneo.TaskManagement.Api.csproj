@@ -14,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Ardalis.SmartEnum" Version="8.2.0" />
       <PackageReference Include="MediatR" Version="12.4.1" />
       <PackageReference Include="MediatR.Contracts" Version="2.0.1" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
@@ -25,6 +26,16 @@
       <PackageReference Include="Quartz.AspNetCore" Version="3.13.1" />
       <PackageReference Include="Serilog" Version="4.2.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj" />
+      <ProjectReference Include="..\..\Chat\Moneo.Chat\Moneo.Chat.csproj" />
+      <ProjectReference Include="..\..\TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="ResourceAccess\Services\" />
     </ItemGroup>
 
 </Project>

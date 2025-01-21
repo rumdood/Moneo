@@ -1,56 +1,123 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using Moneo.TaskManagement.Contracts.Models;
+using Moneo.TaskManagement.Model;
 
 namespace Moneo.TaskManagement.ResourceAccess.Entities;
 
 [Table("tasks")]
-public class MoneoTask
+[Index(nameof(Name), nameof(ConversationId), IsUnique = true)]
+public class MoneoTask : AuditableEntity, IHasDomainEvents
 {
-    [Key]
-    [Column("id")]
-    public long Id { get; internal set; }
+    [NotMapped] private List<string>? _completedMessages;
+    [NotMapped] private List<string>? _skippedMessages;
+    [NotMapped] private TaskBadger? _badger;
+    [NotMapped] private TaskRepeater? _repeater;
     
+    [Required]
     [Column("name")]
+    [StringLength(100)]
     public string Name { get; internal set; }
     
+    [Required]
     [Column("description")]
-    public string Description { get; internal set; }
+    [StringLength(1000)]
+    public string? Description { get; internal set; }
 
     [Column("isActive")]
     public bool IsActive { get; internal set; } = true;
-    
-    [Column("completedMessages")]
-    public string CompletedMessages { get; internal set; }
 
     [Column("canBeSkipped")] 
     public bool CanBeSkipped { get; internal set; } = true;
-    
-    [Column("skippedMessages")]
-    public string SkippedMessages { get; internal set; }
 
     [Column("timezone")]
+    [Required]
+    [StringLength(100)]
     public string Timezone { get; internal set; } = "";
     
     [Column("dueOn")]
-    public DateTime? DueOn { get; internal set; }
+    public DateTimeOffset? DueOn { get; internal set; }
     
-    [Column("badgerFrequency")]
-    public int? BadgerFrequencyInMinutes { get; internal set; }
-    
-    [Column("badgerMessages")]
-    public string? BadgerMessages { get; internal set; }
-    
-    [Column("createdOn")]
-    public DateTime CreatedOn { get; internal set; }
-    
-    [Column("modifiedOn")]
-    public DateTime ModifiedOn { get; internal set; }
-    
+    [Required]
     [Column("conversation_id")]
     public long ConversationId { get; internal set; }
-    
     public Conversation Conversation { get; internal set; }
-    
-    public TaskRepeater? TaskRepeater { get; internal set; }
     public ICollection<TaskEvent> TaskEvents { get; internal set; } = new List<TaskEvent>();
+    
+    public ICollection<TaskJob> TaskJobs { get; private set; } = new List<TaskJob>();
+    
+    /*
+     * JSON Fields
+     */
+    
+    [Column("repeater_json")]
+    public string? RepeaterJson { get; private set; }
+
+    [NotMapped]
+    public TaskRepeater? Repeater
+    {
+        get => this.GetValueFromJson(() => (RepeaterJson, _repeater));
+        set => this.SetJsonFieldFromValue(() => (RepeaterJson, _repeater = value));
+    }
+    
+    [Column("badger_json")]
+    public string? BadgerJson { get; private set; }
+
+    [NotMapped]
+    public TaskBadger? Badger
+    {
+        get => this.GetValueFromJson(() => (BadgerJson, _badger));
+        set => this.SetJsonFieldFromValue(() => (BadgerJson, _badger = value));
+    }
+    
+    [Required]
+    [Column("completed_messages")]
+    public string? CompletedMessagesJson { get; internal set; }
+
+    [NotMapped]
+    public List<string> CompletedMessages
+    {
+        get => this.GetListFromJsonField(() => (CompletedMessagesJson, _completedMessages));
+        set => this.SetJsonFieldFromList(() => (CompletedMessagesJson, _completedMessages = value));
+    }
+    
+    [Column("skipped_messages")]
+    public string? SkippedMessagesJson { get; internal set; }
+    
+    [NotMapped]
+    public List<string> SkippedMessages
+    {
+        get => this.GetListFromJsonField(() => (SkippedMessagesJson, _skippedMessages));
+        set => this.SetJsonFieldFromList(() => (SkippedMessagesJson, _skippedMessages = value));
+    }
+
+    public List<DomainEvent> DomainEvents { get; set; } = [];
+
+    private MoneoTask() { }
+    
+    public MoneoTask(string name, string timezone, Conversation conversation)
+    {
+        Name = name;
+        Timezone = timezone;
+        Conversation = conversation;
+    }
+
+    public MoneoTaskDto ToDto()
+    {
+        return new MoneoTaskDto
+        {
+            Id = Id,
+            Name = Name,
+            Description = Description,
+            DueOn = DueOn,
+            CanBeSkipped = CanBeSkipped,
+            Timezone = Timezone,
+            IsActive = IsActive,
+            CompletedMessages = CompletedMessages,
+            SkippedMessages = SkippedMessages,
+            Repeater = Repeater?.ToDto(),
+            Badger = Badger?.ToDto(),
+        };
+    }
 }

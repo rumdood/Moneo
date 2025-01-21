@@ -9,3 +9,9 @@ services:
     build:
       context: .
       dockerfile: src/Moneo.Hosts/Moneo.TaskManagment.Api/Dockerfile
+
+  moneo.telegramchat.api:
+    image: moneo.telegramchat.api
+    build:
+      context: .
+      dockerfile: src/Hosts/Moneo.TelegramChat.Api/Dockerfile

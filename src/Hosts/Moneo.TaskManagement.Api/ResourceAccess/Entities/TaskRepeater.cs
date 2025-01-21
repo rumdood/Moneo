@@ -1,21 +1,16 @@
-using System.ComponentModel.DataAnnotations.Schema;
+using Moneo.TaskManagement.Contracts.Models;
 
 namespace Moneo.TaskManagement.ResourceAccess.Entities;
 
-[Table("task_repeaters")]
-public class TaskRepeater
+public record TaskRepeater(string CronExpression, int EarlyCompletionThresholdHours = 3, DateTimeOffset? Expiry = null)
 {
-    [Column("expiry")]
-    public DateTime? Expiry { get; set; }
-
-    [Column("repeatCron")]
-    public string RepeatCron { get; set; } = "";
-
-    [Column("earlyCompletionThreshold")]
-    public int? EarlyCompletionThresholdHours { get; set;}
+    public static TaskRepeater FromDto(TaskRepeaterDto dto)
+    {
+        return new TaskRepeater(dto.CronExpression, dto.EarlyCompletionThresholdHours, dto.Expiry);
+    }
     
-    [Column("task_id")]
-    public long? TaskId { get; set; }
-    
-    public MoneoTask? Task { get; set; }
+    public TaskRepeaterDto ToDto()
+    {
+        return new TaskRepeaterDto(CronExpression, EarlyCompletionThresholdHours, Expiry);
+    }
 }

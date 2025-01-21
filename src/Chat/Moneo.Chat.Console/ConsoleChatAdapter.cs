@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using System.Text.Json;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.BotRequests;
 using Moneo.Chat.Models;
@@ -68,6 +69,18 @@ namespace Moneo.Chat
                 _logger.LogError(e, "An Error Occurred");
                 Console.WriteLine($"ERROR: {e.Message}", ConsoleColor.Red);
             }
+        }
+
+        public Task ReceiveUserMessageAsJsonAsync(string message, CancellationToken cancellationToken)
+        {
+            var userMessage = JsonSerializer.Deserialize<ConsoleUserMessage>(message);
+            
+            if (userMessage is null)
+            {
+                throw new UserMessageFormatException("UserMessage is not in the correct format (expected ConsoleUserMessage)");
+            }
+            
+            return ReceiveMessageAsync(userMessage, cancellationToken);
         }
 
         public Task ReceiveUserMessageAsync(object message, CancellationToken cancellationToken) =>

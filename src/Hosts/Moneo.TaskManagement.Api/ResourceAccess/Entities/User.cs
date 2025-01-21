@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Moneo.TaskManagement.ResourceAccess.Entities;
 
 [Table("users")]
-public class User
+public class User : AuditableEntity
 {
     [Key]
     [Column("id")]
@@ -13,6 +13,7 @@ public class User
     [Column("name")]
     public string Name { get; internal set; }
     
+    [Required]
     [Column("email")]
     public string Email { get; internal set; }
     
