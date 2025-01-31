@@ -1,8 +1,9 @@
 using MediatR;
+using Moneo.Common;
 using Moneo.TaskManagement.Contracts.Models;
-using Moneo.TaskManagement.Model;
+using Moneo.TaskManagement.DomainEvents;
 using Moneo.TaskManagement.ResourceAccess;
-using Moneo.TaskManagement.ResourceAccess.Entities;
+using TaskEvent = Moneo.TaskManagement.ResourceAccess.Entities.TaskEvent;
 
 namespace Moneo.TaskManagement.Features.DeactivateTask;
 
@@ -27,10 +28,12 @@ internal sealed class DeactivateTaskRequestHandler(MoneoTasksDbContext dbContext
             }
         
             // add a task event to log the deactivation
-            var taskEvent = new TaskEvent(task, TaskEventType.Disabled, timeProvider.GetUtcNow());
+            var taskEvent = new TaskEvent(task, TaskEventType.Disabled, timeProvider.GetUtcNow().UtcDateTime);
             await dbContext.TaskEvents.AddAsync(taskEvent, cancellationToken);
 
             task.IsActive = false;
+            task.DomainEvents.Add(new TaskDeactivated(timeProvider.GetUtcNow().UtcDateTime, task));
+            
             await dbContext.SaveChangesAsync(cancellationToken);
             return MoneoResult.Success();
         }

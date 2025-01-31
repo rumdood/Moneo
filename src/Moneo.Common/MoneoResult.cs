@@ -1,6 +1,6 @@
 using Ardalis.SmartEnum;
 
-namespace Moneo.TaskManagement.Model;
+namespace Moneo.Common;
 
 public interface IMoneoResult
 {
@@ -24,8 +24,12 @@ public class MoneoResult<TData> : IMoneoResult<TData>
 
     public static MoneoResult<TData> Success(TData data) => new()
         { Data = data, Type = MoneoResultType.Success };
+    public static MoneoResult<TData> Success(TData data, string message) => new()
+        { Data = data, Type = MoneoResultType.Success, Message = message };
     public static MoneoResult<TData> NoChange(TData data) => new()
         { Data = data, Type = MoneoResultType.NoChange };
+    public static MoneoResult<TData> NoChange(TData data, string message) => new()
+        { Data = data, Type = MoneoResultType.NoChange, Message = message };
     public static MoneoResult<TData> Failed(string message, Exception? exception = null) => new()
         { Type = MoneoResultType.Failed, Message = message, Exception = exception };
     public static MoneoResult<TData> Failed(Exception exception) => new()
@@ -42,8 +46,10 @@ public class MoneoResult<TData> : IMoneoResult<TData>
 
 public class MoneoResult : MoneoResult<object>
 {
-    public new static MoneoResult Success() => new() { Type = MoneoResultType.Success };
-    public new static MoneoResult NoChange() => new() { Type = MoneoResultType.NoChange };
+    public static MoneoResult Success() => new() { Type = MoneoResultType.Success };
+    public static MoneoResult Success(string message) => new() { Type = MoneoResultType.Success, Message = message };
+    public static MoneoResult NoChange() => new() { Type = MoneoResultType.NoChange };
+    public static MoneoResult NoChange(string message) => new() { Type = MoneoResultType.NoChange, Message = message };
     public new static MoneoResult Failed(string message, Exception? exception = null) => new()
         { Type = MoneoResultType.Failed, Message = message, Exception = exception };
     public new static MoneoResult Failed(Exception exception) => new()
@@ -75,27 +81,5 @@ public sealed class MoneoResultType : SmartFlagEnum<MoneoResultType>
 
     private MoneoResultType(string name, int value) : base(name, value)
     {
-    }
-}
-
-public static class MoneoResultToHttpResultMapper
-{
-    private static readonly Dictionary<MoneoResultType, Func<MoneoResult, IResult>> ResultMap = new()
-    {
-        { MoneoResultType.Success, r => Results.Ok(r.Data ?? r.Message) },
-        {
-            MoneoResultType.Failed,
-            r => Results.Problem(title: "Internal Server Error",
-                detail: string.IsNullOrEmpty(r.Message) ? r.Exception?.Message : r.Message, statusCode: 500)
-        },
-        { MoneoResultType.TaskNotFound, r => Results.NotFound(r.Message) },
-        { MoneoResultType.TaskAlreadyExists, r => Results.Conflict(r.Message) },
-        { MoneoResultType.ConversationNotFound, r => Results.NotFound(r.Message) }
-    };
-    
-    public static IResult GetHttpResult<TData>(this MoneoResult<TData> result)
-    {
-        var r = result as MoneoResult;
-        return ResultMap.TryGetValue(result.Type, out var resultFunc) ? resultFunc(r) : Results.NoContent();
     }
 }

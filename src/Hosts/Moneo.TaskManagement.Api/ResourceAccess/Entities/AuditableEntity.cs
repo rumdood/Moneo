@@ -10,11 +10,11 @@ public abstract class AuditableEntity : IAuditable, IEntity
     public long Id { get; internal set; }
     
     [Column("created_on")]
-    public DateTimeOffset CreatedOn { get; set; }
+    public DateTime CreatedOn { get; set; }
     [Column("created_by")]
     public string? CreatedBy { get; set; }
     [Column("modified_on")]
-    public DateTimeOffset? ModifiedOn { get; set; }
+    public DateTime? ModifiedOn { get; set; }
     [Column("modified_by")]
     public string? ModifiedBy { get; set; }
 }

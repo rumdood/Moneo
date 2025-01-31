@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Moneo.TaskManagement.Contracts.Models;
+namespace Moneo.Common;
 
 public record PageOptions(int PageNumber, int PageSize) : IParsable<PageOptions>
 {

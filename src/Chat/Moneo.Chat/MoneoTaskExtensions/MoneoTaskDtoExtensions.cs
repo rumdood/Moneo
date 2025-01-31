@@ -1,6 +1,6 @@
 using System.Text;
 using CronExpressionDescriptor;
-using Moneo.Obsolete.TaskManagement.Models;
+using Moneo.TaskManagement.Contracts.Models;
 
 namespace Moneo.Chat;
 
@@ -16,7 +16,7 @@ internal static class MoneoTaskDtoExtensions
 
         if (task.Repeater is { } repeater)
         {
-            var cronDescription = ExpressionDescriptor.GetDescription(repeater.RepeatCron);
+            var cronDescription = ExpressionDescriptor.GetDescription(repeater.CronExpression);
             builder.Append("Repeats: ");
             builder.Append(cronDescription);
             builder.Append("Stops Repeating: ");
@@ -30,7 +30,7 @@ internal static class MoneoTaskDtoExtensions
         if (task.Badger is { } badger)
         {
             builder.Append("Badger you every ");
-            builder.Append(badger.BadgerFrequencyMinutes);
+            builder.Append(badger.BadgerFrequencyInMinutes);
             builder.AppendLine(" minutes if you miss the due date");
         }
         else
@@ -38,14 +38,9 @@ internal static class MoneoTaskDtoExtensions
             builder.AppendLine("** Do not badger you if you miss your due date");
         }
 
-        if (task.DueDates.Count > 0)
+        if (task.DueOn.HasValue)
         {
-            builder.AppendLine("Task is due on the following dates:");
-            foreach (var date in task.DueDates)
-            {
-                builder.Append("  ");
-                builder.AppendLine(date.ToLongDateString());
-            }
+            builder.AppendLine($"Task is due: {task.DueOn.Value.ToString("dddd, MMMM d, yyyy")}");
         }
 
         return builder.ToString();

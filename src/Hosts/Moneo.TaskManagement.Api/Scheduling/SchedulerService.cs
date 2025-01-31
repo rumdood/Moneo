@@ -1,3 +1,5 @@
+using MediatR;
+using Moneo.TaskManagement.Api.Events.ApplicationEvents;
 using Quartz;
 
 namespace Moneo.TaskManagement.Scheduling;
@@ -7,15 +9,31 @@ public interface ISchedulerService
     IScheduler? GetScheduler();
 }
 
-internal class SchedulerService(ISchedulerFactory factory) : ISchedulerService, IHostedService
+internal class SchedulerService : ISchedulerService, IHostedService
 {
-    private readonly ISchedulerFactory _factory = factory;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly TimeProvider _timeProvider;
+    private readonly ISchedulerFactory _factory;
     private IScheduler? _scheduler;
+
+    public SchedulerService(
+        IServiceProvider serviceProvider, 
+        TimeProvider timeProvider, 
+        ISchedulerFactory factory)
+    {
+        _serviceProvider = serviceProvider;
+        _timeProvider = timeProvider;
+        _factory = factory;
+    }
     
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _scheduler = await _factory.GetScheduler(cancellationToken);
         await _scheduler.Start(cancellationToken);
+
+        using var scope = _serviceProvider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        await mediator.Publish(new ApplicationStartedEvent(_timeProvider.GetUtcNow().UtcDateTime), cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

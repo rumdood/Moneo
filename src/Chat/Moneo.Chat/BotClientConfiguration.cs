@@ -1,4 +1,4 @@
-using Moneo.Core;
+using Moneo.Common;
 
 namespace Moneo.Chat;
 

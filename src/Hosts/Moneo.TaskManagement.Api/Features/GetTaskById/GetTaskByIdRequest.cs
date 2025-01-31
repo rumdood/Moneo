@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Moneo.Common;
 using Moneo.TaskManagement.Contracts.Models;
-using Moneo.TaskManagement.Model;
 using Moneo.TaskManagement.ResourceAccess;
 
 namespace Moneo.TaskManagement.Features.GetTaskById;

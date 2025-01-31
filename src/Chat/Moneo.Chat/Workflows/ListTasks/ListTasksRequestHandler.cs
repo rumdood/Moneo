@@ -1,29 +1,45 @@
 using MediatR;
 using Moneo.Chat.Commands;
-using Moneo.Obsolete.TaskManagement;
-using Moneo.Obsolete.TaskManagement.Models;
+using Moneo.Common;
+using Moneo.TaskManagement.Contracts;
+using Moneo.TaskManagement.Contracts.Models;
 
 namespace Moneo.Chat.UserRequests;
 
 internal class ListTasksRequestHandler : IRequestHandler<ListTasksRequest, MoneoCommandResult>
 {
-    private readonly ITaskResourceManager _taskResourceManager;
+    private readonly ITaskManagerClient _taskManagerClient;
     
-    public ListTasksRequestHandler(ITaskResourceManager taskResourceManager)
+    public ListTasksRequestHandler(ITaskManagerClient taskManagerClient)
     {
-        _taskResourceManager = taskResourceManager;
+        _taskManagerClient = taskManagerClient;
     }
     
     public async Task<MoneoCommandResult> Handle(ListTasksRequest request, CancellationToken cancellationToken)
     {
-        var ( _, taskList, _) = await _taskResourceManager.GetAllTasksForUserAsync(request.ConversationId);
+        var result = await _taskManagerClient.GetTasksForConversationAsync(
+            request.ConversationId,
+            new PageOptions(0, 100), 
+            cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return new MoneoCommandResult
+            {
+                ResponseType = ResponseType.Text,
+                Type = ResultType.Error,
+                UserMessageText = result.Message
+            };
+        }
+
+        var taskList = result.Data?.Data ?? [];
 
         return new MoneoCommandResult
         {
             ResponseType = request.AsMenuFlag ? ResponseType.Menu : ResponseType.Text,
             Type = ResultType.WorkflowCompleted,
             UserMessageText = request.AsMenuFlag ? "Please select a task:" : GetTaskListAsString(taskList),
-            MenuOptions = [..request.AsMenuFlag ? GetTaskListAsMenuOptions(taskList) : Array.Empty<string>()]
+            MenuOptions = [..request.AsMenuFlag ? GetTaskListAsMenuOptions(taskList) : []]
         };
     }
 

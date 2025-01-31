@@ -1,8 +1,8 @@
-using Moneo.Core;
-using Moneo.Obsolete.TaskManagement;
-using Moneo.Obsolete.TaskManagement.Client.Models;
-using Moneo.Obsolete.TaskManagement.Models;
+using Moneo.Common;
+using Moneo.TaskManagement.Contracts;
+using Moneo.TaskManagement.Contracts.Models;
 using RestSharp;
+using IBotClientConfiguration = Moneo.Core.IBotClientConfiguration;
 
 namespace Moneo.TelegramChat.Api;
 
@@ -20,38 +20,61 @@ public class TaskManagerClient : ITaskManagerClient
         var options = new RestClientOptions(_configuration.TaskApiBase);
         _client = new RestClient(options);
     }
-    
-    public Task<MoneoTaskResult<Dictionary<string, MoneoTaskManagerDto>>> GetAllTasksAsync()
+
+    public Task<Common.MoneoResult<PagedList<MoneoTaskDto>>> GetTasksForConversationAsync(long conversationId, PageOptions pagingOptions,
+        CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MoneoTaskResult<Dictionary<string, MoneoTaskDto>>> GetTasksForConversation(long conversationId)
+    public Task<Common.MoneoResult<PagedList<MoneoTaskDto>>> GetTasksForUserAsync(long userId, PageOptions pagingOptions, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MoneoTaskResult> CompleteTaskAsync(long conversationId, string taskName)
+    public Task<Common.MoneoResult<PagedList<MoneoTaskDto>>> GetTasksForUserAndConversationAsync(long userId, long conversationId, PageOptions pagingOptions,
+        CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MoneoTaskResult> SkipTaskAsync(long conversationId, string taskName)
+    public Task<Common.MoneoResult<PagedList<MoneoTaskDto>>> GetTasksByKeywordSearchAsync(long conversationId, string keyword, PageOptions pagingOptions,
+        CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MoneoTaskResult> CreateTaskAsync(long conversationId, MoneoTaskDto task)
+    public Task<Common.MoneoResult<MoneoTaskDto>> GetTaskAsync(long taskId, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MoneoTaskResult> DisableTaskAsync(long conversationId, string taskName)
+    public Task<Common.MoneoResult<MoneoTaskDto>> CreateTaskAsync(long conversationId, CreateEditTaskDto dto, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MoneoTaskResult> UpdateTaskAsync(long conversationId, string taskName, MoneoTaskDto task)
+    public Task<Common.MoneoResult> UpdateTaskAsync(long taskId, CreateEditTaskDto dto, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Common.MoneoResult> DeleteTaskAsync(long taskId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Common.MoneoResult> CompleteTaskAsync(long taskId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Common.MoneoResult> SkipTaskAsync(long taskId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Common.MoneoResult> DeactivateTaskAsync(long taskId, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Workflows.CreateCronSchedule;
-using Moneo.Obsolete.TaskManagement;
+using Moneo.TaskManagement.Contracts;
 
 namespace Moneo.Chat.Workflows.CreateTask;
 
@@ -13,11 +13,11 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
     public CreateTaskWorkflowManager(
         IMediator mediator,
         ILogger<CreateTaskWorkflowManager> logger,
-        ITaskResourceManager taskResourceManager)
+        ITaskManagerClient taskManagerClient)
     {
         _mediator = mediator;
         _logger = logger;
-        _taskResourceManager = taskResourceManager;
+        _taskManagerClient = taskManagerClient;
         _innerWorkflowManager =
         new CreateOrUpdateTaskWorkflowManager(
             logger,
@@ -34,7 +34,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
 
     private readonly IMediator _mediator;
     private readonly ILogger<CreateTaskWorkflowManager> _logger;
-    private readonly ITaskResourceManager _taskResourceManager;
+    private readonly ITaskManagerClient _taskManagerClient;
     private readonly CreateOrUpdateTaskWorkflowManager _innerWorkflowManager;
     private readonly Dictionary<long, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>> _chatStates = new();
     
@@ -82,7 +82,16 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
     
     private async Task CompleteWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
     {
-        await _taskResourceManager.CreateTaskAsync(stateMachine.ConversationId, stateMachine.Draft.Task);
+        var result = await _taskManagerClient.CreateTaskAsync(stateMachine.ConversationId, stateMachine.Draft.ToEditDto());
+        
+        if (!result.IsSuccess)
+        {
+            _logger.LogError(
+                result.Exception,
+                "Failed to create task for conversation {ConversationId}",
+                stateMachine.ConversationId);
+        }
+        
         _chatStates.Remove(stateMachine.ConversationId);
         await _mediator.Send(new CreateTaskWorkflowCompletedEvent(stateMachine.ConversationId));
     }

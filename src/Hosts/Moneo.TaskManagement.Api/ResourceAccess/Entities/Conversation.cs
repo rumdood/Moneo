@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Moneo.TaskManagement.Model;
+using Moneo.TaskManagement.DomainEvents;
 
 namespace Moneo.TaskManagement.ResourceAccess.Entities;
 
@@ -13,8 +13,8 @@ public class Conversation : AuditableEntity, IHasDomainEvents
     
     public ICollection<UserConversation> UserConversations { get; internal set; } = new List<UserConversation>();
     public ICollection<MoneoTask> Tasks { get; internal set; } = new List<MoneoTask>();
-    
-    public List<DomainEvent> DomainEvents { get; set; }
+
+    public List<DomainEvent> DomainEvents { get; set; } = [];
     
     private Conversation() { }
     

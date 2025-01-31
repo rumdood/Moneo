@@ -1,9 +1,6 @@
-using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.Commands;
-using Moneo.Chat.Workflows.CreateCronSchedule;
 using Moneo.Chat.Workflows.CreateTask;
-using Moneo.Obsolete.TaskManagement;
 
 namespace Moneo.Chat.Workflows;
 
@@ -96,7 +93,7 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
     private (bool Success, string? FailureMessage) HandleTaskRepeaterCronInput(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> machine,
         string userInput)
     {
-        machine.Draft.Task.Repeater!.RepeatCron = userInput;
+        machine.Draft.Repeater!.CronExpression = userInput;
         return (true, null);
     }
 
@@ -106,7 +103,7 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
         var noExpiry = new HashSet<string> { "none", "never", "no", "n/a", "it doesn't"};
         try
         {
-            machine.Draft.Task.Repeater!.Expiry = DateTime.Parse(userInput);
+            machine.Draft.Repeater!.Expiry = DateTime.Parse(userInput);
             return (true, null);
         }
         catch (Exception e)
@@ -123,10 +120,10 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
         {
             var threshold =
                 string.IsNullOrWhiteSpace(userInput) || userInput.Equals("default", StringComparison.OrdinalIgnoreCase)
-                    ? 4
+                    ? 3
                     : int.Parse(userInput);
         
-            machine.Draft.Task.Repeater!.EarlyCompletionThresholdHours = threshold;
+            machine.Draft.Repeater!.EarlyCompletionThresholdHours = threshold;
 
             return (true, null);
         }
@@ -161,7 +158,7 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
     {
         try
         {
-            machine.Draft.Task.Badger!.BadgerFrequencyMinutes = int.Parse(userInput);
+            machine.Draft.Badger!.BadgerFrequencyInMinutes = int.Parse(userInput);
             return (true, null);
         }
         catch (Exception e)
@@ -179,7 +176,7 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
             return (false, "That's not a valid date");
         }
         
-        machine.Draft.Task.DueDates.Add(dueDate);
+        machine.Draft.Task.DueOn = dueDate;
         return (true, null);
     }
     
@@ -187,19 +184,19 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
         string userInput)
     {
         _logger.LogDebug("Setting Timezone");
-        machine.Draft.Task.TimeZone = userInput;
+        machine.Draft.Task.Timezone = userInput;
         return (true, null);
     }
     
     private (bool Success, string? FailureMessage) HandleBadgerMessagesInput(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> machine,
         string userInput)
     {
-        machine.Draft.Task.Badger!.BadgerMessages = new[]
-        {
+        machine.Draft.Badger!.BadgerMessages =
+        [
             $"Hey! You need to do the {machine.Draft.Task.Name} thing",
             $"You still haven't finished your task: {machine.Draft.Task.Name}",
             $"Dude. {machine.Draft.Task.Name}. It's past due."
-        };
+        ];
         return (true, null);
     }
     

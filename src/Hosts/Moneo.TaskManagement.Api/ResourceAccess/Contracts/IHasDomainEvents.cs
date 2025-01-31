@@ -1,4 +1,4 @@
-using Moneo.TaskManagement.Model;
+using Moneo.TaskManagement.DomainEvents;
 
 namespace Moneo.TaskManagement.ResourceAccess;
 

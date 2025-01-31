@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Moneo.TaskManagement.Contracts.Models;
-using Moneo.TaskManagement.Model;
+using Moneo.TaskManagement.DomainEvents;
 
 namespace Moneo.TaskManagement.ResourceAccess.Entities;
 
@@ -37,7 +37,7 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     public string Timezone { get; internal set; } = "";
     
     [Column("dueOn")]
-    public DateTimeOffset? DueOn { get; internal set; }
+    public DateTime? DueOn { get; internal set; }
     
     [Required]
     [Column("conversation_id")]
@@ -58,7 +58,8 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     public TaskRepeater? Repeater
     {
         get => this.GetValueFromJson(() => (RepeaterJson, _repeater));
-        set => this.SetJsonFieldFromValue(() => (RepeaterJson, _repeater = value));
+        set => this.SetJsonFieldFromValue(() => (RepeaterJson, _repeater = value), 
+            newJson => RepeaterJson = newJson);
     }
     
     [Column("badger_json")]
@@ -68,7 +69,8 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     public TaskBadger? Badger
     {
         get => this.GetValueFromJson(() => (BadgerJson, _badger));
-        set => this.SetJsonFieldFromValue(() => (BadgerJson, _badger = value));
+        set => this.SetJsonFieldFromValue(() => (BadgerJson, _badger = value),
+            newJson => BadgerJson = newJson);
     }
     
     [Required]
@@ -79,7 +81,8 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     public List<string> CompletedMessages
     {
         get => this.GetListFromJsonField(() => (CompletedMessagesJson, _completedMessages));
-        set => this.SetJsonFieldFromList(() => (CompletedMessagesJson, _completedMessages = value));
+        set => this.SetJsonFieldFromList(() => (CompletedMessagesJson, _completedMessages = value),
+            newJson => CompletedMessagesJson = newJson);
     }
     
     [Column("skipped_messages")]
@@ -89,7 +92,8 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     public List<string> SkippedMessages
     {
         get => this.GetListFromJsonField(() => (SkippedMessagesJson, _skippedMessages));
-        set => this.SetJsonFieldFromList(() => (SkippedMessagesJson, _skippedMessages = value));
+        set => this.SetJsonFieldFromList(() => (SkippedMessagesJson, _skippedMessages = value),
+            newJson => SkippedMessagesJson = newJson);
     }
 
     public List<DomainEvent> DomainEvents { get; set; } = [];

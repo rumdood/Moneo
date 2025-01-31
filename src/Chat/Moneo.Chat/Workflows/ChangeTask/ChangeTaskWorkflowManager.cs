@@ -4,8 +4,8 @@ using Microsoft.Extensions.Logging;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Workflows.CreateCronSchedule;
 using Moneo.Chat.Workflows.CreateTask;
-using Moneo.Obsolete.TaskManagement;
-using Moneo.Obsolete.TaskManagement.Client.Models;
+using Moneo.Common;
+using Moneo.TaskManagement.Contracts;
 
 namespace Moneo.Chat.Workflows.ChangeTask;
 
@@ -15,7 +15,7 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ChangeTaskWorkflowManager> _logger;
-    private readonly ITaskResourceManager _taskResourceManager;
+    private readonly ITaskManagerClient _taskResourceManager;
     private readonly CreateOrUpdateTaskWorkflowManager _innerWorkflowManager;
     private readonly Dictionary<long, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>> _chatStates = new();
     private readonly Dictionary<long, ChangeTaskMenuOption> _menuOptions = new();
@@ -23,7 +23,7 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
     public ChangeTaskWorkflowManager(
         IMediator mediator,
         ILogger<ChangeTaskWorkflowManager> logger,
-        ITaskResourceManager taskResourceManager)
+        ITaskManagerClient taskResourceManager)
     {
         _mediator = mediator;
         _logger = logger;
@@ -90,24 +90,25 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
         
         await _mediator.Send(new ChangeTaskWorkflowStartedEvent(chatId));
 
-        var searchResult = await _taskResourceManager.GetTasksForUserAsync(
+        var searchResult = await _taskResourceManager.GetTasksByKeywordSearchAsync(
             chatId, 
-            new MoneoTaskFilter { SearchString = taskName });
-            
-        if (!searchResult.IsSuccessful)
+            taskName, 
+            new PageOptions(0, 100));
+        
+        if (!searchResult.IsSuccess || searchResult.Data is null)
         {
             return new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText = searchResult.ErrorMessage ?? 
+                UserMessageText = searchResult.Message ?? 
                                   "An error occurred while searching for the task. Please try again later."
             };
         }
 
-        var tasks = searchResult.Result.Where(t => !string.IsNullOrEmpty(t.Id)).ToArray();
+        var tasks = searchResult.Data?.Data ?? [];
 
-        switch (tasks.Length)
+        switch (tasks.Count)
         {
             case 0:
                 return new MoneoCommandResult
@@ -153,10 +154,15 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
     
     private async Task CompleteWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
     {
-        await _taskResourceManager.UpdateTaskAsync(
+        var result = await _taskResourceManager.UpdateTaskAsync(
             stateMachine.ConversationId, 
-            stateMachine.Draft.Task.Id,
-            stateMachine.Draft.Task);
+            stateMachine.Draft.ToEditDto());
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogError(result.Exception, "Failed to update task {TaskId}", stateMachine.ConversationId);
+        }
+        
         _chatStates.Remove(stateMachine.ConversationId);
         await _mediator.Send(new ChangeTaskWorkflowCompletedEvent(stateMachine.ConversationId));
     }

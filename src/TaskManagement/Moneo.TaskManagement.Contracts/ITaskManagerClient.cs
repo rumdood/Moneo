@@ -1,17 +1,45 @@
+
+using Moneo.Common;
 using Moneo.TaskManagement.Contracts.Models;
 
 namespace Moneo.TaskManagement.Contracts;
 
 public interface ITaskManagerClient
 {
-    Task<IReadOnlyList<MoneoTaskDto>> GetTasksForConversationAsync(long conversationId);
-    Task<IReadOnlyList<MoneoTaskDto>> GetTasksForUserAsync(long userId);
-    Task<IReadOnlyList<MoneoTaskDto>> GetTasksForUserAndConversationAsync(long userId, long conversationId);
-    Task<MoneoTaskDto?> GetTaskAsync(long taskId);
-    Task<MoneoTaskDto> CreateTaskAsync(CreateEditTaskDto dto);
-    Task UpdateTaskAsync(long taskId, CreateEditTaskDto dto);
-    Task DeleteTaskAsync(long taskId);
-    Task CompleteTaskAsync(long taskId);
-    Task SkipTaskAsync(long taskId);
-    Task DeactivateTaskAsync(long taskId);
+    Task<MoneoResult<PagedList<MoneoTaskDto>>> GetTasksForConversationAsync(
+        long conversationId, 
+        PageOptions pagingOptions,
+        CancellationToken cancellationToken = default);
+
+    Task<MoneoResult<PagedList<MoneoTaskDto>>> GetTasksForUserAsync(
+        long userId,
+        PageOptions pagingOptions,
+        CancellationToken cancellationToken = default);
+
+    Task<MoneoResult<PagedList<MoneoTaskDto>>> GetTasksForUserAndConversationAsync(
+        long userId, 
+        long conversationId,
+        PageOptions pagingOptions, 
+        CancellationToken cancellationToken = default);
+    
+    Task<MoneoResult<PagedList<MoneoTaskDto>>> GetTasksByKeywordSearchAsync(
+        long conversationId,
+        string keyword,
+        PageOptions pagingOptions,
+        CancellationToken cancellationToken = default);
+    Task<MoneoResult<MoneoTaskDto>> GetTaskAsync(long taskId, CancellationToken cancellationToken = default);
+
+    Task<MoneoResult<MoneoTaskDto>> CreateTaskAsync(
+        long conversationId, 
+        CreateEditTaskDto dto,
+        CancellationToken cancellationToken = default);
+
+    Task<MoneoResult> UpdateTaskAsync(
+        long taskId, 
+        CreateEditTaskDto dto,
+        CancellationToken cancellationToken = default);
+    Task<MoneoResult> DeleteTaskAsync(long taskId, CancellationToken cancellationToken = default);
+    Task<MoneoResult> CompleteTaskAsync(long taskId, CancellationToken cancellationToken = default);
+    Task<MoneoResult> SkipTaskAsync(long taskId, CancellationToken cancellationToken = default);
+    Task<MoneoResult> DeactivateTaskAsync(long taskId, CancellationToken cancellationToken = default);
 }

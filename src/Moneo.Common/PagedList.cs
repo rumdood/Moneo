@@ -1,4 +1,4 @@
-namespace Moneo.TaskManagement.Contracts.Models;
+namespace Moneo.Common;
 
 public class PagedList<T> where T : class
 {

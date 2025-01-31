@@ -1,6 +1,5 @@
 using MediatR;
 using Moneo.TaskManagement.Contracts.Models;
-using Moneo.TaskManagement.Model;
 
 namespace Moneo.TaskManagement.Features.CreateEditTask;
 

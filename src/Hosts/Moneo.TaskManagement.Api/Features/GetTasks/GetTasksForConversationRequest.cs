@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Moneo.Common;
 using Moneo.TaskManagement.Contracts.Models;
-using Moneo.TaskManagement.Model;
 using Moneo.TaskManagement.ResourceAccess;
 
 namespace Moneo.TaskManagement.Features.GetTasks;
@@ -12,7 +12,9 @@ public sealed record GetTasksForConversationRequest(long ConversationId, PageOpt
 internal sealed class GetTasksForConversationRequestHandler(MoneoTasksDbContext dbContext)
     : IRequestHandler<GetTasksForConversationRequest, MoneoResult<PagedList<MoneoTaskDto>>>
 {
-    public async Task<MoneoResult<PagedList<MoneoTaskDto>>> Handle(GetTasksForConversationRequest request, CancellationToken cancellationToken)
+    public async Task<MoneoResult<PagedList<MoneoTaskDto>>> Handle(
+        GetTasksForConversationRequest request, 
+        CancellationToken cancellationToken)
     {
         try
         {

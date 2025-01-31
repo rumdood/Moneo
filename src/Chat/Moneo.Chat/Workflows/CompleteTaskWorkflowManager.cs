@@ -1,7 +1,7 @@
 using MediatR;
 using Moneo.Chat.Commands;
-using Moneo.Obsolete.TaskManagement;
-using Moneo.Obsolete.TaskManagement.Client.Models;
+using Moneo.Common;
+using Moneo.TaskManagement.Contracts;
 
 namespace Moneo.Chat.Workflows;
 
@@ -19,7 +19,7 @@ public interface ICompleteTaskWorkflowManager : IWorkflowManager
 
 public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWorkflowManager
 {
-    private readonly ITaskResourceManager _taskResourceManager;
+    private readonly ITaskManagerClient _taskManagerClient;
     
     public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CompleteTaskOption option, CancellationToken cancellationToken = default)
     {
@@ -28,11 +28,10 @@ public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWor
             return await Mediator.Send(new ListTasksRequest(conversationId, true), cancellationToken);
         }
 
-        var tasksMatchingName =
-            await _taskResourceManager.GetTasksForUserAsync(conversationId,
-                new MoneoTaskFilter {SearchString = taskName});
+        var tasksMatchingName = await _taskManagerClient.GetTasksByKeywordSearchAsync(conversationId, taskName,
+            new PageOptions(0, 100), cancellationToken);
 
-        if (!tasksMatchingName.IsSuccessful || !tasksMatchingName.Result.Any())
+        if (!tasksMatchingName.IsSuccess || tasksMatchingName.Data?.TotalCount == 0)
         {
             return new MoneoCommandResult
             {
@@ -42,34 +41,34 @@ public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWor
             };
         }
 
-        var tasks = tasksMatchingName.Result.Where(t => t.IsActive && !string.IsNullOrEmpty(t.Id)).ToArray();
+        var tasks = tasksMatchingName.Data?.Data?.Where(t => t.IsActive).ToArray() ?? [];
 
-        if (!tasks.Any())
+        if (tasks.Length == 0)
         {
             return new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText = $"There was a problem working with {taskName} and I can't clear it."
+                UserMessageText = $"There are no active tasks called {taskName}"
             };
         }
 
         if (tasks.Length == 1)
         {
+            var taskToComplete = tasks.First();
             // here we'll do a call to the Azure Function to complete the task
             var completeTaskResult = option switch
             {
-                CompleteTaskOption.Complete => await _taskResourceManager.CompleteTaskAsync(conversationId,
-                    tasks.First().Id),
-                CompleteTaskOption.Skip => await _taskResourceManager.SkipTaskAsync(conversationId, tasks.First().Id),
-                _ => new MoneoTaskResult(false, "Unknown option")
+                CompleteTaskOption.Complete => await _taskManagerClient.CompleteTaskAsync(taskToComplete.Id, cancellationToken),
+                CompleteTaskOption.Skip => await _taskManagerClient.SkipTaskAsync(taskToComplete.Id, cancellationToken),
+                _ => MoneoResult.Failed("No such option")
             };
 
             return new MoneoCommandResult
             {
-                ResponseType = completeTaskResult.IsSuccessful ? ResponseType.None : ResponseType.Text,
-                Type = completeTaskResult.IsSuccessful ? ResultType.WorkflowCompleted : ResultType.Error,
-                UserMessageText = completeTaskResult.IsSuccessful ? "" : "Something went wrong. Look at the logs?"
+                ResponseType = completeTaskResult.IsSuccess ? ResponseType.None : ResponseType.Text,
+                Type = completeTaskResult.IsSuccess ? ResultType.WorkflowCompleted : ResultType.Error,
+                UserMessageText = completeTaskResult.IsSuccess ? "" : "Something went wrong. Look at the logs?"
             };
         }
 
@@ -89,8 +88,8 @@ public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWor
         };
     }
 
-    public CompleteTaskWorkflowManager(IMediator mediator, ITaskResourceManager taskResourceManager) : base(mediator)
+    public CompleteTaskWorkflowManager(IMediator mediator, ITaskManagerClient taskManagerClient) : base(mediator)
     {
-        _taskResourceManager = taskResourceManager;
+        _taskManagerClient = taskManagerClient;
     }
 }

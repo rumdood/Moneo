@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Moneo.Core;
+using Moneo.Common;
 
 namespace Moneo.Chat.ServiceCollectionExtensions;
 

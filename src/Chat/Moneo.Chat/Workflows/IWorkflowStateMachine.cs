@@ -1,5 +1,4 @@
 using Moneo.Chat.Workflows.CreateTask;
-using Moneo.Obsolete.TaskManagement.Models;
 
 namespace Moneo.Chat.Workflows;
 

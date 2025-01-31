@@ -2,7 +2,7 @@ using MediatR;
 using Moneo.Chat.Commands;
 using Moq;
 using Moneo.Chat.Workflows;
-using Moneo.Obsolete.TaskManagement;
+using Moneo.TaskManagement.Contracts;
 
 namespace Moneo.Chat.Tests;
 
@@ -12,7 +12,7 @@ public class UnitTest1
     public async Task CanCreateCompleteRequestWithoutArgs()
     {
         // setup
-        var mgr = new Mock<ITaskResourceManager>();
+        var mgr = new Mock<ITaskManagerClient>();
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<IRequest<MoneoCommandResult>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IRequest<MoneoCommandResult> request, CancellationToken token) =>

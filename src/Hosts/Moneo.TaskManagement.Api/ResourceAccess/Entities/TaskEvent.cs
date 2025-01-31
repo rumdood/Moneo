@@ -14,7 +14,7 @@ public class TaskEvent : AuditableEntity
     
     [Required]
     [Column("occurred_on")]
-    public DateTimeOffset OccurredOn { get; internal set; }
+    public DateTime OccurredOn { get; internal set; }
     
     [Required]
     [Column("type")]
@@ -25,7 +25,7 @@ public class TaskEvent : AuditableEntity
     
     private TaskEvent() { }
     
-    public TaskEvent(MoneoTask task, TaskEventType type, DateTimeOffset occurredOn)
+    public TaskEvent(MoneoTask task, TaskEventType type, DateTime occurredOn)
     {
         Task = task;
         OccurredOn = occurredOn;

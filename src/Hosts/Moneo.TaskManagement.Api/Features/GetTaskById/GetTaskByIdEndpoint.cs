@@ -1,5 +1,4 @@
 using MediatR;
-using Moneo.TaskManagement.Model;
 
 namespace Moneo.TaskManagement.Features.GetTaskById;
 

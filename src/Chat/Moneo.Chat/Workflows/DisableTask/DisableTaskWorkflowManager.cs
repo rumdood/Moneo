@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Moneo.Chat.Commands;
-using Moneo.Obsolete.TaskManagement;
-using Moneo.Obsolete.TaskManagement.Client.Models;
+using Moneo.Common;
+using Moneo.TaskManagement.Contracts;
 
 namespace Moneo.Chat.Workflows.DisableTask;
 
@@ -12,7 +12,7 @@ public interface IDisableTaskWorkflowManager : IWorkflowManager
 
 public class DisableTaskWorkflowManager : WorkflowManagerBase, IDisableTaskWorkflowManager
 {
-    private readonly ITaskResourceManager _taskResourceManager;
+    private readonly ITaskManagerClient _taskManagerClient;
 
     public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CancellationToken cancellationToken = default)
     {
@@ -21,11 +21,13 @@ public class DisableTaskWorkflowManager : WorkflowManagerBase, IDisableTaskWorkf
             return await Mediator.Send(new ListTasksRequest(conversationId, true), cancellationToken);
         }
 
-        var tasksMatchingName =
-            await _taskResourceManager.GetTasksForUserAsync(conversationId,
-                new MoneoTaskFilter { SearchString = taskName });
+        var tasksMatchingName = await _taskManagerClient.GetTasksByKeywordSearchAsync(
+            conversationId, 
+            taskName,
+            new PageOptions(0, 100), 
+            cancellationToken);
 
-        if (!tasksMatchingName.IsSuccessful || !tasksMatchingName.Result.Any())
+        if (!tasksMatchingName.IsSuccess || tasksMatchingName.Data?.TotalCount == 0)
         {
             return new MoneoCommandResult
             {
@@ -35,30 +37,31 @@ public class DisableTaskWorkflowManager : WorkflowManagerBase, IDisableTaskWorkf
             };
         }
 
-        var tasks = tasksMatchingName.Result.Where(t => t.IsActive && !string.IsNullOrEmpty(t.Id)).ToArray();
+        var tasks = tasksMatchingName.Data?.Data?.Where(t => t.IsActive).ToArray() ?? [];
 
-        if (!tasks.Any())
+        if (tasks.Length == 0)
         {
             return new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText = $"There was a problem working with {taskName} and I can't disable it."
+                UserMessageText = $"There were no active tasks similar to {taskName}"
             };
         }
 
         if (tasks.Length == 1)
         {
+            var taskToDisable = tasks.First();
             // here we'll do a call to the Azure Function to disable the task
-            var disableTaskResult = await _taskResourceManager.DisableTaskAsync(conversationId, tasks.First().Id);
+            var disableTaskResult = await _taskManagerClient.DeactivateTaskAsync(taskToDisable.Id, cancellationToken);
 
-            if (!disableTaskResult.IsSuccessful)
+            if (!disableTaskResult.IsSuccess)
             {
                 return new MoneoCommandResult
                 {
                     ResponseType = ResponseType.Text,
                     Type = ResultType.Error,
-                    UserMessageText = $"There was a problem working with {taskName} and I can't disable it."
+                    UserMessageText = $"There was a problem working with {taskToDisable.Name} and I can't disable it."
                 };
             }
 
@@ -66,7 +69,7 @@ public class DisableTaskWorkflowManager : WorkflowManagerBase, IDisableTaskWorkf
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.WorkflowCompleted,
-                UserMessageText = $"I've disabled the task {taskName}"
+                UserMessageText = $"I've disabled the task \"{taskToDisable.Name}\""
             };
         }
 
@@ -79,8 +82,8 @@ public class DisableTaskWorkflowManager : WorkflowManagerBase, IDisableTaskWorkf
         };
     }
 
-    public DisableTaskWorkflowManager(IMediator mediator, ITaskResourceManager taskResourceManager) : base(mediator)
+    public DisableTaskWorkflowManager(IMediator mediator, ITaskManagerClient taskManagerClient) : base(mediator)
     {
-        _taskResourceManager = taskResourceManager;
+        _taskManagerClient = taskManagerClient;
     }
 }

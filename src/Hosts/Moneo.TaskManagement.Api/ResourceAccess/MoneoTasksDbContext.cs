@@ -2,8 +2,9 @@ using System.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Moneo.TaskManagement.Model;
+using Moneo.TaskManagement.DomainEvents;
 using Moneo.TaskManagement.ResourceAccess.Entities;
+using TaskEvent = Moneo.TaskManagement.ResourceAccess.Entities.TaskEvent;
 
 namespace Moneo.TaskManagement.ResourceAccess;
 
@@ -82,10 +83,10 @@ public class MoneoTasksDbContext : DbContext
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedOn = _timeProvider.GetUtcNow();
+                    entry.Entity.CreatedOn = _timeProvider.GetUtcNow().UtcDateTime;
                     break;
                 case EntityState.Modified:
-                    entry.Entity.ModifiedOn = _timeProvider.GetUtcNow();
+                    entry.Entity.ModifiedOn = _timeProvider.GetUtcNow().UtcDateTime;
                     break;
                 case EntityState.Deleted:
                 case EntityState.Detached:
@@ -95,16 +96,19 @@ public class MoneoTasksDbContext : DbContext
             }
         }
 
-        var events = ChangeTracker.Entries<IHasDomainEvents>()
-            .Select(x => x.Entity.DomainEvents)
-            .SelectMany(x => x)
+        var entitiesWithEvents = ChangeTracker.Entries<IHasDomainEvents>()
+            .Select(entry => entry.Entity)
+            .Where(entity => entity.DomainEvents.Count != 0)
             .ToArray();
 
-        var result = await base.SaveChangesAsync(cancellationToken);
-        
-        await DispatchEvents(events);
-        
-        return result;
+        foreach (var entity in entitiesWithEvents)
+        {
+            var events = entity.DomainEvents.ToArray();
+            entity.DomainEvents.Clear();
+            await DispatchEvents(events);
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -162,8 +166,11 @@ public class MoneoTasksDbContext : DbContext
             .HasIndex(t => t.OccurredOn, "IDX_TaskEvent_OccurredOn");
     }
     
-    private Task DispatchEvents(IReadOnlyList<DomainEvent> events)
+    private async Task DispatchEvents(IReadOnlyList<DomainEvent> events)
     {
-        return Task.CompletedTask;
+        foreach (var domainEvent in events)
+        {
+            await _mediator.Publish(domainEvent);
+        }
     }
 }

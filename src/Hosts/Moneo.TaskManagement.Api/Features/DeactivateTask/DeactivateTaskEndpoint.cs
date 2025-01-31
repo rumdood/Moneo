@@ -1,6 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Moneo.TaskManagement.Model;
 
 namespace Moneo.TaskManagement.Features.DeactivateTask;
 
