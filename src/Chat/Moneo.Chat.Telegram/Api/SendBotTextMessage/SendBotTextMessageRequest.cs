@@ -1,14 +1,15 @@
 using MediatR;
 using Moneo.Chat;
+using Moneo.Common;
 
-namespace Moneo.TelegramChat.Api.Features.SendBotTextMessage;
+namespace Moneo.Moneo.Chat.Telegram.Api.SendBotTextMessage;
 
 public sealed record BotTextMessageDto(long ConversationId, string Text, bool IsError) : IBotTextMessage;
 
-public sealed record SendBotTextMessageRequest(BotTextMessageDto Message) : IRequest<IMoneoResult>;
+public sealed record SendBotTextMessageRequest(BotTextMessageDto Message) : IRequest<MoneoResult>;
 
 internal sealed class SendMessageRequestHandler
-    : IRequestHandler<SendBotTextMessageRequest, IMoneoResult>
+    : IRequestHandler<SendBotTextMessageRequest, MoneoResult>
 {
     private readonly IChatAdapter _chatAdapter;
     
@@ -17,7 +18,7 @@ internal sealed class SendMessageRequestHandler
         _chatAdapter = chatAdapter;
     }
 
-    public async Task<IMoneoResult> Handle(SendBotTextMessageRequest request, CancellationToken cancellationToken)
+    public async Task<MoneoResult> Handle(SendBotTextMessageRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -26,7 +27,7 @@ internal sealed class SendMessageRequestHandler
         }
         catch (Exception e)
         {
-            return MoneoResult.Error(e);
+            return MoneoResult.Failed(e);
         }
     }
 }

@@ -1,11 +1,14 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.TelegramChat.Api.Features.SendBotTextMessage;
+namespace Moneo.Moneo.Chat.Telegram.Api.SendBotTextMessage;
 
 public static class SendBotTextMessageEndpoint
 {
-    public static void AddSendBotTextmessageEndpoint(this IEndpointRouteBuilder app)
+    public static void AddSendBotTextMessageEndpoint(this IEndpointRouteBuilder app)
     {
         app.MapPost($"/{ChatConstants.Routes.SendToUser}/text", async ([FromBody] BotTextMessageDto message, ISender sender) =>
         {

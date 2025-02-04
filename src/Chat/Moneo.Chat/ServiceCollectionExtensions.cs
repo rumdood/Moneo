@@ -31,26 +31,34 @@ public static partial class ServiceCollectionExtensions
         {
             cfg.RegisterServicesFromAssemblies(typeof(CompleteTaskRequest).Assembly, typeof(TChatAdapter).Assembly);
         });
+
         return services;
     }
     
-    public static IServiceCollection AddMediatr(this IServiceCollection services, IBotClientConfiguration botConfig)
+    public static IServiceCollection AddChatAdapter<TChatAdapter>(this IServiceCollection services,
+        ChatAdapterOptions options) where TChatAdapter : class, IChatAdapter
     {
-        services.AddMediatR(cfg =>
+        services.AddChatAdapter<TChatAdapter>();
+        if (!options.IsValid())
         {
-            // check to see if we already have the IChatAdapter registered
-            var chatAdapterType =
-                services.FirstOrDefault(s => s.ServiceType == typeof(IChatAdapter))?.ImplementationType ??
-                AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.Name.Equals(botConfig.ChatAdapter, StringComparison.OrdinalIgnoreCase));
-            
-            var adapterAssembly = chatAdapterType?.Assembly ?? throw new InvalidOperationException(
-                $"Chat adapter '{botConfig.ChatAdapter}' not found.");
-            
-            cfg.RegisterServicesFromAssemblies(typeof(CompleteTaskRequest).Assembly, adapterAssembly);
-        });
+            throw new InvalidOperationException("Invalid ChatManagerOptions");
+        }
         
+        if (options.InMemoryStateManagementEnabled)
+        {
+            services.AddInMemoryChatStateManagement();
+        }
+        return services;
+    }
+
+    public static IServiceCollection AddChatAdapter<TChatAdapter>(this IServiceCollection services,
+        Action<ChatAdapterOptions> options) where TChatAdapter : class, IChatAdapter
+    {
+        services.AddChatAdapter<TChatAdapter>();
+        var chatAdapterOptions = new ChatAdapterOptions();
+        options.Invoke(chatAdapterOptions);
+
+        services.AddChatAdapter<TChatAdapter>(chatAdapterOptions);
         return services;
     }
     
@@ -65,4 +73,13 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<IChatManager, ChatManager>();
         return services;
     }
+}
+
+public class ChatAdapterOptions
+{
+    public bool InMemoryStateManagementEnabled { get; private set; } = true;
+    
+    public void UseInMemoryStateManagement() => InMemoryStateManagementEnabled = true;
+
+    public bool IsValid() => true;
 }

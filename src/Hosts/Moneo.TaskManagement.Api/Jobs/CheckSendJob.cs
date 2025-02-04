@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Moneo.Chat;
+using Moneo.TaskManagement.Api.Chat;
 using Moneo.TaskManagement.Contracts.Models;
 using Moneo.TaskManagement.ResourceAccess;
 using Quartz;
@@ -11,6 +13,7 @@ internal sealed class CheckSendJob : IJob
     private readonly ILogger<CheckSendJob> _logger;
     private readonly TimeProvider _timeProvider;
     private readonly MoneoTasksDbContext _dbContext;
+    private readonly IChatAdapter _chatAdapter;
     
     private record MoneoTaskCompletionDataDto(
         long Id,
@@ -20,22 +23,23 @@ internal sealed class CheckSendJob : IJob
         TaskRepeaterDto? Repeater,
         DateTime? LastCompletedOrSkipped);
 
-    public CheckSendJob(ILogger<CheckSendJob> logger, TimeProvider timeProvider, MoneoTasksDbContext dbContext)
+    public CheckSendJob(ILogger<CheckSendJob> logger, TimeProvider timeProvider, MoneoTasksDbContext dbContext, IChatAdapter adapter)
     {
         _logger = logger;
         _timeProvider = timeProvider;
         _dbContext = dbContext;
+        _chatAdapter = adapter;
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        _logger.LogDebug("Executing job {JobKey}", context.JobDetail.Key);
-        var dataMap = context.JobDetail.JobDataMap;
+        _logger.LogInformation("Executing job {JobKey}", context.JobDetail.Key);
+        var dataMap = context.Trigger.JobDataMap;
 
         var taskId = dataMap.GetLong("TaskId");
         var message = dataMap.GetString("Message");
 
-        _logger.LogInformation("TaskId: {TaskId}, Message: {Message}", taskId, message);
+        _logger.LogDebug("TaskId: {TaskId}, Message: {Message}", taskId, message);
 
         var taskInfo = await GetTaskWithHistoryData(taskId);
 
@@ -60,7 +64,15 @@ internal sealed class CheckSendJob : IJob
             return;
         }
 
-        await SendNotificationAsync(taskInfo.ConversationId, message);
+        try
+        {
+            await SendNotificationAsync(taskInfo.ConversationId, message);
+            _logger.LogInformation("Notification sent for TaskId: {TaskId}", taskId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to send notification for TaskId: {TaskId}", taskId);
+        }
     }
 
     private async Task<MoneoTaskCompletionDataDto?> GetTaskWithHistoryData(long taskId)
@@ -77,7 +89,7 @@ internal sealed class CheckSendJob : IJob
                 t.TaskEvents
                     .Where(h => h.Type == TaskEventType.Completed || h.Type == TaskEventType.Skipped)
                     .OrderByDescending(h => h.OccurredOn)
-                    .Select(h => h.OccurredOn)
+                    .Select(h => (DateTime?)h.OccurredOn)
                     .FirstOrDefault()
             ))
             .FirstOrDefaultAsync();
@@ -113,9 +125,9 @@ internal sealed class CheckSendJob : IJob
                TimeSpan.FromHours(taskInfo.Repeater.EarlyCompletionThresholdHours);
     }
 
-    private Task SendNotificationAsync(long conversationId, string message)
+    private async Task SendNotificationAsync(long conversationId, string message, CancellationToken cancellationToken = default)
     {
-        // send the notification
-        return Task.CompletedTask;
+        var botMessage = new BotTextMessageDto(conversationId, message);
+        await _chatAdapter.SendBotTextMessageAsync(botMessage, cancellationToken);
     }
 }

@@ -22,7 +22,9 @@ public static class MoneoTaskExtensions
         // create a new job
         var jobData = new JobDataMap
         {
+            {"ConversationId", task.Conversation.Id},
             {"TaskId", task.Id},
+            {"TaskName", task.Name},
             {"Message", $"Your task '{task.Name}' is due now"},
             {"IsBadger", false}
         };
@@ -33,7 +35,7 @@ public static class MoneoTaskExtensions
             return TriggerBuilder.Create()
                 .WithMoneoIdentity(task.Id, CheckSendType.Due)
                 .UsingJobData(jobData)
-                .WithCronSchedule(repeater.CronExpression)
+                .WithCronSchedule(repeater.CronExpression.GetQuartzCronExpression())
                 .EndAt(repeater.Expiry)
                 .Build();
         }
@@ -68,11 +70,13 @@ public static class MoneoTaskExtensions
                 .PersistJobDataAfterExecution()
                 .Build();
 
+            /*
             await scheduler.AddJob(
                 job, 
-                replace: false, 
+                replace: true, 
                 storeNonDurableWhileAwaitingScheduling: true, 
                 cancellationToken);
+            */
 
             var dueTrigger = task.BuildDueTrigger();
         
@@ -128,11 +132,13 @@ public static class MoneoTaskExtensions
                 .PersistJobDataAfterExecution()
                 .Build();
 
+            /*
             await scheduler.AddJob(
                 job, 
                 replace: false, 
                 storeNonDurableWhileAwaitingScheduling: true,
                 cancellationToken);
+            */
         
             var trigger = TriggerBuilder.Create()
                 .WithMoneoIdentity(task.Id, CheckSendType.Badger)

@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.BotRequests;
 using Moneo.Chat.Models;
-using Moneo.Core;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -18,18 +17,18 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     IRequestHandler<BotGifMessageRequest>,
     IRequestHandler<BotMenuMessageRequest>
 {
-    private readonly IBotClientConfiguration _configuration;
+    private readonly TelegramChatAdapterOptions _options;
     private readonly ITelegramBotClient _botClient;
     private readonly IChatManager _conversationManager;
     private readonly ILogger<TelegramChatAdapter> _logger;
     private bool _isUsingWebhook = false;
 
-    public TelegramChatAdapter(IBotClientConfiguration configuration, IChatManager conversationManager,
+    public TelegramChatAdapter(TelegramChatAdapterOptions options, IChatManager conversationManager,
         ILogger<TelegramChatAdapter> logger, ITelegramBotClient? botClient = null)
     {
         _logger = logger;
-        _configuration = configuration;
-        _botClient = botClient ?? new TelegramBotClient(configuration.BotToken);
+        _options = options;
+        _botClient = botClient ?? new TelegramBotClient(options.BotToken);
         _conversationManager = conversationManager;
     }
     
@@ -90,7 +89,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     {
         if (exception is ApiRequestException apiRequestException)
         {
-            await _botClient.SendTextMessageAsync(_configuration.MasterConversationId, apiRequestException.ToString(),
+            await _botClient.SendTextMessageAsync(_options.MasterConversationId, apiRequestException.ToString(),
                 cancellationToken: cancelToken);
         }
     }
@@ -115,7 +114,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     public async Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default)
     {
         _isUsingWebhook = true;
-        await _botClient.SetWebhookAsync(url: callbackUrl, secretToken: _configuration.CallbackToken, cancellationToken: cancellationToken);
+        await _botClient.SetWebhookAsync(url: callbackUrl, secretToken: _options.CallbackToken, cancellationToken: cancellationToken);
         IsActive = true;
     }
 
@@ -165,10 +164,11 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
     public async Task SendBotTextMessageAsync(IBotTextMessage botTextMessage, CancellationToken cancellationToken)
     {
-        if (botTextMessage is not BotTextMessageRequest message)
-        {
-            throw new UserMessageFormatException("BotTextMessage is not in the correct format");
-        }
+        var message = botTextMessage as BotTextMessageRequest ??
+                      new BotTextMessageRequest(
+                          botTextMessage.ConversationId,
+                          botTextMessage.Text,
+                          botTextMessage.IsError);
         
         await Handle(message, cancellationToken);
     }

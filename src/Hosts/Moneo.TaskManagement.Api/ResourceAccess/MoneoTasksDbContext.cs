@@ -101,14 +101,18 @@ public class MoneoTasksDbContext : DbContext
             .Where(entity => entity.DomainEvents.Count != 0)
             .ToArray();
 
+        var result = await base.SaveChangesAsync(cancellationToken);
+        
+        // we're going to try firing the events after the transaction is committed so we don't 
+        // have to worry about the events being dispatched if the transaction is rolled back
         foreach (var entity in entitiesWithEvents)
         {
             var events = entity.DomainEvents.ToArray();
             entity.DomainEvents.Clear();
             await DispatchEvents(events);
         }
-
-        return await base.SaveChangesAsync(cancellationToken);
+        
+        return result;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

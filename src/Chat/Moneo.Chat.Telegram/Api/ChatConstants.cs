@@ -1,4 +1,4 @@
-namespace Moneo.TelegramChat.Api.Features;
+namespace Moneo.Moneo.Chat.Telegram.Api;
 
 public static class ChatConstants
 {

@@ -1,6 +1,9 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.TelegramChat.Api.Features.StartChatAdapter;
+namespace Moneo.Moneo.Chat.Telegram.Api.StartChatAdapter;
 
 public static class StartChatAdapterEndpoints
 {

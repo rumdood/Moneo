@@ -22,4 +22,10 @@ public class Conversation : AuditableEntity, IHasDomainEvents
     {
         Transport = transport;
     }
+    
+    public Conversation(long id, Transport transport)
+    {
+        Id = id;
+        Transport = transport;
+    }
 }

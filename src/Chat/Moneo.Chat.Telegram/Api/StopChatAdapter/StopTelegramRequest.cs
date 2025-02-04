@@ -1,11 +1,12 @@
 using MediatR;
 using Moneo.Chat;
+using Moneo.Common;
 
-namespace Moneo.TelegramChat.Api.Features.StopChatAdapter;
+namespace Moneo.Moneo.Chat.Telegram.Api.StopChatAdapter;
 
-public sealed record StopTelegramRequest : IRequest<IMoneoResult>;
+public sealed record StopTelegramRequest : IRequest<MoneoResult>;
 
-internal sealed class StopTelegramRequestHandler : IRequestHandler<StopTelegramRequest, IMoneoResult>
+internal sealed class StopTelegramRequestHandler : IRequestHandler<StopTelegramRequest, MoneoResult>
 {
     private readonly IChatAdapter _chatAdapter;
 
@@ -14,7 +15,7 @@ internal sealed class StopTelegramRequestHandler : IRequestHandler<StopTelegramR
         _chatAdapter = chatAdapter;
     }
     
-    public async Task<IMoneoResult> Handle(StopTelegramRequest request, CancellationToken cancellationToken)
+    public async Task<MoneoResult> Handle(StopTelegramRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -23,7 +24,7 @@ internal sealed class StopTelegramRequestHandler : IRequestHandler<StopTelegramR
         }
         catch (Exception e)
         {
-            return MoneoResult.Error(e);
+            return MoneoResult.Failed(e);
         }
     }
 }

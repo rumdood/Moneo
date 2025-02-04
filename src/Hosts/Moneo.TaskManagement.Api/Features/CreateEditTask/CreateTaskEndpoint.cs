@@ -7,7 +7,7 @@ public static class CreateTaskEndpoint
 {
     public static void AddCreatTaskEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost("{conversationId:long}/tasks",
+        app.MapPost("conversations/{conversationId:long}/tasks",
             async (long conversationId, CreateEditTaskDto taskDto, ISender sender) =>
             {
                 var result = await sender.Send(

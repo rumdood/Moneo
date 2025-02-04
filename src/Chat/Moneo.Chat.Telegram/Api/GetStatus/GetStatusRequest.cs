@@ -1,13 +1,14 @@
 using MediatR;
 using Moneo.Chat;
+using Moneo.Common;
 
-namespace Moneo.TelegramChat.Api.Features.GetStatus;
+namespace Moneo.Moneo.Chat.Telegram.Api.GetStatus;
 
 public sealed record GetStatusResult(ChatAdapterStatus Status);
 
-public sealed record GetStatusRequest : IRequest<IMoneoResult<GetStatusResult>>;
+public sealed record GetStatusRequest : IRequest<MoneoResult<GetStatusResult>>;
 
-internal sealed class GetStatusRequestHandler : IRequestHandler<GetStatusRequest, IMoneoResult<GetStatusResult>>
+internal sealed class GetStatusRequestHandler : IRequestHandler<GetStatusRequest, MoneoResult<GetStatusResult>>
 {
     private readonly IChatAdapter _chatAdapter;
 
@@ -16,7 +17,7 @@ internal sealed class GetStatusRequestHandler : IRequestHandler<GetStatusRequest
         _chatAdapter = chatAdapter;
     }
     
-    public async Task<IMoneoResult<GetStatusResult>> Handle(GetStatusRequest request, CancellationToken cancellationToken)
+    public async Task<MoneoResult<GetStatusResult>> Handle(GetStatusRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -25,7 +26,7 @@ internal sealed class GetStatusRequestHandler : IRequestHandler<GetStatusRequest
         }
         catch (Exception e)
         {
-            return MoneoResult<GetStatusResult>.Error(e);
+            return MoneoResult<GetStatusResult>.Failed(e);
         }
     }
 }

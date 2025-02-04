@@ -1,6 +1,9 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.TelegramChat.Api.Features.GetStatus;
+namespace Moneo.Moneo.Chat.Telegram.Api.GetStatus;
 
 public static class GetStatusEndpoint
 {

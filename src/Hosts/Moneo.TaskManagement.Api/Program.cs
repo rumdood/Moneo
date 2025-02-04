@@ -1,16 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Moneo.TaskManagement.Api;
-using Moneo.TaskManagement.Api.Features.CompleteTask;
-using Moneo.TaskManagement.Features.CreateEditTask;
-using Moneo.TaskManagement.Features.DeactivateTask;
-using Moneo.TaskManagement.Features.DeleteTask;
-using Moneo.TaskManagement.Features.GetTaskById;
-using Moneo.TaskManagement.Features.GetTasks;
-using Moneo.TaskManagement.ResourceAccess;
-using Moneo.TaskManagement.Scheduling;
-using Quartz;
-using Quartz.AspNetCore;
+using Moneo.Chat.Telegram;
+using Moneo.TaskManagement.Api.ServiceCollectionExtensions;
+using Moneo.TaskManagement.Api.Services;
+using Moneo.TaskManagement.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,55 +12,36 @@ builder.Configuration.SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.Configure<MoneoConfiguration>(builder.Configuration.GetSection("Moneo"));
-builder.Services.AddMediatR(cfg =>
+builder.Services.AddTaskManagement(opt =>
 {
-    cfg.RegisterServicesFromAssemblyContaining<CreateEditTaskRequest>();
+    opt.UseSqlite(builder.Configuration.GetConnectionString("TaskManagement"));
 });
 
-builder.Services.AddDbContext<MoneoTasksDbContext>((serviceProvider, options) =>
+builder.Services.AddTelegramChatAdapter(opts =>
 {
-    var moneoConfig = serviceProvider.GetRequiredService<IOptions<MoneoConfiguration>>().Value;
+    var masterConversationId = builder.Configuration.GetValue<long>("Telegram:MasterConversationId");
+    var botToken =  builder.Configuration["Telegram:BotToken"];
+    var callbackToken =  builder.Configuration["Telegram:CallbackToken"];
 
-    switch (moneoConfig.DatabaseProvider)
+    if (string.IsNullOrEmpty(botToken) || string.IsNullOrEmpty(callbackToken))
     {
-        case DatabaseProvider.Sqlite:
-            options.UseSqlite(moneoConfig.ConnectionString);
-            break;
-        case DatabaseProvider.Postgres:
-            options.UseNpgsql(moneoConfig.ConnectionString);
-            break;
-        default:
-            throw new InvalidOperationException("Unknown or missing database provider");
+        throw new InvalidOperationException(
+            "Telegram:BotToken and Telegram:CallbackToken must be set in the configuration");
     }
+    
+    opts.MasterConversationId = masterConversationId;
+    opts.BotToken = botToken;
+    opts.CallbackToken = callbackToken;
+    opts.UseInMemoryStateManagement();
 });
 
-builder.Services.AddQuartz();
-builder.Services.AddQuartzServer(options =>
-{
-    options.WaitForJobsToComplete = true;
-    options.AwaitApplicationStarted = true;
-});
-
-builder.Services.AddSingleton<SchedulerService>();
-builder.Services.AddSingleton<ISchedulerService>(provider =>
-    provider.GetRequiredService<SchedulerService>());
-builder.Services.AddSingleton<IHostedService>(provider =>
-    provider.GetRequiredService<SchedulerService>());
+builder.Services.AddSingleton<ITaskManagerClient, InternalTaskManagerClient>();
 
 var app = builder.Build();
-
 app.MapGet("/about", () => "Moneo Task Management API");
+app.UseHealthChecks("/health");
 
-app.AddCreatTaskEndpoint();
-app.AddUpdateTaskEndpoints();
-app.AddCompleteTaskEndpoint();
-app.AddSkipTaskEndpoint();
-app.AddDeactivateTaskEndpoints();
-app.AddDeleteTaskEndpoints();
-app.AddGetTaskByFilterEndpoint();
-app.AddGetTasksForConversationEndpoint();
-app.AddGetTaskByIdEndpoint();
+app.AddTaskManagementEndpoints();
+app.AddTelegramChatAdapterEndpoints();
 
 app.Run();

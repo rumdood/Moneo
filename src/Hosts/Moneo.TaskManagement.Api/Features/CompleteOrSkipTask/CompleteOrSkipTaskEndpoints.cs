@@ -6,7 +6,7 @@ public static class CompleteOrSkipTaskEndpoints
 {
     public static void AddSkipTaskEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost("{taskId:long}/skip",
+        app.MapPost("tasks/{taskId:long}/skip",
             async (long taskId, ISender sender) =>
             {
                 var result = await sender.Send(new CompleteOrSkipTaskRequest(taskId, TaskCompletionType.Skipped));
@@ -16,7 +16,7 @@ public static class CompleteOrSkipTaskEndpoints
     
     public static void AddCompleteTaskEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost("{taskId:long}/complete",
+        app.MapPost("tasks/{taskId:long}/complete",
             async (long taskId, ISender sender) =>
             {
                 var result = await sender.Send(new CompleteOrSkipTaskRequest(taskId, TaskCompletionType.Completed));

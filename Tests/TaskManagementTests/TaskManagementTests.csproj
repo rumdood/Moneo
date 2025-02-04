@@ -22,7 +22,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\Hosts\Moneo.TaskManagement.Api\Moneo.TaskManagement.Api.csproj" />
-      <ProjectReference Include="..\..\src\Hosts\Moneo.TelegramChat.Api\Moneo.TelegramChat.Api.csproj" />
     </ItemGroup>
 
 </Project>

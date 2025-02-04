@@ -41,7 +41,7 @@ public sealed class CreateEditTaskHandler : IRequestHandler<CreateEditTaskReques
             if (conversation == null)
             {
                 // conversation isn't found. Later on maybe we'll toss those, but for now, create it.
-                conversation = new Conversation(Transport.Telegram); // everything is telegram right now
+                conversation = new Conversation(request.ConversationId.Value, Transport.Telegram); // everything is telegram right now
                 await _dbContext.Conversations.AddAsync(conversation, cancellationToken);
             }
             else

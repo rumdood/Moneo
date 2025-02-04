@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Moneo.Chat;
+using Moneo.TaskManagement.Api.Chat;
 using Moneo.TaskManagement.Contracts.Models;
 using Moneo.TaskManagement.ResourceAccess;
 using Quartz;
@@ -11,6 +13,7 @@ internal sealed class BadgerJob : IJob
     private readonly ILogger<BadgerJob> _logger;
     private readonly MoneoTasksDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
+    private readonly IChatAdapter _chatAdapter;
 
     private record MoneoTaskCompletionDataDto(
         long Id,
@@ -20,17 +23,17 @@ internal sealed class BadgerJob : IJob
         TaskRepeaterDto? Repeater,
         DateTime? LastCompletedOrSkipped);
     
-    public BadgerJob(ILogger<BadgerJob> logger, MoneoTasksDbContext dbContext, TimeProvider timeProvider)
+    public BadgerJob(ILogger<BadgerJob> logger, MoneoTasksDbContext dbContext, TimeProvider timeProvider, IChatAdapter chatAdapter)
     {
         _logger = logger;
         _dbContext = dbContext;
         _timeProvider = timeProvider;
+        _chatAdapter = chatAdapter;
     }
     
     public async Task Execute(IJobExecutionContext context)
     {
         _logger.LogDebug("Executing badger job {JobKey}", context.JobDetail.Key);
-        var key = context.JobDetail.Key;
         var dataMap = context.JobDetail.JobDataMap;
         
         var taskId = dataMap.GetLong("TaskId");
@@ -87,7 +90,7 @@ internal sealed class BadgerJob : IJob
                 t.TaskEvents
                     .Where(h => h.Type == TaskEventType.Completed || h.Type == TaskEventType.Skipped)
                     .OrderByDescending(h => h.OccurredOn)
-                    .Select(h => h.OccurredOn)
+                    .Select(h => (DateTime?)h.OccurredOn)
                     .FirstOrDefault()
             ))
             .FirstOrDefaultAsync();
@@ -123,9 +126,9 @@ internal sealed class BadgerJob : IJob
                TimeSpan.FromHours(taskInfo.Repeater.EarlyCompletionThresholdHours);
     }
     
-    private Task SendNotificationAsync(long conversationId, string message)
+    private async Task SendNotificationAsync(long conversationId, string message, CancellationToken cancellationToken = default)
     {
-        // send the notification
-        return Task.CompletedTask;
+        var messageDto = new BotTextMessageDto(conversationId, message);
+        await _chatAdapter.SendBotTextMessageAsync(messageDto, cancellationToken);
     }
 }

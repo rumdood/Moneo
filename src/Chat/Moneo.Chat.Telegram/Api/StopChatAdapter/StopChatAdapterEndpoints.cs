@@ -1,7 +1,9 @@
 using MediatR;
-using Moneo.TelegramChat.Api.Features.StartChatAdapter;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.TelegramChat.Api.Features.StopChatAdapter;
+namespace Moneo.Moneo.Chat.Telegram.Api.StopChatAdapter;
 
 public static class StopChatAdapterEndpoints
 {

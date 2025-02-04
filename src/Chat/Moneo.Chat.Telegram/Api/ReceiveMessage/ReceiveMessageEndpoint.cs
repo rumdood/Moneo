@@ -1,6 +1,9 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.TelegramChat.Api.Features.ReceiveMessage;
+namespace Moneo.Moneo.Chat.Telegram.Api.ReceiveMessage;
 
 public static class ReceiveMessageEndpoint
 {
