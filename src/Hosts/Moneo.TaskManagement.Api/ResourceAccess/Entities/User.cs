@@ -6,10 +6,6 @@ namespace Moneo.TaskManagement.ResourceAccess.Entities;
 [Table("users")]
 public class User : AuditableEntity
 {
-    [Key]
-    [Column("id")]
-    public long Id { get; internal set; }
-    
     [Column("name")]
     public string Name { get; internal set; }
     
