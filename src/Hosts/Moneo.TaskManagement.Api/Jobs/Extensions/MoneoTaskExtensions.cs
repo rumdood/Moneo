@@ -19,10 +19,17 @@ public static class MoneoTaskExtensions
     
     private static ITrigger BuildDueTrigger(this MoneoTask task)
     {
+        if (task.Conversation is null && task.Id == 0)
+        {
+            throw new InvalidOperationException("Task does not have a conversation or an ID");
+        }
+        
+        var conversationId = task.Conversation?.Id ?? task.ConversationId;
+        
         // create a new job
         var jobData = new JobDataMap
         {
-            {"ConversationId", task.Conversation.Id},
+            {"ConversationId", conversationId},
             {"TaskId", task.Id},
             {"TaskName", task.Name},
             {"Message", $"Your task '{task.Name}' is due now"},
@@ -69,14 +76,6 @@ public static class MoneoTaskExtensions
                 .WithIdentity(jobKey)
                 .PersistJobDataAfterExecution()
                 .Build();
-
-            /*
-            await scheduler.AddJob(
-                job, 
-                replace: true, 
-                storeNonDurableWhileAwaitingScheduling: true, 
-                cancellationToken);
-            */
 
             var dueTrigger = task.BuildDueTrigger();
         
@@ -131,14 +130,6 @@ public static class MoneoTaskExtensions
                 .WithIdentity(jobKey)
                 .PersistJobDataAfterExecution()
                 .Build();
-
-            /*
-            await scheduler.AddJob(
-                job, 
-                replace: false, 
-                storeNonDurableWhileAwaitingScheduling: true,
-                cancellationToken);
-            */
         
             var trigger = TriggerBuilder.Create()
                 .WithMoneoIdentity(task.Id, CheckSendType.Badger)

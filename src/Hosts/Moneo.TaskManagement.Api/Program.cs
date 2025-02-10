@@ -1,7 +1,5 @@
-using Moneo.Chat.Telegram;
 using Moneo.TaskManagement.Api.ServiceCollectionExtensions;
 using Moneo.TaskManagement.Api.Services;
-using Moneo.TaskManagement.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,36 +10,29 @@ builder.Configuration.SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
+var notificationConfig = builder.Configuration.GetSection("Moneo:Notification").Get<NotificationConfig>();
+
 builder.Services.AddTaskManagement(opt =>
 {
     opt.UseSqlite(builder.Configuration.GetConnectionString("TaskManagement"));
 });
 
-builder.Services.AddTelegramChatAdapter(opts =>
+builder.Services.AddNotificationService(opt =>
 {
-    var masterConversationId = builder.Configuration.GetValue<long>("Telegram:MasterConversationId");
-    var botToken =  builder.Configuration["Telegram:BotToken"];
-    var callbackToken =  builder.Configuration["Telegram:CallbackToken"];
-
-    if (string.IsNullOrEmpty(botToken) || string.IsNullOrEmpty(callbackToken))
-    {
-        throw new InvalidOperationException(
-            "Telegram:BotToken and Telegram:CallbackToken must be set in the configuration");
-    }
-    
-    opts.MasterConversationId = masterConversationId;
-    opts.BotToken = botToken;
-    opts.CallbackToken = callbackToken;
-    opts.UseInMemoryStateManagement();
+    opt.UseConfiguration(notificationConfig);
 });
 
-builder.Services.AddSingleton<ITaskManagerClient, InternalTaskManagerClient>();
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
-app.MapGet("/about", () => "Moneo Task Management API");
 app.UseHealthChecks("/health");
 
 app.AddTaskManagementEndpoints();
-app.AddTelegramChatAdapterEndpoints();
+
+app.MapOpenApi();
+app.UseSwaggerUI(opt =>
+{
+    opt.SwaggerEndpoint("/openapi/v1.json", "v1");
+});
 
 app.Run();

@@ -9,9 +9,14 @@ public static class ChatConstants
     
     public static class Routes
     {
-        public const string ReceiveFromUser = "receive";
-        public const string StartAdapterRoute = "start";
-        public const string StopAdapterRoute = "stop";
-        public const string SendToUser = "send";
+        private const string NotifyRoutePrefix = "api/notify";
+        private const string TelegramRoutePrefix = "api/telegram";
+        public const string GetStatusRoute = $"{TelegramRoutePrefix}/status";
+        public const string ReceiveFromUser = $"{NotifyRoutePrefix}/receive";
+        public const string StartAdapter = $"{TelegramRoutePrefix}/start";
+        public const string StopAdapter = $"{TelegramRoutePrefix}/stop";
+        public const string ConfigureAdapterRoute = $"{TelegramRoutePrefix}/configure";
+        public const string SendTextToUser = $"{NotifyRoutePrefix}/send/text";
+        public const string SendGifToUser = $"{NotifyRoutePrefix}/send/gif";
     }
 }

@@ -97,6 +97,33 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     }
 
     public List<DomainEvent> DomainEvents { get; set; } = [];
+    
+    public string GetRandomCompletedMessage()
+    {
+        if (CompletedMessages.Count == 0)
+        {
+            return $"Task {Name} completed!";
+        }
+
+        var random = new Random();
+        return CompletedMessages[random.Next(CompletedMessages.Count)];
+    }
+    
+    public string GetRandomSkippedMessage()
+    {
+        if (!CanBeSkipped)
+        {
+            return $"Task {Name} cannot be skipped!";
+        }
+        
+        if (SkippedMessages.Count == 0)
+        {
+            return $"Task {Name} skipped!";
+        }
+
+        var random = new Random();
+        return SkippedMessages[random.Next(SkippedMessages.Count)];
+    }
 
     private MoneoTask() { }
     

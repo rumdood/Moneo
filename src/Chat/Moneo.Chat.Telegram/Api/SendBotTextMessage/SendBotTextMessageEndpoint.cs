@@ -10,7 +10,7 @@ public static class SendBotTextMessageEndpoint
 {
     public static void AddSendBotTextMessageEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost($"/{ChatConstants.Routes.SendToUser}/text", async ([FromBody] BotTextMessageDto message, ISender sender) =>
+        app.MapPost(ChatConstants.Routes.SendTextToUser, async ([FromBody] BotTextMessageDto message, ISender sender) =>
         {
             var result = await sender.Send(new SendBotTextMessageRequest(message));
             return result.IsSuccess 

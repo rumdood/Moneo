@@ -17,17 +17,19 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
     private readonly ILogger<ChangeTaskWorkflowManager> _logger;
     private readonly ITaskManagerClient _taskResourceManager;
     private readonly CreateOrUpdateTaskWorkflowManager _innerWorkflowManager;
-    private readonly Dictionary<long, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>> _chatStates = new();
+    private readonly IWorkflowWithTaskDraftStateMachineRepository _chatStates;
     private readonly Dictionary<long, ChangeTaskMenuOption> _menuOptions = new();
     
     public ChangeTaskWorkflowManager(
         IMediator mediator,
         ILogger<ChangeTaskWorkflowManager> logger,
+        IWorkflowWithTaskDraftStateMachineRepository chatStates,
         ITaskManagerClient taskResourceManager)
     {
         _mediator = mediator;
         _logger = logger;
         _taskResourceManager = taskResourceManager;
+        _chatStates = chatStates;
         
         _innerWorkflowManager =
         new CreateOrUpdateTaskWorkflowManager(

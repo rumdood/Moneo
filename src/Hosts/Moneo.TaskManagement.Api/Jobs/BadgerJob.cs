@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Moneo.Chat;
 using Moneo.TaskManagement.Api.Chat;
+using Moneo.TaskManagement.Api.Services;
 using Moneo.TaskManagement.Contracts.Models;
 using Moneo.TaskManagement.ResourceAccess;
 using Quartz;
@@ -13,7 +14,7 @@ internal sealed class BadgerJob : IJob
     private readonly ILogger<BadgerJob> _logger;
     private readonly MoneoTasksDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
-    private readonly IChatAdapter _chatAdapter;
+    private readonly INotificationService _notificationService;
 
     private record MoneoTaskCompletionDataDto(
         long Id,
@@ -23,12 +24,16 @@ internal sealed class BadgerJob : IJob
         TaskRepeaterDto? Repeater,
         DateTime? LastCompletedOrSkipped);
     
-    public BadgerJob(ILogger<BadgerJob> logger, MoneoTasksDbContext dbContext, TimeProvider timeProvider, IChatAdapter chatAdapter)
+    public BadgerJob(
+        ILogger<BadgerJob> logger,
+        MoneoTasksDbContext dbContext,
+        TimeProvider timeProvider,
+        INotificationService notificationService)
     {
         _logger = logger;
         _dbContext = dbContext;
         _timeProvider = timeProvider;
-        _chatAdapter = chatAdapter;
+        _notificationService = notificationService;
     }
     
     public async Task Execute(IJobExecutionContext context)
@@ -126,9 +131,11 @@ internal sealed class BadgerJob : IJob
                TimeSpan.FromHours(taskInfo.Repeater.EarlyCompletionThresholdHours);
     }
     
-    private async Task SendNotificationAsync(long conversationId, string message, CancellationToken cancellationToken = default)
+    private async Task SendNotificationAsync(
+        long conversationId, 
+        string message, 
+        CancellationToken cancellationToken = default)
     {
-        var messageDto = new BotTextMessageDto(conversationId, message);
-        await _chatAdapter.SendBotTextMessageAsync(messageDto, cancellationToken);
+        await _notificationService.SendTextNotification(conversationId, message, false, cancellationToken);
     }
 }

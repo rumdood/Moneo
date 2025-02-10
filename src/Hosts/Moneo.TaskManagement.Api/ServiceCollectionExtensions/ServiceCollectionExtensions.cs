@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Moneo.TaskManagement.Api.Services;
 using Moneo.TaskManagement.Features.CreateEditTask;
 using Moneo.TaskManagement.ResourceAccess;
 using Moneo.TaskManagement.Scheduling;
@@ -52,7 +53,7 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<SchedulerService>());
         services.AddSingleton<IHostedService>(provider =>
             provider.GetRequiredService<SchedulerService>());
-
+        
         services.AddHealthChecks()
             .AddDbContextCheck<MoneoTasksDbContext>("MoneoTasksDbContext")
             .AddCheck<SchedulerServiceHealthcheck>("SchedulerService");

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Moneo.Chat;
 using Moneo.TaskManagement.Api.Chat;
+using Moneo.TaskManagement.Api.Services;
 using Moneo.TaskManagement.Contracts.Models;
 using Moneo.TaskManagement.ResourceAccess;
 using Quartz;
@@ -13,7 +14,7 @@ internal sealed class CheckSendJob : IJob
     private readonly ILogger<CheckSendJob> _logger;
     private readonly TimeProvider _timeProvider;
     private readonly MoneoTasksDbContext _dbContext;
-    private readonly IChatAdapter _chatAdapter;
+    private readonly INotificationService _notificationService;
     
     private record MoneoTaskCompletionDataDto(
         long Id,
@@ -23,12 +24,16 @@ internal sealed class CheckSendJob : IJob
         TaskRepeaterDto? Repeater,
         DateTime? LastCompletedOrSkipped);
 
-    public CheckSendJob(ILogger<CheckSendJob> logger, TimeProvider timeProvider, MoneoTasksDbContext dbContext, IChatAdapter adapter)
+    public CheckSendJob(
+        ILogger<CheckSendJob> logger, 
+        TimeProvider timeProvider, 
+        MoneoTasksDbContext dbContext, 
+        INotificationService notificationService)
     {
         _logger = logger;
         _timeProvider = timeProvider;
         _dbContext = dbContext;
-        _chatAdapter = adapter;
+        _notificationService = notificationService;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -127,7 +132,6 @@ internal sealed class CheckSendJob : IJob
 
     private async Task SendNotificationAsync(long conversationId, string message, CancellationToken cancellationToken = default)
     {
-        var botMessage = new BotTextMessageDto(conversationId, message);
-        await _chatAdapter.SendBotTextMessageAsync(botMessage, cancellationToken);
+        await _notificationService.SendTextNotification(conversationId, message, false, cancellationToken);
     }
 }

@@ -12,6 +12,7 @@ public static class AppBuilderExtensions
 {
     public static void AddTaskManagementEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/api/about", () => "Moneo Task Management API");
         app.AddCreatTaskEndpoint();
         app.AddUpdateTaskEndpoints();
         app.AddCompleteTaskEndpoint();

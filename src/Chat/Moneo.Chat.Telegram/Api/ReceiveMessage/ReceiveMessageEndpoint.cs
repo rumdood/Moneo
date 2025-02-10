@@ -9,7 +9,7 @@ public static class ReceiveMessageEndpoint
 {
     public static void AddReceiveMessageEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost($"/{ChatConstants.Routes.ReceiveFromUser}",
+        app.MapPost(ChatConstants.Routes.ReceiveFromUser,
             async (HttpRequestMessage requestMessage, ISender sender) =>
             {
                 // get the telegram header

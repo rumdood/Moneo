@@ -9,7 +9,7 @@ public static class StopChatAdapterEndpoints
 {
     public static void AddStopChatAdapterEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapDelete($"/{ChatConstants.Routes.StopAdapterRoute}", async (ISender sender) =>
+        app.MapDelete(ChatConstants.Routes.StopAdapter, async (ISender sender) =>
         {
             var result = await sender.Send(new StopTelegramRequest());
 

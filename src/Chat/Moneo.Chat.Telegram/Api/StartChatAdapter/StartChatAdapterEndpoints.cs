@@ -9,15 +9,10 @@ public static class StartChatAdapterEndpoints
 {
     public static void AddStartChatAdapterEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost($"/{ChatConstants.Routes.StartAdapterRoute}",
-            async (HttpRequestMessage request, ISender sender) =>
+        app.MapPost(ChatConstants.Routes.StartAdapter,
+            async (HttpContext context, ISender sender) =>
             {
-                var requestUri = request.RequestUri?.AbsoluteUri;
-
-                if (requestUri is null)
-                {
-                    return Results.BadRequest();
-                }
+                var requestUri = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}";
 
                 var result = await sender.Send(new StartTelegramRequest(requestUri));
 

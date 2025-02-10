@@ -163,7 +163,13 @@ public class MoneoTasksDbContext : DbContext
             .IsUnique();
         
         modelBuilder.Entity<MoneoTask>()
-            .HasIndex(t => new { t.Name, t.ConversationId }, "IDX_Task_Name_ConversationId")
+            .HasIndex(t => new
+            {
+                t.Name, 
+                t.ConversationId, 
+                t.IsActive
+            }, 
+                name: "IDX_Task_Name_ConversationId_IsActive")
             .IsUnique();
         
         modelBuilder.Entity<TaskEvent>()

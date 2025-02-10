@@ -27,6 +27,8 @@ internal sealed class GetTaskByIdRequestHandler(MoneoTasksDbContext dbContext)
                 IsActive = t.IsActive,
                 Badger = t.Badger != null ? t.Badger.ToDto() : null,
                 Repeater = t.Repeater != null ? t.Repeater.ToDto() : null,
+                CompletedMessages = t.CompletedMessages,
+                SkippedMessages = t.SkippedMessages,
                 LastCompleted = t.TaskEvents
                     .Where(e => e.Type == TaskEventType.Completed)
                     .OrderByDescending(e => e.OccurredOn)

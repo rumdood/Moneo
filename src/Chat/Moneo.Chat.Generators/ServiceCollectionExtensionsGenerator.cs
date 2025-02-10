@@ -105,7 +105,7 @@ public class ServiceCollectionExtensionsGenerator : IIncrementalGenerator
 
         foreach (var registration in nonNullRegistrations)
         {
-            sourceBuilder.AppendLine($"                .AddSingleton<{registration!.InterfaceName}, {registration!.ImplementationName}>()");
+            sourceBuilder.AppendLine($"                .AddScoped<{registration!.InterfaceName}, {registration!.ImplementationName}>()");
         }
 
         sourceBuilder.AppendLine("            ;");

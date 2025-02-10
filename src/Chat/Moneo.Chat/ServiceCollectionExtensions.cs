@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using Moneo.Chat.Workflows;
+using Moneo.Chat.Workflows.CreateCronSchedule;
 using Moneo.Common;
 
 namespace Moneo.Chat.ServiceCollectionExtensions;
@@ -65,6 +67,8 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection AddInMemoryChatStateManagement(this IServiceCollection services)
     {
         services.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
+        services.AddSingleton<IWorkflowWithTaskDraftStateMachineRepository, TaskCreateOrChangeStateMachineRepository>();
+        services.AddSingleton<IWorkflowStateMachineRepository<CronWorkflowState>, CronStateMachineRepository>();
         return services;
     }
     
@@ -78,7 +82,6 @@ public static partial class ServiceCollectionExtensions
 public class ChatAdapterOptions
 {
     public bool InMemoryStateManagementEnabled { get; private set; } = true;
-    
     public void UseInMemoryStateManagement() => InMemoryStateManagementEnabled = true;
 
     public bool IsValid() => true;

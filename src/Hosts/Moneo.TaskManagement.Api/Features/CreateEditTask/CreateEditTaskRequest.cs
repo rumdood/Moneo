@@ -74,7 +74,6 @@ public sealed class CreateEditTaskHandler : IRequestHandler<CreateEditTaskReques
             }
         }
 
-        // task.ConversationId = request.ConversationId ?? task.ConversationId;
         task.Name = request.EditDto.Name;
         task.Description = request.EditDto.Description;
         task.DueOn = request.EditDto.DueOn?.UtcDateTime;

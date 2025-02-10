@@ -9,7 +9,7 @@ public class MoneoTaskDraft
 
     public bool IsRepeaterEnabled => _repeater is not null;
 
-    public bool IsBadgerEnabled => Task.Badger is not null;
+    public bool IsBadgerEnabled => _badger is not null;
 
     public MoneoTaskDto Task { get; set; } = new();
     

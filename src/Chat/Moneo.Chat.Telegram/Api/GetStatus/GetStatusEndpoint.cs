@@ -9,7 +9,7 @@ public static class GetStatusEndpoint
 {
     public static void AddGetStatusEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/status", async (ISender sender) =>
+        app.MapGet(ChatConstants.Routes.GetStatusRoute, async (ISender sender) =>
         {
             var result = await sender.Send(new GetStatusRequest());
             return result.IsSuccess

@@ -20,7 +20,7 @@ internal sealed class StartTelegramRequestHandler : IRequestHandler<StartTelegra
         try
         {
             var callbackUrl = request.RequestUrl.Replace(
-                ChatConstants.Routes.StartAdapterRoute,
+                ChatConstants.Routes.StartAdapter,
                 ChatConstants.Routes.ReceiveFromUser);
             
             await _chatAdapter.StartReceivingAsync(callbackUrl, cancellationToken);

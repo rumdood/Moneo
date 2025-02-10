@@ -10,14 +10,22 @@ public interface ICreateTaskWorkflowManager : ICreateOrUpdateTaskWorkflowManager
 
 public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
 {
+    private readonly IMediator _mediator;
+    private readonly ILogger<CreateTaskWorkflowManager> _logger;
+    private readonly ITaskManagerClient _taskManagerClient;
+    private readonly CreateOrUpdateTaskWorkflowManager _innerWorkflowManager;
+    private readonly IWorkflowWithTaskDraftStateMachineRepository _chatStates;
+    
     public CreateTaskWorkflowManager(
         IMediator mediator,
         ILogger<CreateTaskWorkflowManager> logger,
+        IWorkflowWithTaskDraftStateMachineRepository chatStates,
         ITaskManagerClient taskManagerClient)
     {
         _mediator = mediator;
         _logger = logger;
         _taskManagerClient = taskManagerClient;
+        _chatStates = chatStates;
         _innerWorkflowManager =
         new CreateOrUpdateTaskWorkflowManager(
             logger,
@@ -31,12 +39,6 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
             UserMessageText = "Task created successfully!"
         });
     }
-
-    private readonly IMediator _mediator;
-    private readonly ILogger<CreateTaskWorkflowManager> _logger;
-    private readonly ITaskManagerClient _taskManagerClient;
-    private readonly CreateOrUpdateTaskWorkflowManager _innerWorkflowManager;
-    private readonly Dictionary<long, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>> _chatStates = new();
     
     public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, string? taskName = null)
     {
