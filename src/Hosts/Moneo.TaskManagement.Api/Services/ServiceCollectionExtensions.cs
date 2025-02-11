@@ -38,7 +38,7 @@ internal static class ServiceCollectionExtensions
                     throw new InvalidOperationException("Configuration is not set");
                 }
 
-                return Configuration.Url;
+                return Configuration.BaseUrl;
             }
             set
             {
@@ -47,7 +47,7 @@ internal static class ServiceCollectionExtensions
                     Configuration = new NotificationConfig();
                 }
 
-                Configuration.Url = value;
+                Configuration.BaseUrl = value;
             }
         }
 

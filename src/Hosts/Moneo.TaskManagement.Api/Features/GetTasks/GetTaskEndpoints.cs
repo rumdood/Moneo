@@ -10,7 +10,7 @@ public static class GetTaskEndpoints
 {
     public static void AddGetTaskByFilterEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/tasks",
+        app.MapGet("/api/tasks",
             async ([FromQuery] TaskFilter filter, [FromQuery] PageOptions pagingOptions, ISender sender) =>
             {
                 var result = await sender.Send(new GetTasksByFilterRequest(filter, pagingOptions));
@@ -20,7 +20,7 @@ public static class GetTaskEndpoints
 
     public static void AddGetTasksForConversationEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/conversations/{conversationId:long}/tasks",
+        app.MapGet("/api/conversations/{conversationId:long}/tasks",
             async (long conversationId, [FromQuery] PageOptions pagingOptions, ISender sender) =>
             {
                 var result = await sender.Send(new GetTasksForConversationRequest(conversationId, pagingOptions));
@@ -30,7 +30,7 @@ public static class GetTaskEndpoints
     
     public static void AddGetTasksByKeywordEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/conversations/{conversationId:long}/tasks/search",
+        app.MapGet("/api/conversations/{conversationId:long}/tasks/search",
             async (long conversationId, [FromQuery] string keyword, ISender sender,
                 CancellationToken cancellationToken = default) =>
             {

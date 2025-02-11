@@ -27,7 +27,7 @@ internal class NotificationService : INotificationService
         _httpClient = httpClient;
         _logger = logger;
         _apiKey = config.ApiKey;
-        _baseUrl = config.Url;
+        _baseUrl = config.BaseUrl;
     }
 
     public async Task<MoneoResult> SendTextNotification(
@@ -37,7 +37,7 @@ internal class NotificationService : INotificationService
         CancellationToken cancellationToken = default)
     {
         var dto = new BotTextMessageDto(conversationId, message, isError);
-        var requestUri = new Uri(_httpClient.BaseAddress ?? new Uri(_baseUrl), "api/notify/send/text");
+        var requestUri = new Uri(_httpClient.BaseAddress ?? new Uri(_baseUrl), "/api/notify/send/text");
         var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
 

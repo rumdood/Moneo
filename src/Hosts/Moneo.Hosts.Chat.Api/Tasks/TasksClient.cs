@@ -44,24 +44,24 @@ internal class TasksClient : ITaskManagerClient
     
     public async Task<MoneoResult<MoneoTaskDto>> CreateTaskAsync(long conversationId, CreateEditTaskDto dto, CancellationToken cancellationToken = default)
     {
-        return await SendRequestAsync<MoneoTaskDto>(HttpMethod.Post, $"conversations/{conversationId}/tasks", dto, cancellationToken);
+        return await SendRequestAsync<MoneoTaskDto>(HttpMethod.Post, $"api/conversations/{conversationId}/tasks", dto, cancellationToken);
     }
 
     public async Task<MoneoResult> UpdateTaskAsync(long taskId, CreateEditTaskDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await SendRequestAsync<object>(HttpMethod.Put, $"tasks/{taskId}", dto, cancellationToken);
+        var result = await SendRequestAsync<object>(HttpMethod.Put, $"api/tasks/{taskId}", dto, cancellationToken);
         return result.IsSuccess ? MoneoResult.Success() : MoneoResult.Failed(result.Message);
     }
     
     public async Task<MoneoResult> CompleteTaskAsync(long taskId, CancellationToken cancellationToken = default)
     {
-        var result = await SendRequestAsync<object>(HttpMethod.Post, $"tasks/{taskId}/complete", null, cancellationToken);
+        var result = await SendRequestAsync<object>(HttpMethod.Post, $"api/tasks/{taskId}/complete", null, cancellationToken);
         return result.IsSuccess ? MoneoResult.Success() : MoneoResult.Failed(result.Message);
     }
 
     public async Task<MoneoResult> SkipTaskAsync(long taskId, CancellationToken cancellationToken = default)
     {
-        var result = await SendRequestAsync<object>(HttpMethod.Post, $"tasks/{taskId}/skip", null, cancellationToken);
+        var result = await SendRequestAsync<object>(HttpMethod.Post, $"api/tasks/{taskId}/skip", null, cancellationToken);
         return result.IsSuccess ? MoneoResult.Success() : MoneoResult.Failed(result.Message);
     }
 
@@ -69,14 +69,14 @@ internal class TasksClient : ITaskManagerClient
         PageOptions pagingOptions, CancellationToken cancellationToken = default)
     {
         var query =
-            $"conversations/{conversationId}/tasks?pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
+            $"api/conversations/{conversationId}/tasks?pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
         return await SendRequestAsync<PagedList<MoneoTaskDto>>(HttpMethod.Get, query, null, cancellationToken);
     }
 
     public async Task<MoneoResult<PagedList<MoneoTaskDto>>> GetTasksForUserAsync(long userId, PageOptions pagingOptions,
         CancellationToken cancellationToken = default)
     {
-        var query = $"users/{userId}/tasks?pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
+        var query = $"api/users/{userId}/tasks?pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
         return await SendRequestAsync<PagedList<MoneoTaskDto>>(HttpMethod.Get, query, null, cancellationToken);
     }
 
@@ -84,7 +84,7 @@ internal class TasksClient : ITaskManagerClient
         long conversationId, PageOptions pagingOptions, CancellationToken cancellationToken = default)
     {
         var query =
-            $"users/{userId}/conversations/{conversationId}/tasks?pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
+            $"api/users/{userId}/conversations/{conversationId}/tasks?pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
         return await SendRequestAsync<PagedList<MoneoTaskDto>>(HttpMethod.Get, query, null, cancellationToken);
     }
 
@@ -92,26 +92,26 @@ internal class TasksClient : ITaskManagerClient
         string keyword, PageOptions pagingOptions, CancellationToken cancellationToken = default)
     {
         var query =
-            $"conversations/{conversationId}/tasks/search?keyword={keyword}&pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
+            $"api/conversations/{conversationId}/tasks/search?keyword={keyword}&pn={pagingOptions.PageNumber}&ps={pagingOptions.PageSize}";
         return await SendRequestAsync<PagedList<MoneoTaskDto>>(HttpMethod.Get, query, null, cancellationToken);
     }
 
     public async Task<MoneoResult<MoneoTaskDto>> GetTaskAsync(long taskId,
         CancellationToken cancellationToken = default)
     {
-        return await SendRequestAsync<MoneoTaskDto>(HttpMethod.Get, $"tasks/{taskId}", null, cancellationToken);
+        return await SendRequestAsync<MoneoTaskDto>(HttpMethod.Get, $"api/tasks/{taskId}", null, cancellationToken);
     }
 
     public async Task<MoneoResult> DeleteTaskAsync(long taskId, CancellationToken cancellationToken = default)
     {
-        var result = await SendRequestAsync<object>(HttpMethod.Delete, $"tasks/{taskId}", null, cancellationToken);
+        var result = await SendRequestAsync<object>(HttpMethod.Delete, $"api/tasks/{taskId}", null, cancellationToken);
         return result.IsSuccess ? MoneoResult.Success() : MoneoResult.Failed(result.Message);
     }
 
     public async Task<MoneoResult> DeactivateTaskAsync(long taskId, CancellationToken cancellationToken = default)
     {
         var result =
-            await SendRequestAsync<object>(HttpMethod.Post, $"tasks/{taskId}/deactivate", null, cancellationToken);
+            await SendRequestAsync<object>(HttpMethod.Post, $"api/tasks/{taskId}/deactivate", null, cancellationToken);
         return result.IsSuccess ? MoneoResult.Success() : MoneoResult.Failed(result.Message);
     }
 }

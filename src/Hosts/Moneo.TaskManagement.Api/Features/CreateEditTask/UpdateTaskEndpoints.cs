@@ -7,7 +7,7 @@ public static class UpdateTaskEndpoints
 {
     public static void AddUpdateTaskEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPut("/tasks/{taskId:long}", async (long taskId, CreateEditTaskDto taskDto, ISender sender,
+        app.MapPut("/api/tasks/{taskId:long}", async (long taskId, CreateEditTaskDto taskDto, ISender sender,
             CancellationToken cancellationToken = default) =>
         {
             var request = new CreateEditTaskRequest(EditDto: taskDto, TaskId: taskId);
