@@ -28,7 +28,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       Moneo__DatabaseProvider: Sqlite
-      Moneo__DatabaseConnectionString: Data Source=task.db
+      Moneo__DatabaseConnectionString: Data Source=tasks.sqlite
       Moneo__Notification__BaseUrl: http://chatapi:8080
       Moneo__Notification__ApiKey: 123456
       Telegram__BotToken: 599186770:AAEaRIjKJNh0G5W2ySfqUi7CrXInuC9Wr4s
