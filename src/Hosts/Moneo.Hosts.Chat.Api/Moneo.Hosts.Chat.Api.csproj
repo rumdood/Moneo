@@ -19,11 +19,12 @@
       <ProjectReference Include="..\..\Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj" />
       <ProjectReference Include="..\..\Chat\Moneo.Chat\Moneo.Chat.csproj" />
       <ProjectReference Include="..\..\Moneo.Common\Moneo.Common.csproj" />
+      <ProjectReference Include="..\..\Moneo.Web.Common\Moneo.Web.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="MediatR" Version="12.4.1" />
-      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1" />
+      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
       <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0" />
     </ItemGroup>
 

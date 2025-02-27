@@ -69,6 +69,17 @@ public class MoneoTaskDraft
     
     public CreateEditTaskDto ToEditDto()
     {
+        if (Task.CompletedMessages.Count == 0)
+        {
+            Task.CompletedMessages =
+            [
+                "Good job",
+                "Well done",
+                $"Finished {Task.Name}",
+                $"{Task.Name} completed",
+            ];
+        }
+        
         var dto = new CreateEditTaskDto(
             Task.Name,
             Task.Description!,

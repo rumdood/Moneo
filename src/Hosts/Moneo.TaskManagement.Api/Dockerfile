@@ -16,8 +16,11 @@ RUN dotnet build "Moneo.TaskManagement.Api.csproj" -c $BUILD_CONFIGURATION -o /a
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Moneo.TaskManagement.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN rm -f /app/publish/appsettings.local.json
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN mkdir -p /app/data && chmod 755 /app/data
+VOLUME ["/app/data"]
 ENTRYPOINT ["dotnet", "Moneo.TaskManagement.Api.dll"]

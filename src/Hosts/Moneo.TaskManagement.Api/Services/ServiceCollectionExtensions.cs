@@ -19,7 +19,7 @@ internal static class ServiceCollectionExtensions
         services.AddHttpClient<INotificationService, NotificationService>(client =>
         {
             client.BaseAddress = new Uri(options.Host);
-            client.DefaultRequestHeaders.Add("ApiKey", options.ApiKey);
+            client.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);
         });
 
         return services;

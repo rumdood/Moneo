@@ -28,7 +28,7 @@ internal class TasksClient : ITaskManagerClient
 
         if (!string.IsNullOrEmpty(_apiKey))
         {
-            requestMessage.Headers.Add("ApiKey", _apiKey);
+            requestMessage.Headers.Add("X-Api-Key", _apiKey);
         }
 
         var response = await _httpClient.SendAsync(requestMessage, cancellationToken);

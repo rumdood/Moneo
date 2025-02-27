@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -12,9 +12,11 @@
 
   <ItemGroup>
     <PackageReference Include="AutoFixture.AutoMoq" Version="4.18.1" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.2" />
     <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Telegram.Bot" Version="22.4.4" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,12 +29,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj" />
     <ProjectReference Include="..\..\src\Chat\Moneo.Chat\Moneo.Chat.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\Moneo.TaskManagement.Api\Moneo.TaskManagement.Api.csproj" />
     <ProjectReference Include="..\..\src\Moneo.Core\Moneo.Core.csproj" />
     <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Client\Moneo.Obsolete.TaskManagement.Client.csproj" />
     <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Contracts\Moneo.Obsolete.TaskManagement.Contracts.csproj" />
     <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Models\Moneo.Obsolete.TaskManagement.Models.csproj" />
-    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement\Moneo.Obsolete.TaskManagement.csproj" />
   </ItemGroup>
 
 </Project>

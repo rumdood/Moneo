@@ -5,9 +5,12 @@ namespace Moneo.TaskManagement.Features.CreateEditTask;
 
 public static class UpdateTaskEndpoints
 {
-    public static void AddUpdateTaskEndpoints(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddUpdateTaskEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPut("/api/tasks/{taskId:long}", async (long taskId, CreateEditTaskDto taskDto, ISender sender,
+        return app.MapPut("/api/tasks/{taskId:long}", async (
+            long taskId, 
+            CreateEditTaskDto taskDto, 
+            ISender sender,
             CancellationToken cancellationToken = default) =>
         {
             var request = new CreateEditTaskRequest(EditDto: taskDto, TaskId: taskId);

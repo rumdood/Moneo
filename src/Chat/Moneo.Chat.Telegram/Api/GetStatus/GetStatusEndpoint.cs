@@ -7,9 +7,9 @@ namespace Moneo.Moneo.Chat.Telegram.Api.GetStatus;
 
 public static class GetStatusEndpoint
 {
-    public static void AddGetStatusEndpoint(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddGetStatusEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet(ChatConstants.Routes.GetStatusRoute, async (ISender sender) =>
+        return app.MapGet(ChatConstants.Routes.GetStatusRoute, async (ISender sender) =>
         {
             var result = await sender.Send(new GetStatusRequest());
             return result.IsSuccess

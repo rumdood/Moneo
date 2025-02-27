@@ -7,9 +7,9 @@ namespace Moneo.Moneo.Chat.Telegram.Api.StopChatAdapter;
 
 public static class StopChatAdapterEndpoints
 {
-    public static void AddStopChatAdapterEndpoint(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddStopChatAdapterEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapDelete(ChatConstants.Routes.StopAdapter, async (ISender sender) =>
+        return app.MapDelete(ChatConstants.Routes.StopAdapter, async (ISender sender) =>
         {
             var result = await sender.Send(new StopTelegramRequest());
 

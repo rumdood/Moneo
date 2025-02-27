@@ -6,9 +6,9 @@ namespace Moneo.TaskManagement.Jobs.GetJobs;
 
 public static class JobsEndpoint
 {
-    public static void AddGetJobsEndpoint(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddGetJobsEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/jobs", async (HttpContext context, ISender sender) =>
+        return app.MapGet("/api/jobs", async (HttpContext context, ISender sender) =>
         {
             var queryString = context.Request.QueryString.Value;
             

@@ -16,6 +16,7 @@ RUN dotnet build "Moneo.Hosts.Chat.Api.csproj" -c $BUILD_CONFIGURATION -o /app/b
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Moneo.Hosts.Chat.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN rm -f /app/publish/appsettings.local.json
 
 FROM base AS final
 WORKDIR /app

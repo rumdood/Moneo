@@ -40,6 +40,13 @@ internal class NotificationService : INotificationService
         var requestUri = new Uri(_httpClient.BaseAddress ?? new Uri(_baseUrl), "/api/notify/send/text");
         var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
+        
+        // log the request and all the headers
+        _logger.LogInformation("Sending notification to conversation {ConversationId}. Request: {Request}", conversationId, dto);
+        foreach (var header in request.Headers)
+        {
+            _logger.LogInformation("Header: {HeaderName} = {HeaderValue}", header.Key, header.Value);
+        }
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode)

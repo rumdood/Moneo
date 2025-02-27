@@ -75,6 +75,8 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     
     private async Task HandleUpdateAsync(ITelegramBotClient _, Update update, CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Processing update: {@Update}", update);
+        
         var handler = update switch
         {
             {Message: { } message} => HandleMessageUpdate(message, cancellationToken),
@@ -104,8 +106,8 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
         var options = new ReceiverOptions
         {
-            AllowedUpdates = new[] { UpdateType.Message, UpdateType.CallbackQuery },
-            ThrowPendingUpdates = true,
+            AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
+            DropPendingUpdates = true
         };
         _botClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, options, cancellationToken);
         IsActive = true;
@@ -152,14 +154,16 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     
     public Task ReceiveUserMessageAsJsonAsync(string json, CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Received JSON: {Json}", json);
         var update = JsonSerializer.Deserialize<Update>(json);
-        
-        if (update is null)
+
+        if (update is not null)
         {
-            throw new UserMessageFormatException("Message type is not supported by Telegram (expecting Update)");
+            return ReceiveMessageAsync(update, cancellationToken);
         }
         
-        return ReceiveMessageAsync(update, cancellationToken);
+        _logger.LogWarning("Failed to deserialize JSON");
+        throw new UserMessageFormatException("Message type is not supported by Telegram (expecting Update)");
     }
 
     public async Task SendBotTextMessageAsync(IBotTextMessage botTextMessage, CancellationToken cancellationToken)

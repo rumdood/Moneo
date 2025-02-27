@@ -1,5 +1,8 @@
 using Moneo.Chat.Telegram;
+using Moneo.Hosts.Chat.Api;
 using Moneo.Hosts.Chat.Api.Tasks;
+using Moneo.Web.Auth;
+using Moneo.Web.Auth.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,17 @@ if (taskManagementConfig is null)
 
 // register the TaskManagementConfig in the DI container
 builder.Services.AddSingleton(taskManagementConfig);
+
+// get the TaskManagementConfig from the configuration "Moneo:TaskManagement"
+var chatConfig = builder.Configuration.GetSection("Moneo:Chat").Get<ChatConfig>();
+
+if (chatConfig is null)
+{
+    throw new InvalidOperationException("Moneo:Chat section is missing in the configuration");
+}
+
+// register the TaskManagementConfig in the DI container
+builder.Services.AddSingleton(chatConfig);
 
 builder.Services.AddTelegramChatAdapter(opts =>
 {
@@ -48,7 +62,46 @@ builder.Services.AddTaskManagement(opt =>
 
 builder.Services.AddOpenApi();
 
+const string authenticationPolicyName = "Moneo.Chat.ApiKey";
+
+builder.Services.AddApiKeyAuthentication(opt =>
+{
+    opt.HeaderName = "X-Api-Key";
+    opt.UseValidationCallback(apiKey =>
+    {
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            return Task.FromResult(false);
+        }
+        
+        return Task.FromResult(chatConfig.ApiKey == apiKey);
+    });
+});
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(authenticationPolicyName, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddAuthenticationSchemes(ApiKeyAuthenticationDefaults.ApiKeyAuthenticationScheme);
+    });
+
+builder.Services.AddMoneoHttpLogging(builder.Configuration);
+
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("AllowAll", b =>
+    {
+        b.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
+app.UseHttpLogging();
+app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHealthChecks("/health");
 app.MapGet("/api/about", () => "Moneo Chat API");
@@ -57,6 +110,9 @@ app.UseSwaggerUI(opt =>
 {
     opt.SwaggerEndpoint("/openapi/v1.json", "v1");
 });
-app.AddTelegramChatAdapterEndpoints();
+app.AddTelegramChatAdapterEndpoints(opt =>
+{
+    opt.RequireAuthorization(authenticationPolicyName);
+});
 
 app.Run();

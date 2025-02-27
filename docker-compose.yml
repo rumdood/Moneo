@@ -4,17 +4,20 @@ services:
     build:
       context: .
       dockerfile: src/Hosts/Moneo.Hosts.Chat.Api/Dockerfile
-    image: moneo-chat-api:latest
+    image: mrobold/moneo-chat-api:latest
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       Moneo__TaskManagement__BaseUrl: http://taskapi:8080
-      Moneo__TaskManagement__ApiKey: 123456
+      Moneo__TaskManagement__ApiKey: taskapikey
+      Moneo__Chat__ApiKey: chatapikey
+      Moneo__HttpLogging__RequestHeaders: X-Api-Key,Authorization
+      Logging__LogLevel__Microsoft.AspNetCore.HttpLogging: Information
       Telegram__BotToken: 599186770:AAEaRIjKJNh0G5W2ySfqUi7CrXInuC9Wr4s
       Telegram__MasterConversationId: 122243374
-      Telegram__CallbackToken: ccccccvljldelhvjclhulingujnhvgkuvbilllgddjjd
+      Telegram__CallbackToken: callbacktoken
     ports:
-      - "5080:8080"
+      - "7077:8080"
     networks:
       - moneo
         
@@ -23,19 +26,19 @@ services:
     build:
       context: .
       dockerfile: src/Hosts/Moneo.TaskManagement.Api/Dockerfile
-    image: moneo-tasks-api:latest
+    image: mrobold/moneo-tasks-api:latest
     environment:
+      Logging__LogLevel__Microsoft.AspNetCore.HttpLogging: Information
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       Moneo__DatabaseProvider: Sqlite
-      Moneo__DatabaseConnectionString: Data Source=tasks.sqlite
+      ConnectionStrings__TaskManagement: Data Source=/app/data/tasks.sqlite
       Moneo__Notification__BaseUrl: http://chatapi:8080
-      Moneo__Notification__ApiKey: 123456
-      Telegram__BotToken: 599186770:AAEaRIjKJNh0G5W2ySfqUi7CrXInuC9Wr4s
-      Telegram__MasterConversationId: 122243374
-      Telegram__CallbackToken: ccccccvljldelhvjclhulingujnhvgkuvbilllgddjjd
+      Moneo__Notification__ApiKey: chatapikey
+      Moneo__ApiKey: taskapikey
+      Moneo__HttpLogging__RequestHeaders: X-Api-Key,Authorization
     ports:
-      - "5090:8080"
+      - "7078:8080"
     networks:
       - moneo
         

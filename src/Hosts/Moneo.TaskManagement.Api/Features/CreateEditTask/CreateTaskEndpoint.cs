@@ -5,9 +5,9 @@ namespace Moneo.TaskManagement.Features.CreateEditTask;
 
 public static class CreateTaskEndpoint
 {
-    public static void AddCreatTaskEndpoint(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddCreateTaskEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/conversations/{conversationId:long}/tasks",
+        return app.MapPost("/api/conversations/{conversationId:long}/tasks",
             async (long conversationId, CreateEditTaskDto taskDto, ISender sender) =>
             {
                 var result = await sender.Send(

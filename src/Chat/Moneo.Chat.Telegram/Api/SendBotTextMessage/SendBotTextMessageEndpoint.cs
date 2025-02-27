@@ -8,9 +8,9 @@ namespace Moneo.Moneo.Chat.Telegram.Api.SendBotTextMessage;
 
 public static class SendBotTextMessageEndpoint
 {
-    public static void AddSendBotTextMessageEndpoint(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddSendBotTextMessageEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost(ChatConstants.Routes.SendTextToUser, async ([FromBody] BotTextMessageDto message, ISender sender) =>
+        return app.MapPost(ChatConstants.Routes.SendTextToUser, async ([FromBody] BotTextMessageDto message, ISender sender) =>
         {
             var result = await sender.Send(new SendBotTextMessageRequest(message));
             return result.IsSuccess 

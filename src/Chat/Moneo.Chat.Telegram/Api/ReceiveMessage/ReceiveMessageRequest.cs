@@ -1,6 +1,8 @@
+using System.Text.Json;
 using MediatR;
 using Moneo.Chat;
 using Moneo.Common;
+using Telegram.Bot.Types;
 
 namespace Moneo.Moneo.Chat.Telegram.Api.ReceiveMessage;
 
@@ -9,6 +11,10 @@ public sealed record ReceiveMessageRequest(string JsonMessage) : IRequest<MoneoR
 internal sealed class ReceiveMessageRequestHandler : IRequestHandler<ReceiveMessageRequest, MoneoResult>
 {
     private readonly IChatAdapter _chatAdapter;
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
     
     public ReceiveMessageRequestHandler(IChatAdapter chatAdapter)
     {
@@ -19,7 +25,14 @@ internal sealed class ReceiveMessageRequestHandler : IRequestHandler<ReceiveMess
     {
         try
         {
-            await _chatAdapter.ReceiveUserMessageAsJsonAsync(request.JsonMessage, cancellationToken);
+            var update = JsonSerializer.Deserialize<Update>(request.JsonMessage, SerializerOptions);
+
+            if (update is null)
+            {
+                return MoneoResult.BadRequest("Payload was not a valid Update object");
+            }
+            
+            await _chatAdapter.ReceiveUserMessageAsync(update, cancellationToken);
             return MoneoResult.Success();
         }
         catch (UserMessageFormatException ufe)

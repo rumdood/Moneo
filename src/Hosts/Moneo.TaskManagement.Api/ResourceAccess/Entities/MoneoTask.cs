@@ -18,32 +18,32 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     [Required]
     [Column("name")]
     [StringLength(100)]
-    public string Name { get; internal set; }
+    public string Name { get; set; }
     
     [Required]
     [Column("description")]
     [StringLength(1000)]
-    public string? Description { get; internal set; }
+    public string? Description { get; set; }
 
     [Column("isActive")]
-    public bool IsActive { get; internal set; } = true;
+    public bool IsActive { get; set; } = true;
 
     [Column("canBeSkipped")] 
-    public bool CanBeSkipped { get; internal set; } = true;
+    public bool CanBeSkipped { get; set; } = true;
 
     [Column("timezone")]
     [Required]
     [StringLength(100)]
-    public string Timezone { get; internal set; } = "";
+    public string Timezone { get; set; } = "";
     
     [Column("dueOn")]
-    public DateTime? DueOn { get; internal set; }
+    public DateTime? DueOn { get; set; }
     
     [Required]
     [Column("conversation_id")]
-    public long ConversationId { get; internal set; }
+    public long ConversationId { get; set; }
     public Conversation Conversation { get; internal set; }
-    public ICollection<TaskEvent> TaskEvents { get; internal set; } = new List<TaskEvent>();
+    public ICollection<TaskEvent> TaskEvents { get; set; } = new List<TaskEvent>();
     
     public ICollection<TaskJob> TaskJobs { get; private set; } = new List<TaskJob>();
     
@@ -75,7 +75,7 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     
     [Required]
     [Column("completed_messages")]
-    public string? CompletedMessagesJson { get; internal set; }
+    public string? CompletedMessagesJson { get; set; }
 
     [NotMapped]
     public List<string> CompletedMessages
@@ -86,7 +86,7 @@ public class MoneoTask : AuditableEntity, IHasDomainEvents
     }
     
     [Column("skipped_messages")]
-    public string? SkippedMessagesJson { get; internal set; }
+    public string? SkippedMessagesJson { get; set; }
     
     [NotMapped]
     public List<string> SkippedMessages

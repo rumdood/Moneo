@@ -4,9 +4,9 @@ namespace Moneo.TaskManagement.Api.Features.CompleteTask;
 
 public static class CompleteOrSkipTaskEndpoints
 {
-    public static void AddSkipTaskEndpoint(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddSkipTaskEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/tasks/{taskId:long}/skip",
+        return app.MapPost("/api/tasks/{taskId:long}/skip",
             async (long taskId, ISender sender) =>
             {
                 var result = await sender.Send(new CompleteOrSkipTaskRequest(taskId, TaskCompletionType.Skipped));
@@ -14,9 +14,9 @@ public static class CompleteOrSkipTaskEndpoints
             });
     }
     
-    public static void AddCompleteTaskEndpoint(this IEndpointRouteBuilder app)
+    public static RouteHandlerBuilder AddCompleteTaskEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/tasks/{taskId:long}/complete",
+        return app.MapPost("/api/tasks/{taskId:long}/complete",
             async (long taskId, ISender sender) =>
             {
                 var result = await sender.Send(new CompleteOrSkipTaskRequest(taskId, TaskCompletionType.Completed));

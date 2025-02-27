@@ -10,18 +10,53 @@ namespace Moneo.TaskManagement.Api.ServiceCollectionExtensions;
 
 public static class AppBuilderExtensions
 {
-    public static void AddTaskManagementEndpoints(this IEndpointRouteBuilder app)
+    public static void AddTaskManagementEndpoints(
+        this IEndpointRouteBuilder app, 
+        Action<TaskManagementEndpointOptions>? configureOptions = null)
+    {
+        var options = new TaskManagementEndpointOptions();
+        configureOptions?.Invoke(options);
+        app.AddTaskManagementEndpoints(options);
+    }
+    
+    private static void AddTaskManagementEndpoints(this IEndpointRouteBuilder app, TaskManagementEndpointOptions? options)
     {
         app.MapGet("/api/about", () => "Moneo Task Management API");
-        app.AddCreatTaskEndpoint();
-        app.AddUpdateTaskEndpoints();
-        app.AddCompleteTaskEndpoint();
-        app.AddSkipTaskEndpoint();
-        app.AddDeactivateTaskEndpoints();
-        app.AddDeleteTaskEndpoints();
-        app.AddGetTaskByFilterEndpoint();
-        app.AddGetTasksForConversationEndpoint();
-        app.AddGetTaskByIdEndpoint();
-        app.AddGetJobsEndpoint();
+        var createTaskEndpoint = app.AddCreateTaskEndpoint();
+        var updateTaskEndpoint = app.AddUpdateTaskEndpoints();
+        var completeTaskEndpoint = app.AddCompleteTaskEndpoint();
+        var skipTaskEndpoint = app.AddSkipTaskEndpoint();
+        var deactivateTaskEndpoints = app.AddDeactivateTaskEndpoints();
+        var deleteTaskEndpoints = app.AddDeleteTaskEndpoints();
+        var getTaskByFilterEndpoint = app.AddGetTaskByFilterEndpoint();
+        var getTasksForConversationEndpoint = app.AddGetTasksForConversationEndpoint();
+        var getTaskByIdEndpoint = app.AddGetTaskByIdEndpoint();
+        var getJobsEndpoint = app.AddGetJobsEndpoint();
+        
+        if (string.IsNullOrEmpty(options?.AuthorizationPolicy))
+        {
+            return;
+        }
+        
+        createTaskEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        updateTaskEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        completeTaskEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        skipTaskEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        deactivateTaskEndpoints.RequireAuthorization(options.AuthorizationPolicy);
+        deleteTaskEndpoints.RequireAuthorization(options.AuthorizationPolicy);
+        getTaskByFilterEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        getTasksForConversationEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        getTaskByIdEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        getJobsEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+    }
+}
+
+public class TaskManagementEndpointOptions
+{
+    public string? AuthorizationPolicy { get; private set; }
+    
+    public void RequireAuthorization(string policy)
+    {
+        AuthorizationPolicy = policy;
     }
 }

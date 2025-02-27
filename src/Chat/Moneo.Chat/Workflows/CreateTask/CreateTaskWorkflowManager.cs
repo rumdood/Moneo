@@ -8,6 +8,7 @@ namespace Moneo.Chat.Workflows.CreateTask;
 
 public interface ICreateTaskWorkflowManager : ICreateOrUpdateTaskWorkflowManager, IWorkflowManager;
 
+// TODO: Add some default Completed messages
 public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
 {
     private readonly IMediator _mediator;
