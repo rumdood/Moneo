@@ -3,11 +3,12 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Workflows;
 using Moneo.Chat.Workflows.ChangeTask;
 using Moneo.Chat.Workflows.CreateTask;
-using Moneo.Obsolete.TaskManagement;
-using Moneo.Obsolete.TaskManagement.Client.Models;
-using Moneo.Obsolete.TaskManagement.Models;
+using Moneo.Common;
+using Moneo.TaskManagement.Contracts;
+using Moneo.TaskManagement.Contracts.Models;
 
 namespace Moneo.Tests;
 
@@ -20,9 +21,11 @@ public class ChangeTaskWorkflowTests
     private readonly Fixture _fixture = new();
     private readonly Mock<IMediator> _mediator;
     private readonly Mock<ILogger<ChangeTaskWorkflowManager>> _logger;
-    private readonly Mock<ITaskResourceManager> _taskResourceManager;
-    private readonly Dictionary<long, List<MoneoTaskDto>> _tasks = new();
+    private readonly Mock<ITaskManagerClient> _taskResourceManager;
+    private readonly Dictionary<long, List<MoneoTaskDto>> _tasksByConversationId = new();
+    private readonly Dictionary<long, MoneoTaskDto> _tasksById = new();
     private const long ChatId = 123456789;
+    private const long ExistingTaskId = 987654321;
     private const string ExistingTaskName = "Existing Task";
     private readonly DateTime _existingTaskCreatedDate = new(2022, 1, 1);
 
@@ -31,60 +34,62 @@ public class ChangeTaskWorkflowTests
         _fixture.Customize(new AutoMoqCustomization());
         _mediator = _fixture.Freeze<Mock<IMediator>>();
         _logger = _fixture.Freeze<Mock<ILogger<ChangeTaskWorkflowManager>>>();
-        _taskResourceManager = _fixture.Freeze<Mock<ITaskResourceManager>>();
+        _taskResourceManager = _fixture.Freeze<Mock<ITaskManagerClient>>();
+        
+        var taskCreateOrChangeStateMachineRepository = new TaskCreateOrChangeStateMachineRepository();
+        _fixture.Inject<IWorkflowWithTaskDraftStateMachineRepository>(taskCreateOrChangeStateMachineRepository);
 
-        _tasks[ChatId] =
+        _tasksByConversationId[ChatId] =
         [
-            new MoneoTaskDto
-            {
-                Name = ExistingTaskName,
-                IsActive = true,
-                Id = Guid.NewGuid().ToString(),
-                Description = "This is a test task",
-                ConversationId = ChatId,
-                CompletedMessage = "Task completed",
-                DueDates = [_fixture.Create<DateTime>()],
-                Reminders = [],
-                Created = _existingTaskCreatedDate,
-                TimeZone = "Pacific Standard Time",
-                LastUpdated = _existingTaskCreatedDate,
-            }
+            _fixture.Build<MoneoTaskDto>()
+                .With(x => x.Name, ExistingTaskName)
+                .With(x => x.IsActive, true)
+                .With(x => x.Id, ExistingTaskId)
+                .With(x => x.Description, "This is a test task")
+                .With(x => x.CompletedMessages, ["Task completed"])
+                .With(x => x.DueOn, _fixture.Create<DateTime>())
+                .With(x => x.Timezone, "Pacific Standard Time")
+                .Without(x => x.Badger)
+                .Without(x => x.Repeater)
+                .Create()
         ];
         
-        _taskResourceManager.Setup(x => x.GetTasksForUserAsync(It.IsAny<long>(), It.IsAny<MoneoTaskFilter>()))
-            .ReturnsAsync((long chatId, MoneoTaskFilter filter) =>
+        _tasksById[ExistingTaskId] = _tasksByConversationId[ChatId].First();
+        
+        _taskResourceManager.Setup(x => x.GetTasksForConversationAsync(It.IsAny<long>(), It.IsAny<PageOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long chatId, PageOptions pgOpt, CancellationToken _) =>
             {
-                _ = _tasks.TryGetValue(chatId, out var tasks);
-                return new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(true,
-                    tasks ?? []);
+                _tasksByConversationId.TryGetValue(chatId, out var tasks);
+                return MoneoResult<PagedList<MoneoTaskDto>>.Success(new PagedList<MoneoTaskDto>
+                {
+                    Data = tasks ?? [],
+                    Page = 0,
+                    PageSize = pgOpt.PageSize,
+                    TotalCount = tasks?.Count ?? 0
+                });
             });
+        
         _taskResourceManager
-            .Setup(x => x.UpdateTaskAsync(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<MoneoTaskDto>()))
-            .ReturnsAsync((long chatId, string taskId, MoneoTaskDto taskDto) =>
+            .Setup(x => x.UpdateTaskAsync(It.IsAny<long>(), It.IsAny<CreateEditTaskDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long taskId, CreateEditTaskDto dto, CancellationToken _) =>
             {
-                if (!_tasks.TryGetValue(chatId, out var tasks))
+                if (!_tasksById.TryGetValue(taskId, out var task))
                 {
-                    return new MoneoTaskResult(false, "Chat not found");
+                    return MoneoResult<MoneoTaskDto>.TaskNotFound("Task not found");
                 }
 
-                var task = tasks.FirstOrDefault(x => x.Id == taskId);
-
-                if (task is null)
-                {
-                    return new MoneoTaskResult(false, "Task not found");
-                }
-
-                task.Name = taskDto.Name;
-                task.Description = taskDto.Description;
-                task.IsActive = taskDto.IsActive;
-                task.DueDates = taskDto.DueDates;
-                task.CompletedMessage = taskDto.CompletedMessage;
-                task.Reminders = taskDto.Reminders;
-                task.TimeZone = taskDto.TimeZone;
-                task.LastUpdated = DateTime.UtcNow;
-
-                return new MoneoTaskResult(true);
+                var result = MoneoResult.Success();
+                return result;
             });
+        
+        _taskResourceManager.Setup(x => x.GetTasksByKeywordSearchAsync(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<PageOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long _, string keyword, PageOptions pgOpt, CancellationToken _) => MoneoResult<PagedList<MoneoTaskDto>>.Success(new PagedList<MoneoTaskDto>
+            {
+                Data = [_tasksById[ExistingTaskId]],
+                Page = 0,
+                PageSize = pgOpt.PageSize,
+                TotalCount = 1
+            }));
     }
     
     [Fact]
@@ -148,13 +153,6 @@ public class ChangeTaskWorkflowTests
     {
         // Arrange
         var workflowManager = _fixture.Build<ChangeTaskWorkflowManager>().Create();
-        
-        _taskResourceManager.Setup(x => x.GetTasksForUserAsync(It.IsAny<long>(), It.IsAny<MoneoTaskFilter>()))
-            .ReturnsAsync(new MoneoTaskResult<IEnumerable<MoneoTaskDto>>(true,
-                new List<MoneoTaskDto>
-                {
-                    CreateTaskDto(ChatId, ExistingTaskName)
-                }));
         
         // start the workflow
         _ = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
@@ -221,17 +219,16 @@ public class ChangeTaskWorkflowTests
         _mediator.Verify(x => x.Send(It.IsAny<ChangeTaskWorkflowCompletedEvent>(), default));
     }
     
-    private MoneoTaskDto CreateTaskDto(long conversationId, string taskName)
+    private MoneoTaskDto CreateTaskDto(string taskName, long? taskId = null)
     {
         return new MoneoTaskDto
         {
             Name = taskName,
             IsActive = true,
-            Id = Guid.NewGuid().ToString(),
+            Id = taskId ?? _fixture.Create<long>(),
             Description = "This is a test task",
-            ConversationId = conversationId,
-            CompletedMessage = "Task completed",
-            DueDates = [_fixture.Create<DateTime>()]
+            CompletedMessages = ["Task completed"],
+            DueOn = _fixture.Create<DateTimeOffset>(),
         };
     }
 }

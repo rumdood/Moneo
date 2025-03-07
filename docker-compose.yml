@@ -13,7 +13,7 @@ services:
       Moneo__Chat__ApiKey: chatapikey
       Moneo__HttpLogging__RequestHeaders: X-Api-Key,Authorization
       Logging__LogLevel__Microsoft.AspNetCore.HttpLogging: Information
-      Telegram__BotToken: 599186770:AAEaRIjKJNh0G5W2ySfqUi7CrXInuC9Wr4s
+      Telegram__BotToken: ${TELEGRAM_BOT_TOKEN}
       Telegram__MasterConversationId: 122243374
       Telegram__CallbackToken: callbacktoken
     ports:

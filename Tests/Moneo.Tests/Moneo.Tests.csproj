@@ -31,11 +31,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj" />
     <ProjectReference Include="..\..\src\Chat\Moneo.Chat\Moneo.Chat.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\Moneo.Hosts.Chat.Api\Moneo.Hosts.Chat.Api.csproj" />
     <ProjectReference Include="..\..\src\Hosts\Moneo.TaskManagement.Api\Moneo.TaskManagement.Api.csproj" />
     <ProjectReference Include="..\..\src\Moneo.Core\Moneo.Core.csproj" />
-    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Client\Moneo.Obsolete.TaskManagement.Client.csproj" />
-    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Contracts\Moneo.Obsolete.TaskManagement.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\TaskManagement\Moneo.Obsolete.TaskManagement.Models\Moneo.Obsolete.TaskManagement.Models.csproj" />
   </ItemGroup>
 
 </Project>

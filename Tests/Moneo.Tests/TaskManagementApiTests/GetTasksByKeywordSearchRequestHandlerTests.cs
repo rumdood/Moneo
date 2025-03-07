@@ -15,14 +15,12 @@ public class GetTasksByKeywordSearchRequestHandlerTests : TaskManagementApiTestB
         var conversation = Fixture.CreateConversations().Single();
         var task = Fixture
             .CreateTasks(
-                timeProvider: TimeProvider.Object, 
                 conversationId: conversation.Id, 
                 name: "foo foo foo"
             )
             .Single();
         
         _ = Fixture.CreateTasks(
-            timeProvider: TimeProvider.Object, 
             conversationId: conversation.Id, 
             name: "bar bar bar"
         );
@@ -46,7 +44,6 @@ public class GetTasksByKeywordSearchRequestHandlerTests : TaskManagementApiTestB
         // Arrange
         var conversation = Fixture.CreateConversations().Single();
         var task = Fixture.CreateTasks(
-            TimeProvider.Object, 
             1, 
             conversation.Id,
             name: "123456789")

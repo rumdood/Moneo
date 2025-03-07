@@ -18,6 +18,15 @@ internal sealed class GetTasksForConversationRequestHandler(MoneoTasksDbContext 
     {
         try
         {
+            var conversationExists = await dbContext.Conversations
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == request.ConversationId, cancellationToken);
+
+            if (!conversationExists)
+            {
+                return MoneoResult<PagedList<MoneoTaskDto>>.ConversationNotFound("Conversation not found");
+            }
+            
             var query = dbContext.Tasks
                 .AsNoTracking()
                 .Where(t => t.ConversationId == request.ConversationId);

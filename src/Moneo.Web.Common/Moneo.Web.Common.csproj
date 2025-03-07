@@ -11,4 +11,8 @@
       <PackageReference Include="idunno.Authentication.Basic" Version="2.4.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Moneo.Common\Moneo.Common.csproj" />
+    </ItemGroup>
+
 </Project>

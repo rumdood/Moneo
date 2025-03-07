@@ -1,6 +1,7 @@
 using AutoFixture.AutoMoq;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Moneo.TaskManagement.Contracts.Models;
 using Moneo.TaskManagement.ResourceAccess;
 using Moneo.TaskManagement.ResourceAccess.Entities;
 
@@ -16,14 +17,6 @@ public abstract class TaskManagementApiTestBase : IAsyncLifetime
     protected TaskManagementApiTestBase()
     {
         Fixture = new Fixture().Customize(new AutoMoqCustomization());
-    }
-
-    protected MoneoTasksDbContext CreateDbContext()
-    {
-        var options = new DbContextOptionsBuilder<MoneoTasksDbContext>()
-            .UseInMemoryDatabase(databaseName: "MoneoTasksTestDb")
-            .Options;
-        return new MoneoTasksDbContext(options, TimeProvider.Object, Mediator.Object);
     }
     protected async Task ResetDatabase()
     {
@@ -78,7 +71,6 @@ internal static class FixtureExtensions
     
     public static IEnumerable<MoneoTask> CreateTasks(
         this IFixture fixture,
-        TimeProvider timeProvider,
         int count = 1, 
         long? conversationId = null,
         bool active = true,
@@ -90,6 +82,7 @@ internal static class FixtureExtensions
         DateTime? dueDate = null)
     {
         var dbContext = fixture.Create<MoneoTasksDbContext>();
+        var timeProvider = fixture.Create<Mock<TimeProvider>>().Object;
         var conversation = dbContext.Conversations.SingleOrDefault(c => c.Id == conversationId);
         
         var actualDueDate = dueDate is null && repeater is null
@@ -121,5 +114,23 @@ internal static class FixtureExtensions
         dbContext.SaveChanges();
     
         return tasks;
+    }
+
+    public static TaskEvent CreateTaskEventForTask(
+        this IFixture fixture,
+        long taskId,
+        DateTime? occurredOn = null,
+        TaskEventType type = TaskEventType.Completed)
+    {
+        var dbContext = fixture.Create<MoneoTasksDbContext>();
+        var timeProvider = fixture.Create<Mock<TimeProvider>>().Object;
+        
+        var task = dbContext.Tasks.Single(t => t.Id == taskId);
+        
+        var actualOccurredOn = occurredOn ?? timeProvider.GetUtcNow().UtcDateTime;
+        var taskEvent = new TaskEvent(task, type, actualOccurredOn);
+        dbContext.TaskEvents.Add(taskEvent);
+        dbContext.SaveChanges();
+        return taskEvent;
     }
 }

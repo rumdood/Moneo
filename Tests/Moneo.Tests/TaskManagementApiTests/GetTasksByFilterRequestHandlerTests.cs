@@ -11,7 +11,7 @@ public class GetTasksByFilterRequestHandlerTests : TaskManagementApiTestBase
     {
         // Arrange
         var conversation = Fixture.CreateConversations(1).Single();
-        var tasks = Fixture.CreateTasks(TimeProvider.Object, 2, conversation.Id);
+        var tasks = Fixture.CreateTasks(2, conversation.Id);
         var filter = TaskFilter.ForConversation(conversation.Id).WithActive(true);
         var pagingOptions = new PageOptions(0, 10);
         var request = new GetTasksByFilterRequest(filter, pagingOptions);
@@ -33,7 +33,6 @@ public class GetTasksByFilterRequestHandlerTests : TaskManagementApiTestBase
         var conversations = Fixture.CreateConversations(3).ToArray();
         
         _ = Fixture.CreateTasks(
-            TimeProvider.Object, 
             5, 
             conversations[0].Id);
         
@@ -58,7 +57,7 @@ public class GetTasksByFilterRequestHandlerTests : TaskManagementApiTestBase
         var request = new GetTasksByFilterRequest(null, pagingOptions);
         
         var conversation = Fixture.CreateConversations(1).Single();
-        var tasks = Fixture.CreateTasks(TimeProvider.Object, 2, conversation.Id);
+        var tasks = Fixture.CreateTasks(2, conversation.Id);
         var handler = new GetTasksByFilterRequestHandler(DbContext);
 
         // Act

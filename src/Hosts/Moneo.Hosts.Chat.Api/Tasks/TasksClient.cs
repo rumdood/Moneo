@@ -1,6 +1,7 @@
 using Moneo.Common;
 using Moneo.TaskManagement.Contracts;
 using Moneo.TaskManagement.Contracts.Models;
+using Moneo.Web;
 
 namespace Moneo.Hosts.Chat.Api.Tasks;
 
@@ -32,14 +33,8 @@ internal class TasksClient : ITaskManagerClient
         }
 
         var response = await _httpClient.SendAsync(requestMessage, cancellationToken);
-        if (response.IsSuccessStatusCode)
-        {
-            var result = await response.Content.ReadFromJsonAsync<MoneoResult<T>>(cancellationToken: cancellationToken);
-            return result ?? MoneoResult<T>.Failed("Failed to deserialize response.");
-        }
-
-        var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        return MoneoResult<T>.Failed($"Error: {errorContent}");
+        var result = await response.GetMoneoResultAsync<T>(cancellationToken);
+        return result;
     }
     
     public async Task<MoneoResult<MoneoTaskDto>> CreateTaskAsync(long conversationId, CreateEditTaskDto dto, CancellationToken cancellationToken = default)

@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<ITaskManagerClient, TasksClient>(client =>
         {
             client.BaseAddress = new Uri(options.BaseUrl);
-            client.DefaultRequestHeaders.Add("ApiKey", options.ApiKey);
+            client.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);
         });
 
         return services;

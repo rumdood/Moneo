@@ -48,7 +48,6 @@
     <ItemGroup>
       <Folder Include="artifacts\" />
       <Folder Include="Common\" />
-      <Folder Include="Features\CreateEditTask\Chat\" />
       <Folder Include="Model\" />
       <Folder Include="ResourceAccess\Services\" />
     </ItemGroup>

@@ -27,9 +27,9 @@ public sealed class CreateEditTaskHandler : IRequestHandler<CreateEditTaskReques
         MoneoTask? task;
         var isCreate = !request.TaskId.HasValue;
         
-        if (!request.TaskId.HasValue)
+        if (isCreate)
         {
-            if (!request.ConversationId.HasValue)
+            if (request.ConversationId is null or 0)
             {
                 return MoneoResult<long>.BadRequest("Either TaskId or ConversationId must be provided");
             }
@@ -93,8 +93,14 @@ public sealed class CreateEditTaskHandler : IRequestHandler<CreateEditTaskReques
         
         task.DomainEvents.Add(new TaskCreatedOrUpdated(_timeProvider.GetUtcNow().UtcDateTime, task));
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return MoneoResult<long>.Success(task.Id);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return MoneoResult<long>.Success(task.Id);
+        }
+        catch (Exception e)
+        {
+            return MoneoResult<long>.Failed(e);
+        }
     }
 }
