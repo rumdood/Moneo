@@ -36,8 +36,8 @@ internal sealed class GetTasksByKeywordSearchRequestHandler
 
         var matches = tasks.Select(task =>
             {
-                var nameScore = Fuzz.PartialRatio(request.Keywords, task.Name);
-                var descriptionScore = Fuzz.PartialRatio(request.Keywords, task.Description);
+                var nameScore = Fuzz.PartialRatio(request.Keywords.ToLower(), task.Name.ToLower());
+                var descriptionScore = Fuzz.PartialRatio(request.Keywords.ToLower(), task.Description?.ToLower());
                 var overallScore = Math.Max(nameScore, descriptionScore);
                 return (task, overallScore);
             })

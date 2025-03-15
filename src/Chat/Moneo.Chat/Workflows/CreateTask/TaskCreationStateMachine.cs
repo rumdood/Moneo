@@ -3,7 +3,7 @@ namespace Moneo.Chat.Workflows.CreateTask;
 public class TaskCreationStateMachine : IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>
 {
     public TaskCreateOrUpdateState CurrentState { get; private set; }
-    public MoneoTaskDraft Draft { get; } = new();
+    public MoneoTaskDraft Draft { get; } = new(isForCreate: true);
     public long ConversationId { get; private set; }
 
     public TaskCreationStateMachine(long conversationId, string? name = null)

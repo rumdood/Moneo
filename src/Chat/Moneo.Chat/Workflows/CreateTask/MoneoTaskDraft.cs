@@ -6,6 +6,7 @@ public class MoneoTaskDraft
 {
     private TaskRepeaterDraft? _repeater;
     private TaskBadgerDraft? _badger;
+    private readonly bool _isForCreate;
 
     public bool IsRepeaterEnabled => _repeater is not null;
 
@@ -83,7 +84,7 @@ public class MoneoTaskDraft
         var dto = new CreateEditTaskDto(
             Task.Name,
             Task.Description!,
-            Task.IsActive,
+            _isForCreate || Task.IsActive,
             Task.CompletedMessages.ToList(),
             Task.CanBeSkipped,
             Task.SkippedMessages.ToList(),
@@ -95,8 +96,9 @@ public class MoneoTaskDraft
         return dto;
     }
 
-    public MoneoTaskDraft()
+    public MoneoTaskDraft(bool isForCreate = false)
     {
+        _isForCreate = isForCreate;
     }
 
     public MoneoTaskDraft(MoneoTaskDto dto)

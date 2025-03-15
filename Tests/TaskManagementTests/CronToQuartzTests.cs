@@ -6,6 +6,8 @@ public class CronToQuartzTests
 {
     [Theory]
     [InlineData("0 15 10 * * *", "0 15 10 * * ? *")]
+    [InlineData("0 0 12 * * *", "0 0 12 * * ? *")]
+    [InlineData("0 0 9,21 * * *", "0 0 9,21 * * ? *")]
     [InlineData("0 0 12 * * ?", "0 0 12 * * ?")]
     [InlineData("15 10 * * *", "0 15 10 * * ? *")]
     [InlineData("0 * 14 * * *", "0 * 14 * * ? *")]

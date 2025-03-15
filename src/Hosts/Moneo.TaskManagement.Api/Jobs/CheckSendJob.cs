@@ -1,8 +1,8 @@
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Moneo.Chat;
-using Moneo.TaskManagement.Api.Chat;
 using Moneo.TaskManagement.Api.Services;
 using Moneo.TaskManagement.Contracts.Models;
+using Moneo.TaskManagement.DomainEvents;
 using Moneo.TaskManagement.ResourceAccess;
 using Quartz;
 
@@ -15,6 +15,7 @@ internal sealed class CheckSendJob : IJob
     private readonly TimeProvider _timeProvider;
     private readonly MoneoTasksDbContext _dbContext;
     private readonly INotificationService _notificationService;
+    private readonly IPublisher _publisher;
     
     private record MoneoTaskCompletionDataDto(
         long Id,
@@ -28,12 +29,14 @@ internal sealed class CheckSendJob : IJob
         ILogger<CheckSendJob> logger, 
         TimeProvider timeProvider, 
         MoneoTasksDbContext dbContext, 
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IPublisher publisher)
     {
         _logger = logger;
         _timeProvider = timeProvider;
         _dbContext = dbContext;
         _notificationService = notificationService;
+        _publisher = publisher;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -71,6 +74,8 @@ internal sealed class CheckSendJob : IJob
 
         try
         {
+            await _publisher.Publish(new TaskPastDue(_timeProvider.GetUtcNow().UtcDateTime, taskId));
+            
             await SendNotificationAsync(taskInfo.ConversationId, message);
             _logger.LogInformation("Notification sent for TaskId: {TaskId}", taskId);
         }

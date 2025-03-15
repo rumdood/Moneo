@@ -38,6 +38,13 @@ internal sealed class GetJobsRequestHandler : IRequestHandler<GetJobsRequest, Mo
         foreach (var jobKey in jobsForPage)
         {
             var jobDetail = await scheduler.GetJobDetail(jobKey, cancellationToken);
+            var triggers = await scheduler.GetTriggersOfJob(jobKey, cancellationToken);
+            var cronSchedule = triggers.OfType<ICronTrigger>().FirstOrDefault()?.CronExpressionString;
+            
+            var nextFireTime = triggers.Select(t => t.GetNextFireTimeUtc())
+                .Where(t => t.HasValue)
+                .Min();
+            
             if (jobDetail != null)
             {
                 var dataMap = jobDetail.JobDataMap.IsEmpty
@@ -49,7 +56,9 @@ internal sealed class GetJobsRequestHandler : IRequestHandler<GetJobsRequest, Mo
                     jobDetail.Key.Group,
                     jobDetail.JobType.FullName,
                     dataMap,
-                    jobDetail.Description));
+                    jobDetail.Description,
+                    cronSchedule,
+                    nextFireTime));
             }
             else
             {

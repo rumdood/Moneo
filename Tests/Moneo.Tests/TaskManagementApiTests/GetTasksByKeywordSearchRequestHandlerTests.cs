@@ -8,8 +8,11 @@ public class GetTasksByKeywordSearchRequestHandlerTests : TaskManagementApiTestB
     private static GetTasksByKeywordSearchRequestHandler GetHandler(MoneoTasksDbContext dbContext)
         => new(dbContext);
     
-    [Fact]
-    public async Task Handle_ReturnsTasks_WhenKeywordsMatch()
+    [Theory]
+    [InlineData("foo")]
+    [InlineData("Foo")]
+    [InlineData("FOO")]
+    public async Task Handle_ReturnsTasks_WhenKeywordsMatch(string keyword)
     {
         // Arrange
         var conversation = Fixture.CreateConversations().Single();
@@ -25,7 +28,7 @@ public class GetTasksByKeywordSearchRequestHandlerTests : TaskManagementApiTestB
             name: "bar bar bar"
         );
         
-        var request = new GetTasksByKeywordSearchRequest(conversation.Id, "foo");
+        var request = new GetTasksByKeywordSearchRequest(conversation.Id, keyword);
 
         // Act
         var result = await GetHandler(DbContext).Handle(request, CancellationToken.None);
@@ -49,7 +52,7 @@ public class GetTasksByKeywordSearchRequestHandlerTests : TaskManagementApiTestB
             name: "123456789")
             .Single();
         
-        var request = new GetTasksByKeywordSearchRequest(1, "nonexistent");
+        var request = new GetTasksByKeywordSearchRequest(conversation.Id, "nonexistent");
 
         // Act
         var result = await GetHandler(DbContext).Handle(request, CancellationToken.None);

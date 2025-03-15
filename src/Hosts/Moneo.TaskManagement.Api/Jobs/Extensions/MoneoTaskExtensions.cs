@@ -38,11 +38,13 @@ public static class MoneoTaskExtensions
         
         if (task is { Repeater: { } repeater })
         {
+            var quartzCron = repeater.CronExpression.GetQuartzCronExpression();
+            
             // create a CRON trigger for the job
             return TriggerBuilder.Create()
                 .WithMoneoIdentity(task.Id, CheckSendType.Due)
                 .UsingJobData(jobData)
-                .WithCronSchedule(repeater.CronExpression.GetQuartzCronExpression())
+                .WithCronSchedule(quartzCron, x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById(task.Timezone)))
                 .EndAt(repeater.Expiry)
                 .Build();
         }
@@ -162,15 +164,20 @@ public static class CronExpressionExtension
         public string Month { get; set; }
         public string DayOfWeek { get; set; }
         public string Year { get; set; }
+        
+        public override string ToString()
+        {
+            return $"{Seconds} {Minutes} {Hours} {DayOfMonth} {Month} {DayOfWeek} {Year}";
+        }
     }
 
     internal static string GetQuartzCronExpression(this string cronExpression)
     {
-        if (Quartz.CronExpression.IsValidExpression(cronExpression))
+        if (CronExpression.IsValidExpression(cronExpression))
         {
             return cronExpression;
         }
-
+        
         var quartzCron = new QuartzCronObject();
         var parts = cronExpression.Split(' ');
 
@@ -189,9 +196,6 @@ public static class CronExpressionExtension
             quartzCron.DayOfWeek = "?";
         }
 
-        var quartzCronString =
-            $"{quartzCron.Seconds} {quartzCron.Minutes} {quartzCron.Hours} {quartzCron.DayOfMonth} {quartzCron.Month} {quartzCron.DayOfWeek} {quartzCron.Year}";
-
-        return quartzCronString;
+        return quartzCron.ToString();
     }
 }

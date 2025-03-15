@@ -7,4 +7,6 @@ public record JobDto(
     string GroupName, 
     string? JobType = null, 
     Dictionary<string, object?>? JobDataMap = null, 
-    string? Description = null);
+    string? Description = null,
+    string? CronExpression = null,
+    DateTimeOffset? NextFireTime = null);

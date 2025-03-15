@@ -30,6 +30,7 @@ public static class AppBuilderExtensions
         var deleteTaskEndpoints = app.AddDeleteTaskEndpoints();
         var getTaskByFilterEndpoint = app.AddGetTaskByFilterEndpoint();
         var getTasksForConversationEndpoint = app.AddGetTasksForConversationEndpoint();
+        var getTasksByKeywordEndpoint = app.AddGetTasksByKeywordEndpoint();
         var getTaskByIdEndpoint = app.AddGetTaskByIdEndpoint();
         var getJobsEndpoint = app.AddGetJobsEndpoint();
         
@@ -46,6 +47,7 @@ public static class AppBuilderExtensions
         deleteTaskEndpoints.RequireAuthorization(options.AuthorizationPolicy);
         getTaskByFilterEndpoint.RequireAuthorization(options.AuthorizationPolicy);
         getTasksForConversationEndpoint.RequireAuthorization(options.AuthorizationPolicy);
+        getTasksByKeywordEndpoint.RequireAuthorization(options.AuthorizationPolicy);
         getTaskByIdEndpoint.RequireAuthorization(options.AuthorizationPolicy);
         getJobsEndpoint.RequireAuthorization(options.AuthorizationPolicy);
     }

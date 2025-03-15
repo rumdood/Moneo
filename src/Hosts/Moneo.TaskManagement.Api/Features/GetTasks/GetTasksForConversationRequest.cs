@@ -34,6 +34,7 @@ internal sealed class GetTasksForConversationRequestHandler(MoneoTasksDbContext 
             var totalCount = await query.CountAsync(cancellationToken);
 
             var tasks = await query
+                .OrderBy(t => t.Id)
                 .Skip(request.PagingOptions.PageNumber * request.PagingOptions.PageSize)
                 .Take(request.PagingOptions.PageSize)
                 .Select(t => t.ToDto())
