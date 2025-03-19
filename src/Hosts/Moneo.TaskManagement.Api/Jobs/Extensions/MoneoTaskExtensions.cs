@@ -29,11 +29,10 @@ public static class MoneoTaskExtensions
         // create a new job
         var jobData = new JobDataMap
         {
-            {"ConversationId", conversationId},
-            {"TaskId", task.Id},
-            {"TaskName", task.Name},
+            {JobConstants.Tasks.ConversationId, conversationId},
+            {JobConstants.Tasks.Id, task.Id},
+            {JobConstants.Tasks.Name, task.Name},
             {"Message", $"Your task '{task.Name}' is due now"},
-            {"IsBadger", false}
         };
         
         if (task is { Repeater: { } repeater })
@@ -125,13 +124,10 @@ public static class MoneoTaskExtensions
         
             var jobData = new JobDataMap
             {
-                {"TaskId", task.Id},
+                { JobConstants.Tasks.Id, task.Id },
+                { JobConstants.Tasks.Name, task.Name },
+                { JobConstants.Tasks.ConversationId, task.ConversationId },
             };
-
-            var job = JobBuilder.Create<BadgerJob>()
-                .WithIdentity(jobKey)
-                .PersistJobDataAfterExecution()
-                .Build();
         
             var trigger = TriggerBuilder.Create()
                 .WithMoneoIdentity(task.Id, CheckSendType.Badger)
@@ -139,10 +135,14 @@ public static class MoneoTaskExtensions
                 .WithSimpleSchedule(x => x
                     .WithIntervalInMinutes(task.Badger.BadgerFrequencyInMinutes)
                     .RepeatForever())
-                .ForJob(job)
+                .Build();
+            
+            var job = JobBuilder.Create<BadgerJob>()
+                .WithIdentity(jobKey)
+                .PersistJobDataAfterExecution()
                 .Build();
         
-            await scheduler.ScheduleJob(trigger, cancellationToken);
+            await scheduler.ScheduleJob(job, trigger, cancellationToken);
 
             return MoneoResult.Success();
         }
@@ -191,7 +191,11 @@ public static class CronExpressionExtension
         quartzCron.DayOfWeek = parts[offset + 4];
         quartzCron.Year = parts.Length > 6 ? parts[offset + 5] : "*";
         
-        if (quartzCron is { DayOfWeek: "*", DayOfMonth: "*" })
+        if (quartzCron.DayOfWeek != "*" && quartzCron.DayOfWeek != "?")
+        {
+            quartzCron.DayOfMonth = "?";
+        }
+        else if (quartzCron is { DayOfWeek: "*", DayOfMonth: "*" })
         {
             quartzCron.DayOfWeek = "?";
         }

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Moneo.TaskManagement.Contracts.Models;
 using Moneo.TaskManagement.Jobs;
 using Moneo.TaskManagement.ResourceAccess;
 using Moneo.TaskManagement.ResourceAccess.Entities;
@@ -38,25 +39,30 @@ internal class TaskPastDueEventHandler : INotificationHandler<TaskPastDue>
             return;
         }
 
-        var task = await _dbContext
+        var taskWithBadger = await _dbContext
             .Tasks
             .AsNoTracking()
             .Where(t => t.Id == notification.TaskId)
+            .Select(t => new
+            {
+                Task = t,
+                Badger = t.Badger != null ? t.Badger.ToDto() : null
+            })
             .SingleOrDefaultAsync(cancellationToken);
         
-        if (task is null)
+        if (taskWithBadger is null)
         {
             _logger.LogError("Task {TaskId} not found", notification.TaskId);
             return;
         }
 
-        if (task.Badger is null)
+        if (taskWithBadger.Badger is null)
         {
             _logger.LogInformation("Task {TaskId} does not have a badger job", notification.TaskId);
             return;
         }
         
-        var scheduleResult = await task.ScheduleBadgerJobAsync(scheduler, cancellationToken);
+        var scheduleResult = await taskWithBadger.Task.ScheduleBadgerJobAsync(scheduler, cancellationToken);
 
         if (!scheduleResult.IsSuccess)
         {

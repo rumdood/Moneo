@@ -15,14 +15,6 @@ internal sealed class BadgerJob : IJob
     private readonly MoneoTasksDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
     private readonly INotificationService _notificationService;
-
-    private record MoneoTaskCompletionDataDto(
-        long Id,
-        long ConversationId,
-        bool IsActive,
-        TaskBadgerDto? Badger,
-        TaskRepeaterDto? Repeater,
-        DateTime? LastCompletedOrSkipped);
     
     public BadgerJob(
         ILogger<BadgerJob> logger,
@@ -39,11 +31,11 @@ internal sealed class BadgerJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         _logger.LogDebug("Executing badger job {JobKey}", context.JobDetail.Key);
-        var dataMap = context.JobDetail.JobDataMap;
+        var dataMap = context.Trigger.JobDataMap;
         
-        var taskId = dataMap.GetLong("TaskId");
+        var taskId = dataMap.GetLong(JobConstants.Tasks.Id);
         
-        var taskInfo = await GetTaskWithHistoryData(taskId);
+        var taskInfo = await _dbContext.Tasks.GetTaskWithHistoryDataAsync(taskId, true);
         
         if (taskInfo is null)
         {
@@ -79,28 +71,6 @@ internal sealed class BadgerJob : IJob
             taskInfo.ConversationId, taskInfo.Id);
         
         await SendNotificationAsync(taskInfo.ConversationId, message);
-    }
-    
-    private async Task<MoneoTaskCompletionDataDto?> GetTaskWithHistoryData(long taskId)
-    {
-        var task = await _dbContext.Tasks
-            .AsNoTracking()
-            .Where(t => t.Id == taskId)
-            .Select(t => new MoneoTaskCompletionDataDto(
-                t.Id,
-                t.ConversationId,
-                t.IsActive,
-                t.Badger != null ? t.Badger.ToDto() : null,
-                t.Repeater != null ? t.Repeater.ToDto() : null,
-                t.TaskEvents
-                    .Where(h => h.Type == TaskEventType.Completed || h.Type == TaskEventType.Skipped)
-                    .OrderByDescending(h => h.OccurredOn)
-                    .Select(h => (DateTime?)h.OccurredOn)
-                    .FirstOrDefault()
-            ))
-            .FirstOrDefaultAsync();
-
-        return task;
     }
     
     private async Task HandleTaskNotFound(IJobExecutionContext context, long taskId)
