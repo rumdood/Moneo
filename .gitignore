@@ -6,6 +6,9 @@
 # local config files
 *.local.json
 
+# Sqlite Files
+*.sqlite
+
 # User-specific files
 *.rsuser
 *.suo

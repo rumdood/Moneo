@@ -1,6 +1,47 @@
-version: "3.8"
 services:
-  poller:
-    image: moneo-poller
-    volumes:
-      - ./appsettings.json:/App/appsettings.json
+  chatapi:
+    container_name: chat_api
+    build:
+      context: .
+      dockerfile: src/Hosts/Moneo.Hosts.Chat.Api/Dockerfile
+    image: mrobold/moneo-chat-api:latest
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Moneo__TaskManagement__BaseUrl: http://taskapi:8080
+      Moneo__TaskManagement__ApiKey: taskapikey
+      Moneo__Chat__ApiKey: chatapikey
+      Moneo__HttpLogging__RequestHeaders: X-Api-Key,Authorization
+      Logging__LogLevel__Microsoft.AspNetCore.HttpLogging: Information
+      Telegram__BotToken: ${TELEGRAM_BOT_TOKEN}
+      Telegram__MasterConversationId: 122243374
+      Telegram__CallbackToken: callbacktoken
+    ports:
+      - "7077:8080"
+    networks:
+      - moneo
+        
+  taskapi:
+    container_name: task_api
+    build:
+      context: .
+      dockerfile: src/Hosts/Moneo.TaskManagement.Api/Dockerfile
+    image: mrobold/moneo-tasks-api:latest
+    environment:
+      Logging__LogLevel__Microsoft.AspNetCore.HttpLogging: Information
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Moneo__DatabaseProvider: Sqlite
+      ConnectionStrings__TaskManagement: Data Source=/app/data/tasks.sqlite
+      Moneo__Notification__BaseUrl: http://chatapi:8080
+      Moneo__Notification__ApiKey: chatapikey
+      Moneo__ApiKey: taskapikey
+      Moneo__HttpLogging__RequestHeaders: X-Api-Key,Authorization
+    ports:
+      - "7078:8080"
+    networks:
+      - moneo
+        
+networks:
+    moneo:
+        driver: bridge
