@@ -28,7 +28,7 @@ For my personal setup I have a Flic Button in my medicine cabinet that, when pre
 ## Deployment Requirements
 You can run the services as individual processes or in docker/docker-compose. The provided `docker-compose.yml` file is a sample of how to run them. You'd want to setup appropriate API keys, get a Telegram API key, etc.
 
-I currently run this using docker using a reverse proxy to make the services appear as a single host.
+I currently run this using docker using a reverse proxy to make the services appear as a single host. The Task Management API supports either Sqlite or Postgres as a data store. The Chat API is does not require a permanent data store.
 
 ## Chat Requirements
 - Telegram account
