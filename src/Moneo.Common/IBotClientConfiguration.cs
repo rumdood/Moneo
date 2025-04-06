@@ -9,4 +9,5 @@ public interface IBotClientConfiguration
     string TaskApiBase { get; set; }
     bool IsDetailedErrorsEnabled { get; set; }
     string ChatAdapter { get; set; }
+    string DefaultTimezone { get; set; }
 }

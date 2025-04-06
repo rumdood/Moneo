@@ -11,4 +11,5 @@ public class BotClientConfiguration : IBotClientConfiguration
     public string TaskApiBase { get; set; } = default!;
     public bool IsDetailedErrorsEnabled { get; set; }
     public string ChatAdapter { get; set; }
+    public string DefaultTimezone { get; set; } = default!;
 }

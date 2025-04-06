@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj" />
     <ProjectReference Include="..\Moneo.Chat\Moneo.Chat.csproj" />
-    <ProjectReference Include="..\..\Moneo.Core\Moneo.Core.csproj" />
   </ItemGroup>
 
 </Project>

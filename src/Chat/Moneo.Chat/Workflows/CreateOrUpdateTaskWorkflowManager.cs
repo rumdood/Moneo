@@ -32,15 +32,18 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
         _responseHandlers = new();
     private readonly Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task> _onComplete;
     private readonly Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task<MoneoCommandResult>> _onReadyForRepeaterCron;
+    private readonly string _defaultTimezone;
 
     public CreateOrUpdateTaskWorkflowManager(
         ILogger logger,
         Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task<MoneoCommandResult>> onReadyForRepeaterCron,
-        Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task> onComplete)
+        Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task> onComplete,
+        string defaultTimezone = "America/Los_Angeles")
     {
         _logger = logger;
         _onComplete = onComplete;
         _onReadyForRepeaterCron = onReadyForRepeaterCron;
+        _defaultTimezone = defaultTimezone;
         InitializeResponses();
         InitializeResponseHandlers();
     }
@@ -315,7 +318,8 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
             switch (stateMachine.CurrentState)
             {
                 case TaskCreateOrUpdateState.WaitingForTimezone:
-                    HandleTimeZoneInput(stateMachine, "Pacific Standard Time");
+                    // TODO: Find a way to get the timezone from the user
+                    HandleTimeZoneInput(stateMachine, _defaultTimezone);
                     break;
                 case TaskCreateOrUpdateState.WaitingForBadgerMessages:
                     HandleBadgerMessagesInput(stateMachine, "");
