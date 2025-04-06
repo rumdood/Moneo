@@ -52,11 +52,15 @@ public static class MoneoTaskExtensions
         {
             throw new InvalidOperationException("Task does not have a due date");
         }
+        
+        // adjust the DueDate to the task's timezone
+        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(task.Timezone);
+        var dueDate = new DateTimeOffset(task.DueOn.Value, timeZoneInfo.GetUtcOffset(task.DueOn.Value));
 
         return TriggerBuilder.Create()
             .WithMoneoIdentity(task.Id, CheckSendType.Due)
             .UsingJobData(jobData)
-            .StartAt(task.DueOn.Value)
+            .StartAt(dueDate)
             .Build();
     }
     
@@ -132,6 +136,7 @@ public static class MoneoTaskExtensions
             var trigger = TriggerBuilder.Create()
                 .WithMoneoIdentity(task.Id, CheckSendType.Badger)
                 .UsingJobData(jobData)
+                .StartAt(DateBuilder.FutureDate(task.Badger.BadgerFrequencyInMinutes, IntervalUnit.Minute))
                 .WithSimpleSchedule(x => x
                     .WithIntervalInMinutes(task.Badger.BadgerFrequencyInMinutes)
                     .RepeatForever())
@@ -190,9 +195,16 @@ public static class CronExpressionExtension
         quartzCron.Month = parts[offset + 3];
         quartzCron.DayOfWeek = parts[offset + 4];
         quartzCron.Year = parts.Length > 6 ? parts[offset + 5] : "*";
+
+        if (quartzCron.DayOfWeek == "0")
+        {
+            // quartz doesn't use a zero-based week
+            quartzCron.DayOfWeek = "1";
+        }
         
         if (quartzCron.DayOfWeek != "*" && quartzCron.DayOfWeek != "?")
         {
+            // Quartz does not support both day-of-week and day-of-month being "*"
             quartzCron.DayOfMonth = "?";
         }
         else if (quartzCron is { DayOfWeek: "*", DayOfMonth: "*" })

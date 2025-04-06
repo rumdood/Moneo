@@ -9,6 +9,7 @@ internal record MoneoTaskCompletionDataDto(
     string Name,
     long ConversationId,
     bool IsActive,
+    DateTime? DueOn,
     TaskBadgerDto? Badger,
     TaskRepeaterDto? Repeater,
     DateTime? LastCompletedOrSkipped);
@@ -29,6 +30,7 @@ internal static class TaskDbSetExtensions
                 t.Name,
                 t.ConversationId,
                 t.IsActive,
+                t.DueOn,
                 includeBadger ? t.Badger != null ? t.Badger.ToDto() : null : null,
                 t.Repeater != null ? t.Repeater.ToDto() : null,
                 t.TaskEvents

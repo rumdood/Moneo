@@ -8,7 +8,7 @@ internal enum BotResponseType
 
 internal static class BotResponseHelper
 {
-    private static Random _random = new Random();
+    private static readonly Random Random = new Random();
 
     private static readonly string[] UnsureHowToProceed =
     [
@@ -80,8 +80,8 @@ internal static class BotResponseHelper
     {
         return type switch
         {
-            BotResponseType.UnsureHowToProceed => UnsureHowToProceed[_random.Next(UnsureHowToProceed.Length)],
-            BotResponseType.RequestYesOrNo => RequestYesOrNo[_random.Next(RequestYesOrNo.Length)],
+            BotResponseType.UnsureHowToProceed => UnsureHowToProceed[Random.Next(UnsureHowToProceed.Length)],
+            BotResponseType.RequestYesOrNo => RequestYesOrNo[Random.Next(RequestYesOrNo.Length)],
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

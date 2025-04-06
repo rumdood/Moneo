@@ -82,7 +82,10 @@ public static partial class ServiceCollectionExtensions
 public class ChatAdapterOptions
 {
     public bool InMemoryStateManagementEnabled { get; private set; } = true;
+    public string DefaultTimeZone { get; private set; } = "UTC";
+    
     public void UseInMemoryStateManagement() => InMemoryStateManagementEnabled = true;
+    public void SetDefaultTimeZone(string timeZone) => DefaultTimeZone = timeZone;
 
     public bool IsValid() => true;
 }

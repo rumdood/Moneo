@@ -34,11 +34,11 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     
     public bool IsActive { get; private set; } = false;
 
-    private async Task DeleteExistingWebhook(CancellationToken cancellationToken)
+    private async Task DeleteExistingWebhookAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await _botClient.DeleteWebhookAsync(cancellationToken: cancellationToken);
+            await _botClient.DeleteWebhook(cancellationToken: cancellationToken);
             _isUsingWebhook = false;
         }
         catch (ApiRequestException e)
@@ -47,7 +47,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         }
     }
 
-    private async Task HandleMessageUpdate(Message message, CancellationToken cancellationToken)
+    private async Task HandleMessageUpdateAsync(Message message, CancellationToken cancellationToken)
     {
         try
         {
@@ -79,7 +79,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         
         var handler = update switch
         {
-            {Message: { } message} => HandleMessageUpdate(message, cancellationToken),
+            {Message: { } message} => HandleMessageUpdateAsync(message, cancellationToken),
             {CallbackQuery: { } callbackQuery} => HandleCallbackQueryAsync(callbackQuery, cancellationToken),
             _ => HandleUnknownUpdateAsync(update, cancellationToken)
         };
@@ -91,15 +91,13 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     {
         if (exception is ApiRequestException apiRequestException)
         {
-            await _botClient.SendTextMessageAsync(_options.MasterConversationId, apiRequestException.ToString(),
+            await _botClient.SendMessage(_options.MasterConversationId, apiRequestException.ToString(),
                 cancellationToken: cancelToken);
         }
     }
 
-    public async Task StartReceivingAsync(CancellationToken cancellationToken = default)
+    public Task StartReceivingAsync(CancellationToken cancellationToken = default)
     {
-        // delete any existing webhook
-        // await DeleteExistingWebhook(cancellationToken);
         _isUsingWebhook = false;
         
         _botClient.Timeout = TimeSpan.FromSeconds(30);
@@ -111,12 +109,14 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         };
         _botClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, options, cancellationToken);
         IsActive = true;
+
+        return Task.CompletedTask;
     }
 
     public async Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default)
     {
         _isUsingWebhook = true;
-        await _botClient.SetWebhookAsync(url: callbackUrl, secretToken: _options.CallbackToken, cancellationToken: cancellationToken);
+        await _botClient.SetWebhook(url: callbackUrl, secretToken: _options.CallbackToken, cancellationToken: cancellationToken);
         IsActive = true;
     }
 
@@ -124,7 +124,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     {
         if (_isUsingWebhook)
         {
-            await DeleteExistingWebhook(cancellationToken);
+            await DeleteExistingWebhookAsync(cancellationToken);
         } 
 
         IsActive = false;
@@ -132,7 +132,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
     public async Task<ChatAdapterStatus> GetStatusAsync(CancellationToken cancellationToken)
     {
-        var webhookInfo = await _botClient.GetWebhookInfoAsync(cancellationToken);
+        var webhookInfo = await _botClient.GetWebhookInfo(cancellationToken);
         return new ChatAdapterStatus(
             nameof(TelegramChatAdapter),
             _isUsingWebhook,
@@ -192,16 +192,26 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
     public async Task Handle(BotTextMessageRequest request, CancellationToken cancellationToken)
     {
-        await _botClient.SendTextMessageAsync(request.ConversationId, request.Text, cancellationToken: cancellationToken);
+        await _botClient.SendMessage(request.ConversationId, request.Text, cancellationToken: cancellationToken);
     }
 
     public async Task Handle(BotGifMessageRequest request, CancellationToken cancellationToken)
     {
         var inputFile = new InputFileUrl(request.GifUrl);
-        await _botClient.SendAnimationAsync(request.ConversationId, inputFile, cancellationToken: cancellationToken);
+        await _botClient.SendAnimation(request.ConversationId, inputFile, cancellationToken: cancellationToken);
     }
 
     public async Task Handle(BotMenuMessageRequest request, CancellationToken cancellationToken)
+    {
+        var rows = request.MenuOptions.Chunk(2).ToArray();
+        await _botClient.SendMessage(
+            chatId: request.ConversationId, 
+            text: request.Text, 
+            replyMarkup: rows, 
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task HandleViaCallbackButton(BotMenuMessageRequest request, CancellationToken cancellationToken)
     {
         var options = request.MenuOptions.Select(InlineKeyboardButton.WithCallbackData).ToArray();
 
@@ -230,7 +240,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         }
 
         var keyboard = new InlineKeyboardMarkup(GetRows(options, 2));
-        await _botClient.SendTextMessageAsync(chatId: request.ConversationId, text: request.Text, replyMarkup: keyboard,
+        await _botClient.SendMessage(chatId: request.ConversationId, text: request.Text, replyMarkup: keyboard,
             cancellationToken: cancellationToken);
     }
 }

@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.BotRequests;
 using Moneo.Chat.Models;
-using Moneo.Core;
+using Moneo.Common;
 
 namespace Moneo.Chat
 {
