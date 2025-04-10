@@ -96,7 +96,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
         }
     }
 
-    public Task StartReceivingAsync(CancellationToken cancellationToken = default)
+    public async Task StartReceivingAsync(CancellationToken cancellationToken = default)
     {
         _isUsingWebhook = false;
         
@@ -107,10 +107,10 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
             AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
             DropPendingUpdates = true
         };
+        await _botClient.DeleteWebhook(cancellationToken: cancellationToken);
+        
         _botClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, options, cancellationToken);
         IsActive = true;
-
-        return Task.CompletedTask;
     }
 
     public async Task StartReceivingAsync(string callbackUrl, CancellationToken cancellationToken = default)
