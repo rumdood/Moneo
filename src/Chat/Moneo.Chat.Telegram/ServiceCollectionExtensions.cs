@@ -29,6 +29,11 @@ public static class ServiceCollectionExtensions
         //  https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests
         services.AddHttpClient("tgclient")
             .AddTypedClient<ITelegramBotClient>(httpClient => new TelegramBotClient(options.BotToken, httpClient));
+
+        if (options.HostedServiceFlag)
+        {
+            services.AddHostedService<TelegramChatBackgroundService>();
+        }
         
         return services;
     }

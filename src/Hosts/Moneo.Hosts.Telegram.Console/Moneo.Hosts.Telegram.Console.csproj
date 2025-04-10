@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Chat\Moneo.Chat.Contracts\Moneo.Chat.Contracts.csproj" />
+      <ProjectReference Include="..\..\Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj" />
+      <ProjectReference Include="..\..\Chat\Moneo.Chat\Moneo.Chat.csproj" />
+      <ProjectReference Include="..\..\Moneo.Common\Moneo.Common.csproj" />
+      <ProjectReference Include="..\..\Moneo.Web.Common\Moneo.Web.Common.csproj" />
+      <ProjectReference Include="..\..\TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>
