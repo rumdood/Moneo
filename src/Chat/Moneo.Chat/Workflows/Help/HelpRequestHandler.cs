@@ -5,24 +5,24 @@ namespace Moneo.Chat.Workflows.Chitchat;
 
 internal partial class HelpRequestHandler : IRequestHandler<HelpRequest, MoneoCommandResult>
 {
-    public async Task<MoneoCommandResult> Handle(HelpRequest request, CancellationToken cancellationToken)
+    public Task<MoneoCommandResult> Handle(HelpRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(request.UserText))
         {
-            return new MoneoCommandResult()
+            return Task.FromResult(new MoneoCommandResult()
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.WorkflowCompleted,
-                UserMessageText = HelpResponseFactory.DefaultHelpResponse
-            };
+                UserMessageText = HelpResponseFactory.GetDefaultHelpResponse()
+            });
         }
 
         var responseText = HelpResponseFactory.GetHelpResponse(request.UserText.Replace("/", ""));
-        return new MoneoCommandResult()
+        return Task.FromResult(new MoneoCommandResult()
         {
             ResponseType = ResponseType.Text,
             Type = ResultType.WorkflowCompleted,
-            UserMessageText = responseText ?? HelpResponseFactory.DefaultHelpResponse
-        };
+            UserMessageText = responseText ?? HelpResponseFactory.GetDefaultHelpResponse()
+        });
     }
 }

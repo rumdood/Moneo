@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -16,7 +17,7 @@ public class UserRequestGenerators : IIncrementalGenerator
         public const string UserCommandArgumentAttribute = "UserCommandArgument";
         public const string UserCommandHelpText = "HelpDescription";
     }
-    
+
     private record struct UserRequestInfo
     {
         public string Namespace { get; set; }
@@ -33,14 +34,33 @@ public class UserRequestGenerators : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        IncrementalValuesProvider<UserRequestInfo?> requestsProvider = context.SyntaxProvider
+        // Collect user requests from the current project
+        var requestsProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (s, _) => IsClassDeclarationSyntaxWithBaseList(s),
                 transform: static (ctx, _) => GetUserRequestInfo(ctx))
             .Where(m => m is not null);
-        
-        var userRequests = requestsProvider.Collect();
-        
+
+        // Collect user requests from referenced assemblies
+        var referencedRequestsProvider = context.CompilationProvider
+            .SelectMany((compilation, _) => GetAllUserRequestBaseTypes(compilation)
+                .Select(GetUserRequestInfoFromSymbol));
+
+        // Combine both sources
+        var allRequestsProvider = requestsProvider
+            .Collect()
+            .Combine(referencedRequestsProvider.Collect())
+            .SelectMany((pair, _) => pair.Left.Concat(pair.Right))
+            .Where(m => m is not null);
+
+        var currentProjectRequestsProvider = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (s, _) => IsClassDeclarationSyntaxWithBaseList(s),
+                transform: static (ctx, _) => GetUserRequestInfo(ctx))
+            .Where(m => m is not null);
+
+        // Generate source code
+        var userRequests = currentProjectRequestsProvider.Collect(); // allRequestsProvider.Collect();
         context.RegisterSourceOutput(userRequests, static (ctx, regs) =>
         {
             foreach (var userRequest in regs)
@@ -49,18 +69,81 @@ public class UserRequestGenerators : IIncrementalGenerator
                 {
                     continue;
                 }
-                
+
                 ctx.AddSource(
-                    $"{userRequest.Value.Name}WithCommandKey.g.cs", 
+                    $"{userRequest.Value.Name}WithCommandKey.g.cs",
                     SourceText.From(GetUserRequestWithCommandKey(userRequest.Value), Encoding.UTF8));
             }
+            /*
             ctx.AddSource(
-                "UserRequestFactory.g.cs", 
+                "UserRequestFactory.g.cs",
                 SourceText.From(GetUserRequestFactoryPartialClass(regs), Encoding.UTF8));
             ctx.AddSource(
-                "HelpResponseFactory.g.cs", 
+                "HelpResponseFactory.g.cs",
                 SourceText.From(GetHelpRequestFactoryPartialClass(regs), Encoding.UTF8));
+            */
         });
+    }
+    
+    private static UserRequestInfo? GetUserRequestInfoFromSymbol(INamedTypeSymbol type)
+    {
+        var userCommandAttribute = GetUserCommandAttributeValue(type);
+
+        return new UserRequestInfo
+        {
+            Name = type.Name,
+            CommandKey = userCommandAttribute.UserCommand,
+            HelpText = string.IsNullOrEmpty(userCommandAttribute.HelpText) ? "" : GetHelpText(type, userCommandAttribute.HelpText!),
+            Namespace = type.ContainingNamespace.ToDisplayString()
+        };
+    }
+
+    private static IEnumerable<INamedTypeSymbol> GetAllUserRequestBaseTypes(Compilation compilation)
+    {
+        var userRequestBaseType = compilation.GetTypeByMetadataName("Moneo.Chat.UserRequestBase");
+        if (userRequestBaseType == null)
+        {
+            yield break;
+        }
+
+        foreach (var assembly in compilation.ReferencedAssemblyNames)
+        {
+            var referencedAssembly = compilation.References
+                .Select(compilation.GetAssemblyOrModuleSymbol)
+                .OfType<IAssemblySymbol>()
+                .FirstOrDefault(a => a.Identity.Name == assembly.Name);
+
+            if (referencedAssembly == null)
+            {
+                continue;
+            }
+
+            foreach (var type in GetAllTypesInNamespace(referencedAssembly.GlobalNamespace))
+            {
+                if (type.BaseType?.Equals(userRequestBaseType, SymbolEqualityComparer.Default) == true)
+                {
+                    yield return type;
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<INamedTypeSymbol> GetAllTypesInNamespace(INamespaceSymbol namespaceSymbol)
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamedTypeSymbol typeSymbol)
+            {
+                yield return typeSymbol;
+            }
+            else if (member is INamespaceSymbol childNamespace)
+            {
+                foreach (var nestedType in GetAllTypesInNamespace(childNamespace))
+                {
+                    yield return nestedType;
+                }
+            }
+        }
     }
 
     private static string GetHelpRequestFactoryPartialClass(ImmutableArray<UserRequestInfo?> regs)
@@ -69,12 +152,12 @@ public class UserRequestGenerators : IIncrementalGenerator
             .Select(r => r!.Value)
             .OrderBy(r => r.CommandKey)
             .ToImmutableArray();
-        
+
         if (userRequests.Length == 0)
         {
             return string.Empty;
         }
-        
+
         var defaultHelpText = new StringBuilder();
         defaultHelpText.AppendLine("Available Commands");
         defaultHelpText.AppendLine("------------------");
@@ -123,6 +206,18 @@ public class UserRequestGenerators : IIncrementalGenerator
         builder.AppendLine($"public partial class {userRequest.Name}");
         builder.AppendLine("{");
         builder.AppendLine($"    public const string {AttributeKeys.CommandKey} = \"{userRequest.CommandKey}\";");
+        builder.AppendLine();
+        builder.AppendLine("    public static void Register()");
+        builder.AppendLine("    {");
+        builder.AppendLine($"        UserRequestFactory.RegisterCommand({AttributeKeys.CommandKey}, (id, args) => new {userRequest.Name}(id, args));");
+        
+        if (!string.IsNullOrEmpty(userRequest.HelpText))
+        {
+            builder.AppendLine(
+                $"        HelpResponseFactory.RegisterCommand({AttributeKeys.CommandKey}, @\"{userRequest.HelpText}\");");
+        }
+        
+        builder.AppendLine("    }");
         builder.AppendLine("}");
         builder.AppendLine();
         return builder.ToString();
@@ -145,7 +240,7 @@ public class UserRequestGenerators : IIncrementalGenerator
         {
             return null;
         }
-        
+
         var userCommandAttribute = GetUserCommandAttributeValue(type);
 
         return new UserRequestInfo
@@ -156,12 +251,12 @@ public class UserRequestGenerators : IIncrementalGenerator
             Namespace = type.ContainingNamespace.ToDisplayString()
         };
     }
-    
+
     private static string GetHelpText(INamedTypeSymbol userRequest, string requestHelpText)
     {
         var helpTextBuilder = new StringBuilder();
         helpTextBuilder.AppendLine(requestHelpText);
-        
+
         foreach (var member in userRequest.GetMembers().Where(x => x.Kind == SymbolKind.Property))
         {
             var propertySymbol = (IPropertySymbol)member;
@@ -196,7 +291,7 @@ public class UserRequestGenerators : IIncrementalGenerator
 
         return helpTextBuilder.ToString();
     }
-    
+
     private static (string? LongName, string? ShortName, string? HelpText, bool IsRequired, bool IsHidden)?
         GetUserCommandArgumentAttributeValue(ISymbol symbol)
     {
@@ -223,7 +318,7 @@ public class UserRequestGenerators : IIncrementalGenerator
 
         return null;
     }
-    
+
     private static UserCommandAttributeData GetUserCommandAttributeValue(ISymbol symbol)
     {
         var attribute = symbol.GetAttributes()
@@ -262,18 +357,19 @@ public class UserRequestGenerators : IIncrementalGenerator
         sourceBuilder.AppendLine();
         sourceBuilder.AppendLine("public static partial class UserRequestFactory");
         sourceBuilder.AppendLine("{");
-        sourceBuilder.AppendLine("  private static void InitializeLookup()");
+        sourceBuilder.AppendLine("  static UserRequestFactory()");
         sourceBuilder.AppendLine("  {");
-        
+
         // foreach loop here
         foreach (var userRequest in requests)
         {
-            sourceBuilder.AppendLine($"    _lookup[{userRequest.Name}.CommandKey] = (id, args) => new {userRequest.Name}(id, args);");
+            sourceBuilder.AppendLine($"    RegisterCommand({userRequest.Name}.CommandKey, (id, args) => new {userRequest.Name}(id, args));");
+            //sourceBuilder.AppendLine($"    _lookup[{userRequest.Name}.CommandKey] = (id, args) => new {userRequest.Name}(id, args);");
         }
-        
+
         sourceBuilder.AppendLine("  }");
         sourceBuilder.AppendLine("}");
-        
+
         return sourceBuilder.ToString();
     }
 }

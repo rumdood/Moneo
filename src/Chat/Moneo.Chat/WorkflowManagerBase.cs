@@ -1,14 +1,22 @@
 ﻿using MediatR;
+using Moneo.Chat.Commands;
 
-namespace Moneo.Chat
+namespace Moneo.Chat;
+
+public interface IWorkflowManagerWithContinuation
 {
-    public abstract class WorkflowManagerBase
-    {
-        protected readonly IMediator Mediator;
+    Task<MoneoCommandResult> ContinueWorkflowAsync(
+        long chatId, 
+        string userInput, 
+        CancellationToken cancellationToken = default);
+}
 
-        protected WorkflowManagerBase(IMediator mediator)
-        {
-            Mediator = mediator;
-        }
+public abstract class WorkflowManagerBase
+{
+    protected readonly IMediator Mediator;
+
+    protected WorkflowManagerBase(IMediator mediator)
+    {
+        Mediator = mediator;
     }
 }
