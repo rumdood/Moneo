@@ -1,4 +1,5 @@
 using MediatR;
+using Moneo.Chat.CommandRegistration;
 using Moneo.Chat.Commands;
 using Moq;
 using Moneo.Chat.Workflows;
@@ -23,14 +24,15 @@ public class UnitTest1
                     UserMessageText = "Please select a task:",
                     MenuOptions = ["Option 1", "Option 2"]
                 });
+
+        CommandRegistrar.RegisterCommands(new MoneoChatCommandConfiguration
+        {
+            UserRequestsToRegister = { typeof(CompleteTaskRequest) }
+        });
         
         long conversationId = 1;
         var userString = "/complete";
         var context = CommandContext.Get(1, ChatState.Waiting, userString);
-        
-        var parts = userString.Split(' ');
-        context.CommandKey = parts[0].ToLowerInvariant();
-        context.Args = parts[1..];
 
         var request = UserRequestFactory.GetUserRequest(context) as CompleteTaskRequest;
 

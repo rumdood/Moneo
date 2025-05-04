@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using Moneo.Chat.CommandRegistration;
 using Moneo.Chat.Workflows;
+using Moneo.Chat.Workflows.Chitchat;
 using Moneo.Chat.Workflows.CreateCronSchedule;
 using Moneo.Common;
 
@@ -28,23 +30,29 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection AddChatAdapter<TChatAdapter>(this IServiceCollection services)
         where TChatAdapter : class, IChatAdapter
     {
-        services.AddSingleton<IChatAdapter, TChatAdapter>();
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblies(typeof(CompleteTaskRequest).Assembly, typeof(TChatAdapter).Assembly);
-        });
-
-        return services;
+        var options = new ChatAdapterOptions();
+        return services.AddChatAdapter<TChatAdapter>(options);
     }
     
     public static IServiceCollection AddChatAdapter<TChatAdapter>(this IServiceCollection services,
         ChatAdapterOptions options) where TChatAdapter : class, IChatAdapter
     {
-        services.AddChatAdapter<TChatAdapter>();
+        // for now let's automatically add the default commandset
+        options.RegisterUserRequestsFromAssemblyContaining<HelpRequest>();
+        
+        services.AddSingleton<IChatAdapter, TChatAdapter>();
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblies(typeof(TChatAdapter).Assembly);
+            cfg.RegisterServicesFromAssemblies(options.ChatCommandAssemblies.ToArray());
+        });
+        
         if (!options.IsValid())
         {
             throw new InvalidOperationException("Invalid ChatManagerOptions");
         }
+
+        CommandRegistrar.RegisterCommands(options);
         
         if (options.InMemoryStateManagementEnabled)
         {
@@ -79,7 +87,7 @@ public static partial class ServiceCollectionExtensions
     }
 }
 
-public class ChatAdapterOptions
+public class ChatAdapterOptions : MoneoChatCommandConfiguration
 {
     public bool InMemoryStateManagementEnabled { get; private set; } = true;
     public string DefaultTimeZone { get; private set; } = "UTC";
