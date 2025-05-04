@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="appsettings.local.json" />
+      <None Remove="appsettings.local.json" Condition="Exists('appsettings.Development.json')" />
       <Content Include="appsettings.local.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
