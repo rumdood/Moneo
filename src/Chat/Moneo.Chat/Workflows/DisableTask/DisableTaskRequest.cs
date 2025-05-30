@@ -12,10 +12,10 @@ public partial class DisableTaskRequest : UserRequestBase
     [UserCommandArgument(LongName = nameof(TaskName), HelpText = @"Name of the task to disable")]
     public string TaskName { get; private set; }
 
-    public DisableTaskRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public DisableTaskRequest(CommandContext context) : base(context)
     {
-        TaskName = args.Length > 0
-            ? string.Join(" ", args)
+        TaskName = context.Args.Length > 0
+            ? string.Join(" ", context.Args)
             : "";
     }
 

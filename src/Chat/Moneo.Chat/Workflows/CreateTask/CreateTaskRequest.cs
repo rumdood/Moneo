@@ -13,10 +13,10 @@ public partial class CreateTaskRequest : UserRequestBase
     [UserCommandArgument(LongName = nameof(TaskName), HelpText = @"Optional name of the task to create")]
     public string TaskName { get; private set; }
 
-    public CreateTaskRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public CreateTaskRequest(CommandContext context) : base(context)
     {
-        TaskName = args.Length > 0
-            ? string.Join(" ", args)
+        TaskName = context.Args.Length > 0
+            ? string.Join(" ", context.Args)
             : "";
     }
 }

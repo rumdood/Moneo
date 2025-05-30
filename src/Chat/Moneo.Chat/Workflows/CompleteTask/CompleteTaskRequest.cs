@@ -15,10 +15,10 @@ You do not need to label the argument. '/complete my task' will work fine.",
         IsRequired = true)]
     public string TaskName { get; private set; }
 
-    public CompleteTaskRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public CompleteTaskRequest(CommandContext context) : base(context)
     {
-        TaskName = args.Length > 0
-            ? string.Join(" ", args)
+        TaskName = context.Args.Length > 0
+            ? string.Join(" ", context.Args)
             : "";
     }
 

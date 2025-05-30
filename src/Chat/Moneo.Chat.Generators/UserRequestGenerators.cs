@@ -210,7 +210,7 @@ public class UserRequestGenerators : IIncrementalGenerator
         builder.AppendLine();
         builder.AppendLine("    public static void Register()");
         builder.AppendLine("    {");
-        builder.AppendLine($"        Moneo.Chat.UserRequestFactory.RegisterCommand({AttributeKeys.CommandKey}, (id, user, args) => new {userRequest.Name}(id, user, args));");
+        builder.AppendLine($"        Moneo.Chat.UserRequestFactory.RegisterCommand({AttributeKeys.CommandKey}, (context) => new {userRequest.Name}(context));");
         
         if (!string.IsNullOrEmpty(userRequest.HelpText))
         {
@@ -396,8 +396,7 @@ public class UserRequestGenerators : IIncrementalGenerator
         // foreach loop here
         foreach (var userRequest in requests)
         {
-            sourceBuilder.AppendLine($"    RegisterCommand({userRequest.Name}.CommandKey, (id, args) => new {userRequest.Name}(id, args));");
-            //sourceBuilder.AppendLine($"    _lookup[{userRequest.Name}.CommandKey] = (id, args) => new {userRequest.Name}(id, args);");
+            sourceBuilder.AppendLine($"    RegisterCommand({userRequest.Name}.CommandKey, (context) => new {userRequest.Name}(context));");
         }
 
         sourceBuilder.AppendLine("  }");

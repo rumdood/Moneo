@@ -25,13 +25,13 @@ public static class CommandContextFactory
         CommandStateRegistry.RegisterCommand(state, commandKey);
     }
     
-    public static CommandContext BuildCommandContext(long conversationId, long forUserId, ChatState state, string text)
+    public static CommandContext BuildCommandContext(long conversationId, ChatUser? user, ChatState state, string text)
     {
         var context = new CommandContext
         {
             ConversationId = conversationId,
             CurrentState = state,
-            ForUserId = forUserId
+            User = user
         };
 
         if (text.StartsWith('/'))
@@ -56,7 +56,7 @@ public class CommandContext
     public string CommandKey { get; set; } = default!;
     public string[] Args { get; set; } = [];
     public ChatState CurrentState { get; set; }
-    public long ForUserId { get; set; } = 0;
+    public ChatUser? User { get; set; }
 
     internal CommandContext()
     {

@@ -9,9 +9,9 @@ public partial class CreateCronContinuationRequest : UserRequestBase
 {
     public string Text { get; }
     
-    public CreateCronContinuationRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public CreateCronContinuationRequest(CommandContext context) : base(context)
     {
-        Text = string.Join(' ', args);
+        Text = string.Join(' ', context.Args);
     }
 
     public CreateCronContinuationRequest(long conversationId, ChatUser? user, string text) : base(conversationId, user, text)
@@ -31,5 +31,5 @@ internal class CreateCronContinuationRequestHandler : IRequestHandler<CreateCron
 
     public Task<MoneoCommandResult> Handle(CreateCronContinuationRequest request,
         CancellationToken cancellationToken)
-        => _manager.ContinueWorkflowAsync(request.ConversationId, request.ForUserId, request.Text);
+        => _manager.ContinueWorkflowAsync(request.Context, request.Text, cancellationToken);
 }

@@ -87,13 +87,13 @@ internal class ChatManager : IChatManager
         return _chatStateRepository.GetChatStateAsync(conversationId);
     }
 
-    private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, ChatUser? user, string? text)
+    private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, ChatUser? user, string? text, CancellationToken cancellationToken = default)
     {
         var state = await _chatStateRepository.GetChatStateAsync(conversationId);
         
         _logger.LogDebug("Current Chat State for conversation {@Conversation} is {@State}", conversationId, state);
 
-        var context = CommandContextFactory.BuildCommandContext(conversationId, user?.Id ?? 0, state, text!);
+        var context = CommandContextFactory.BuildCommandContext(conversationId, user, state, text!);
 
         try
         {
@@ -101,7 +101,7 @@ internal class ChatManager : IChatManager
             
             if (userRequest is IRequest<MoneoCommandResult> request)
             {
-                return await _mediator.Send(request);
+                return await _mediator.Send(request, cancellationToken);
             }
         } catch (Exception ex) {
             _logger.LogError(ex, "Failed to create user request for command: {Command}", text);

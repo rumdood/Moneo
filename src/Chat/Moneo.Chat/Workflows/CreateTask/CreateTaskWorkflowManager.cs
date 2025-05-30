@@ -42,11 +42,11 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
         });
     }
     
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string? taskName = null, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string? taskName = null, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new CreateTaskWorkflowStartedEvent(chatId), cancellationToken);
+        await _mediator.Send(new CreateTaskWorkflowStartedEvent(cmdContext.ConversationId), cancellationToken);
         
-        if (_chatStates.ContainsKey(new ConversationUserKey(chatId, forUserId)))
+        if (_chatStates.ContainsKey(cmdContext.GenerateConversationUserKey()))
         {
             // can't create a task while creating another task
             return new MoneoCommandResult
@@ -57,16 +57,16 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
             };
         }
         
-        var machine = new TaskCreationStateMachine(chatId, forUserId, taskName);
+        var machine = new TaskCreationStateMachine(cmdContext.ConversationId, cmdContext.User?.Id ?? 0, taskName);
         
-        _chatStates.Add(new ConversationUserKey(chatId, forUserId), machine);
+        _chatStates.Add(cmdContext.GenerateConversationUserKey(), machine);
 
         return await _innerWorkflowManager.StartWorkflowAsync(machine, cancellationToken);
     }
 
-    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> ContinueWorkflowAsync(CommandContext cmdContext, string userInput, CancellationToken cancellationToken = default)
     {
-        if (!_chatStates.TryGetValue(new ConversationUserKey(chatId, forUserId), out var machine))
+        if (!_chatStates.TryGetValue(cmdContext.GenerateConversationUserKey(), out var machine))
         {
             return new MoneoCommandResult
             {

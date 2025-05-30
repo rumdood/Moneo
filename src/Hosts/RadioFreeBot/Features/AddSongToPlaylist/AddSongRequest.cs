@@ -19,12 +19,12 @@ ex: /add Jump by Van Halen")]
 
     internal string SongId { get; init; } = "";
     
-    public AddSongRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public AddSongRequest(CommandContext context) : base(context)
     {
-        if (args.Length == 0)
-            throw new ArgumentException("SongQuery cannot be null or empty", nameof(args));
+        if (context.Args.Length == 0)
+            throw new ArgumentException("SongQuery cannot be null or empty", nameof(context));
         
-        SongQuery = string.Join(" ", args);
+        SongQuery = string.Join(" ", context.Args);
     }
     
     public AddSongRequest(long conversationId, ChatUser? user, string? songQuery) : base(conversationId, user)
@@ -32,9 +32,9 @@ ex: /add Jump by Van Halen")]
         SongQuery = songQuery;
     }
 
-    internal static AddSongRequest CreateForSongId(long conversationId, ChatUser? user, string songId)
+    internal static AddSongRequest CreateForSongId(CommandContext context, string songId)
     {
-        return new AddSongRequest(conversationId,  user, "")
+        return new AddSongRequest(context)
         {
             SongId = songId
         };

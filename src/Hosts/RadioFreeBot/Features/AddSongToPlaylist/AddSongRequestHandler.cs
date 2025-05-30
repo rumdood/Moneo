@@ -18,10 +18,10 @@ internal sealed class AddSongRequestHandler : IRequestHandler<AddSongRequest, Mo
     {
         if (!string.IsNullOrEmpty(request.SongId))
         {
-            return _addSongByIdWorkflowManager.StartWorkflowAsync(request.ConversationId, request.ForUserId, request.SongId, cancellationToken);
+            return _addSongByIdWorkflowManager.StartWorkflowAsync(request.Context, request.SongId, cancellationToken);
         }
         
-        return _addSongByQueryWorkflowManager.StartWorkflowAsync(request.ConversationId, request.ForUserId, request.PlaylistId, request.SongQuery,
+        return _addSongByQueryWorkflowManager.StartWorkflowAsync(request.Context, request.PlaylistId, request.SongQuery,
             cancellationToken);
     }
 }

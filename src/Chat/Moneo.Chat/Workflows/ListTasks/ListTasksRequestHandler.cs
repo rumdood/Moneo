@@ -18,7 +18,7 @@ internal class ListTasksRequestHandler : IRequestHandler<ListTasksRequest, Moneo
     public async Task<MoneoCommandResult> Handle(ListTasksRequest request, CancellationToken cancellationToken)
     {
         var result = await _taskManagerClient.GetTasksForConversationAsync(
-            request.ConversationId,
+            request.Context.ConversationId,
             new PageOptions(0, 100), 
             cancellationToken);
 

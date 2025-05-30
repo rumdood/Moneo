@@ -15,9 +15,9 @@ public partial class FindSongRequest : UserRequestBase
         HelpText = @"The name of the song to find.")]
     public string SongName { get; }
     
-    public FindSongRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public FindSongRequest(CommandContext context) : base(context)
     {
-        SongName = args.Length > 0 ? string.Join(" ", args) : "";
+        SongName = context.Args.Length > 0 ? string.Join(" ", context.Args) : "";
     }
     
     public FindSongRequest(long conversationId, ChatUser? user, string? songName) : base(conversationId, user, songName)
@@ -48,7 +48,7 @@ internal sealed class FindSongHandler : IRequestHandler<FindSongRequest, MoneoCo
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText = "Sorry, I couldn't find what you were looking for. Are you sure the name is correct? You can also try adding in the name of the artist or album."
+                UserMessageText = $"Sorry @{request.Context.User?.Username}, I couldn't find what you were looking for. Are you sure the name is correct? You can also try adding in the name of the artist or album."
             };
         }
 
@@ -57,7 +57,7 @@ internal sealed class FindSongHandler : IRequestHandler<FindSongRequest, MoneoCo
         {
             ResponseType = ResponseType.Text,
             Type = ResultType.WorkflowCompleted,
-            UserMessageText = $"I found the following songs:\n{string.Join("\n", songLinks)}"
+            UserMessageText = $"Hey @{request.Context.User?.Username}, I found the following songs:\n{string.Join("\n", songLinks)}"
         };
     }
 }

@@ -1,6 +1,9 @@
 using MediatR;
+using Moneo.Chat;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Workflows;
+using Moneo.Common;
+using RadioFreeBot.Models;
 using RadioFreeBot.ResourceAccess;
 using RadioFreeBot.ResourceAccess.Entities;
 
@@ -9,7 +12,7 @@ namespace RadioFreeBot.Features.AddSongToPlaylist;
 public interface IAddSongByIdWorkflowManager
 {
     // Define methods for managing the workflow of adding a song by ID
-    Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string songId, CancellationToken cancellationToken = default);
+    Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string songId, CancellationToken cancellationToken = default);
 }
 
 [MoneoWorkflow]
@@ -34,7 +37,7 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
         return $"I couldn't add that song to the playlist. The reason was something to do with '{errorMessage}'";
     }
 
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string songId, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string songId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(songId))
         {
@@ -46,7 +49,7 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
             };
         }
 
-        var playlist = _context.Playlists.FirstOrDefault(pl => pl.ConversationId == chatId);
+        var playlist = _context.Playlists.FirstOrDefault(pl => pl.ConversationId == cmdContext.ConversationId);
         
         if (playlist == null)
         {
@@ -60,19 +63,43 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
         
         // Attempt to add the song to the playlist using the YouTube Music proxy client
         var result = await _youTubeMusicProxyClient.AddSongToPlaylistAsync(playlist.ExternalId, songId, cancellationToken);
+        var user = cmdContext.User is not null ? "@" + cmdContext.User.Username : "you";
 
-        return result.IsSuccess
-            ? new MoneoCommandResult
+        if (result.IsSuccess)
+        {
+            // TODO: Change the API this calls so that it returns the song info directly
+            var songInfo = await GetSongInfoFromPlaylist(playlist.ExternalId, songId, cancellationToken);
+            if (songInfo is not null)
             {
-                ResponseType = ResponseType.Text,
-                Type = ResultType.WorkflowCompleted,
-                UserMessageText = $"Song with ID {songId} has been successfully added to the playlist."
+                return new MoneoCommandResult
+                {
+                    ResponseType = ResponseType.Text,
+                    Type = ResultType.WorkflowCompleted,
+                    UserMessageText = $"I added \"{songInfo.Title}\" to the playlist for {user}! 🎶",
+                };
             }
-            : new MoneoCommandResult
+
+            return new MoneoCommandResult()
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText = GetResponseTextFromErrorMessage(result.Message)
+                UserMessageText =
+                    $"I added the song to the playlist for {user}, but I couldn't retrieve the song details. Please check the playlist manually."
             };
+        }
+
+        return new MoneoCommandResult
+        {
+            ResponseType = ResponseType.Text,
+            Type = ResultType.Error,
+            UserMessageText = GetResponseTextFromErrorMessage(result.Message)
+        };
+
+        async Task<SongItem?> GetSongInfoFromPlaylist(string playlistId, string songId,
+            CancellationToken cancellationToken = default)
+        {
+            var getSongResult = await _youTubeMusicProxyClient.GetSongFromPlaylistAsync(playlistId, songId, cancellationToken);
+            return getSongResult.Data;
+        }
     }
 }

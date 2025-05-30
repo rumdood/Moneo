@@ -9,6 +9,20 @@ public partial class CreateCronRequest : UserRequestBase
 {
     public string TaskName { get; init; }
     public ChatState CalledFromState { get; init; }
+
+    public CreateCronRequest(CommandContext context) : base(context)
+    {
+        CalledFromState = context.CurrentState;
+        
+        if (CalledFromState != ChatState.CreateTask && CalledFromState != ChatState.ChangeTask)
+        {
+            throw new ArgumentException("Invalid chat state for CRON creation");
+        }
+        
+        TaskName = context.Args.Length > 0
+            ? string.Join(" ", context.Args)
+            : "";
+    }
     
     public CreateCronRequest(long conversationId, ChatUser? user, ChatState calledFromState, params string[] args) : base(conversationId, user, args)
     {
@@ -51,6 +65,6 @@ internal class CreateCronRequestHandler : IRequestHandler<CreateCronRequest, Mon
     
     public async Task<MoneoCommandResult> Handle(CreateCronRequest request, CancellationToken cancellationToken)
     {
-        return await _manager.StartWorkflowAsync(request.ConversationId, request.ForUserId, request.CalledFromState, cancellationToken);
+        return await _manager.StartWorkflowAsync(request.Context, cancellationToken);
     }
 }

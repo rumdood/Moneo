@@ -1,4 +1,5 @@
 using MediatR;
+using Moneo.Chat;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Models;
 using Moneo.Chat.Workflows;
@@ -13,7 +14,7 @@ public class ChitChatWorkflowManager : WorkflowManagerBase, IChitChatWorkflowMan
     {
     }
 
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string userInput, CancellationToken cancellationToken = default)
     {
         // we want to check to see if the user has sent us a link to a YouTube Music video
         // the format for such a link is: https://music.youtube.com/watch?v=VIDEO_ID
@@ -26,7 +27,7 @@ public class ChitChatWorkflowManager : WorkflowManagerBase, IChitChatWorkflowMan
             {
                 var response =
                     await Mediator.Send(
-                        AddSongToPlaylist.AddSongRequest.CreateForSongId(chatId, new ChatUser(forUserId, ""), videoId),
+                        AddSongToPlaylist.AddSongRequest.CreateForSongId(cmdContext, videoId),
                         cancellationToken);
                 return response;
             }

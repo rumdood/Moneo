@@ -14,7 +14,7 @@ namespace Moneo.Chat.Workflows.ChangeTask
 
         public async Task<MoneoCommandResult> Handle(ChangeTaskRequest request, CancellationToken cancellationToken)
         {
-            return await _manager.StartWorkflowAsync(request.ConversationId, request.ForUserId, request.TaskName, cancellationToken);
+            return await _manager.StartWorkflowAsync(request.Context, request.TaskName, cancellationToken);
         }
     }
 }

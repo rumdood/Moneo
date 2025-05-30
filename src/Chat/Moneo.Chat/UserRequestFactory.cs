@@ -4,9 +4,9 @@ namespace Moneo.Chat;
 
 public static class UserRequestFactory
 {
-    private static readonly Dictionary<string, Func<long, ChatUser?, string[], IUserRequest>> Lookup = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, Func<CommandContext, IUserRequest>> Lookup = new(StringComparer.OrdinalIgnoreCase);
     
-    public static void RegisterCommand(string commandKey, Func<long, ChatUser?, string[], IUserRequest> constructor)
+    public static void RegisterCommand(string commandKey, Func<CommandContext, IUserRequest> constructor)
     {
         Lookup.TryAdd(commandKey, constructor);
     }
@@ -15,7 +15,7 @@ public static class UserRequestFactory
     {
         return !Lookup.TryGetValue(context.CommandKey, out var constructor)
             ? null
-            : constructor.Invoke(context.ConversationId, new ChatUser(context.ForUserId, ""), context.Args);
+            : constructor.Invoke(context);
     }
 
     public static string? GetPotentialUserCommand(string key)

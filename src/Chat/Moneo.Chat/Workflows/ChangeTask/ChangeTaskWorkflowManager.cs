@@ -68,9 +68,9 @@ public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflo
         });
     }
     
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string? taskName = null, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string? taskName = null, CancellationToken cancellationToken = default)
     {
-        if (_chatStates.ContainsKey(new ConversationUserKey(chatId, forUserId)))
+        if (_chatStates.ContainsKey(cmdContext.GenerateConversationUserKey()))
         {
             // can't create a task while creating another task
             return new MoneoCommandResult
@@ -91,10 +91,10 @@ public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflo
             };
         }
         
-        await _mediator.Send(new ChangeTaskWorkflowStartedEvent(chatId), cancellationToken);
+        await _mediator.Send(new ChangeTaskWorkflowStartedEvent(cmdContext.ConversationId), cancellationToken);
 
         var searchResult = await _taskResourceManager.GetTasksByKeywordSearchAsync(
-            chatId, 
+            cmdContext.ConversationId, 
             taskName, 
             new PageOptions(0, 100), cancellationToken);
         
@@ -129,15 +129,15 @@ public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflo
                     MenuOptions = tasks.Select(t => $"/change {t.Name}").ToHashSet()
                 };
             default:
-                var machine = new TaskChangeStateMachine(chatId, new MoneoTaskDraft(forUserId, tasks.Single()));
-                _chatStates.Add(new ConversationUserKey(chatId, forUserId), machine);
+                var machine = new TaskChangeStateMachine(cmdContext.ConversationId, new MoneoTaskDraft(cmdContext.User?.Id ?? 0, tasks.Single()));
+                _chatStates.Add(cmdContext.GenerateConversationUserKey(), machine);
                 return await _innerWorkflowManager.StartWorkflowAsync(machine, cancellationToken);
         }
     }
 
-    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> ContinueWorkflowAsync(CommandContext cmdContext, string userInput, CancellationToken cancellationToken = default)
     {
-        if (!_chatStates.TryGetValue(new ConversationUserKey(chatId, forUserId), out var machine))
+        if (!_chatStates.TryGetValue(cmdContext.GenerateConversationUserKey(), out var machine))
         {
             return new MoneoCommandResult
             {

@@ -49,3 +49,9 @@ internal class CronStateMachineRepository : IWorkflowStateMachineRepository<Cron
 
     public void Remove(ConversationUserKey key) => _chatStates.Remove(key);
 }
+
+internal static class CommandContextExtensions
+{
+    public static ConversationUserKey GenerateConversationUserKey(this CommandContext context)
+        => new ConversationUserKey(context.ConversationId, context.User?.Id ?? 0);
+}

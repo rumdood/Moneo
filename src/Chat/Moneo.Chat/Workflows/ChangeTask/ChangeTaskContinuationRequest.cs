@@ -9,9 +9,9 @@ public partial class ChangeTaskContinuationRequest: UserRequestBase
 {
     public string Text { get; }
 
-    public ChangeTaskContinuationRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public ChangeTaskContinuationRequest(CommandContext context) : base(context)
     {
-        Text = string.Join(' ', args);
+        Text = string.Join(' ', context.Args);
     }
 
     public ChangeTaskContinuationRequest(long conversationId, ChatUser? user, string text) : base(conversationId, user, text)
@@ -24,6 +24,6 @@ internal class ChangeTaskContinuationRequestHandler(IChangeTaskWorkflowManager m
     : IRequestHandler<ChangeTaskContinuationRequest, MoneoCommandResult>
 {
     public Task<MoneoCommandResult> Handle(ChangeTaskContinuationRequest request, CancellationToken cancellationToken)
-        => manager.ContinueWorkflowAsync(request.ConversationId, request.ForUserId, request.Text, cancellationToken);
+        => manager.ContinueWorkflowAsync(request.Context, request.Text, cancellationToken);
 }
 

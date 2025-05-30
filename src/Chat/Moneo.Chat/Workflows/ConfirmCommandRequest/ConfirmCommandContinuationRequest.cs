@@ -9,9 +9,9 @@ public partial class ConfirmCommandContinuationRequest : UserRequestBase
 {
     public string Text { get; }
 
-    public ConfirmCommandContinuationRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public ConfirmCommandContinuationRequest(CommandContext context) : base(context)
     {
-        Text = string.Join(' ', args);
+        Text = string.Join(' ', context.Args);
     }
 
     public ConfirmCommandContinuationRequest(long conversationId, ChatUser? user, string text) : base(conversationId, user, text)
@@ -30,5 +30,5 @@ internal class ConfirmCommandContinuationRequestHandler : IRequestHandler<Confir
     }
 
     public Task<MoneoCommandResult> Handle(ConfirmCommandContinuationRequest request, CancellationToken cancellationToken)
-        => _manager.ContinueWorkflowAsync(request.ConversationId, request.ForUserId, request.Text, cancellationToken);
+        => _manager.ContinueWorkflowAsync(request.Context, request.Text, cancellationToken);
 }

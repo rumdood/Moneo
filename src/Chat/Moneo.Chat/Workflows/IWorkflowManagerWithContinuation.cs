@@ -5,8 +5,7 @@ namespace Moneo.Chat.Workflows;
 public interface IWorkflowManagerWithContinuation
 {
     Task<MoneoCommandResult> ContinueWorkflowAsync(
-        long chatId, 
-        long forUserId,
+        CommandContext context,
         string userInput, 
         CancellationToken cancellationToken = default);
 }

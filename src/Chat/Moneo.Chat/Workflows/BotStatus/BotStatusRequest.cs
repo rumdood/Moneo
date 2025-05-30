@@ -8,7 +8,7 @@ namespace Moneo.Chat.Workflows.BotStatus
     [UserCommand(CommandKey = "/botstatus", HelpDescription = @"Gets the status of the bot")]
     public partial class BotStatusRequest : UserRequestBase
     {
-        public BotStatusRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+        public BotStatusRequest(CommandContext context) : base(context)
         {
         }
     }

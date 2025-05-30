@@ -1,9 +1,10 @@
 using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 
 namespace Moneo.Chat;
 
 public interface IUserRequest : IRequest<MoneoCommandResult>
 {
-    long ConversationId { get; }
+    CommandContext Context { get; }
 }

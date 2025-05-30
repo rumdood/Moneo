@@ -8,16 +8,16 @@ public partial class ConfirmCommandRequest : UserRequestBase
     public string PotentialCommand { get; private set; }
     public string PotentialArguments { get; private set; }
 
-    public ConfirmCommandRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public ConfirmCommandRequest(CommandContext context) : base(context)
     {
-        if (args.Length == 0)
+        if (context.Args.Length == 0)
         {
             throw new ArgumentException("No potential command provided");
         }
 
-        PotentialCommand = args[0].StartsWith('/') ? args[0] : $"/{args[0]}";
-        PotentialArguments = args.Length > 1
-            ? string.Join(' ', args.Skip(1))
+        PotentialCommand = context.Args[0].StartsWith('/') ? context.Args[0] : $"/{context.Args[0]}";
+        PotentialArguments = context.Args.Length > 1
+            ? string.Join(' ', context.Args.Skip(1))
             : "";
     }
 

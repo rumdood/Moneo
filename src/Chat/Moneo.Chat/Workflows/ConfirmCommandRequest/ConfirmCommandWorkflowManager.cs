@@ -15,7 +15,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
 {
     private readonly Dictionary<long, string> _userCommandsLookup = new();
 
-    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> ContinueWorkflowAsync(CommandContext cmdContext, string userInput, CancellationToken cancellationToken = default)
     {
         var confirmation = UserConfirmationHelper.GetConfirmation(userInput);
 
@@ -31,7 +31,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
         
         // the workflow completes regardless of what the user says at this point. Either we confirm the command and
         // run it, or we're unclear on what they meant to do
-        await Mediator.Send(new ConfirmCommandWorkflowCompletedEvent(chatId), cancellationToken);
+        await Mediator.Send(new ConfirmCommandWorkflowCompletedEvent(cmdContext.ConversationId), cancellationToken);
 
         if (confirmation == UserConfirmation.Negative)
         {
@@ -43,8 +43,8 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
             };
         }
 
-        var foundCommand = _userCommandsLookup.TryGetValue(chatId, out var command);
-        _userCommandsLookup.Remove(chatId);
+        var foundCommand = _userCommandsLookup.TryGetValue(cmdContext.ConversationId, out var command);
+        _userCommandsLookup.Remove(cmdContext.ConversationId);
 
         if (!foundCommand || command is null)
         {
@@ -57,7 +57,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
         }
 
         // I don't like this part and user request management like this should probably be moved into another class to be called by the managers
-        var context = CommandContextFactory.BuildCommandContext(chatId, forUserId, ChatState.ConfirmCommand, command);
+        var context = CommandContextFactory.BuildCommandContext(cmdContext.ConversationId, cmdContext.User, ChatState.ConfirmCommand, command);
         var userRequest = UserRequestFactory.GetUserRequest(context);
 
         if (userRequest is IRequest<MoneoCommandResult> request)
@@ -76,9 +76,9 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
 
     public async Task<MoneoCommandResult> StartWorkflowAsync(ConfirmCommandRequest request, CancellationToken cancellationToken = default)
     {
-        _userCommandsLookup[request.ConversationId] = $"{request.PotentialCommand} {request.PotentialArguments}";
+        _userCommandsLookup[request.Context.ConversationId] = $"{request.PotentialCommand} {request.PotentialArguments}";
 
-        await Mediator.Send(new ConfirmCommandWorkflowStartedEvent(request.ConversationId), cancellationToken);
+        await Mediator.Send(new ConfirmCommandWorkflowStartedEvent(request.Context.ConversationId), cancellationToken);
         return new MoneoCommandResult
         {
             ResponseType = ResponseType.Text,

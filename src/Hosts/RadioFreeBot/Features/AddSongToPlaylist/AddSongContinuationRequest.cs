@@ -11,9 +11,9 @@ public partial class AddSongContinuationRequest : UserRequestBase
 {
     public string Text { get; }
     
-    public AddSongContinuationRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public AddSongContinuationRequest(CommandContext context) : base(context)
     {
-        Text = string.Join(" ", args);
+        Text = string.Join(" ", context.Args);
     }
     
     public AddSongContinuationRequest(long conversationId, ChatUser? user, string text) : base(conversationId, user)
@@ -32,5 +32,5 @@ internal class AddSongContinuationRequestHandler : IRequestHandler<AddSongContin
     }
     
     public Task<MoneoCommandResult> Handle(AddSongContinuationRequest request, CancellationToken cancellationToken)
-        => _addSongByQueryWorkflowManager.ContinueWorkflowAsync(request.ConversationId, request.ForUserId, request.Text, cancellationToken);
+        => _addSongByQueryWorkflowManager.ContinueWorkflowAsync(request.Context, request.Text, cancellationToken);
 }

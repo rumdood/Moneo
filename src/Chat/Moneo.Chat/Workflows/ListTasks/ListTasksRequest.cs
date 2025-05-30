@@ -10,14 +10,19 @@ public partial class ListTasksRequest : UserRequestBase
 {
     public bool AsMenuFlag { get; private set; }
 
-    public ListTasksRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public ListTasksRequest(CommandContext context) : base(context)
     {
-        this.AsMenuFlag = args.Length > 0 && bool.TryParse(args[0], out var flagValue) && flagValue;
+        AsMenuFlag = context.Args.Length > 0 && bool.TryParse(context.Args[0], out var flagValue) && flagValue;
     }
 
     public ListTasksRequest(long conversationId, ChatUser? user, bool asMenu) : base(conversationId, user, asMenu.ToString())
     {
-        this.AsMenuFlag = asMenu;
+        AsMenuFlag = asMenu;
+    }
+
+    public ListTasksRequest(CommandContext context, bool asMenu) : base(context)
+    {
+        AsMenuFlag = asMenu;
     }
 }
 

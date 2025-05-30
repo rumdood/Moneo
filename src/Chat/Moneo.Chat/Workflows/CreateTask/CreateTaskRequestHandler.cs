@@ -14,6 +14,6 @@ internal class CreateTaskRequestHandler : IRequestHandler<CreateTaskRequest, Mon
     
     public async Task<MoneoCommandResult> Handle(CreateTaskRequest request, CancellationToken cancellationToken)
     {
-        return await _manager.StartWorkflowAsync(request.ConversationId, request.ForUserId, request.TaskName);
+        return await _manager.StartWorkflowAsync(request.Context, request.TaskName);
     }
 }

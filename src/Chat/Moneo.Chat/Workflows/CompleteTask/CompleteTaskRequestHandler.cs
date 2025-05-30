@@ -15,8 +15,7 @@ internal class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest,
     
     public Task<MoneoCommandResult> Handle(CompleteTaskRequest request, CancellationToken cancellationToken) =>
         _manager.StartWorkflowAsync(
-            request.ConversationId, 
-            request.ForUserId,
+            request.Context,
             request.TaskName, 
             CompleteTaskOption.Complete,
             cancellationToken);

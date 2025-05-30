@@ -7,9 +7,9 @@ public partial class ChitChatRequest : UserRequestBase
 {
     public string UserText { get; private set; }
 
-    public ChitChatRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
+    public ChitChatRequest(CommandContext context) : base(context)
     {
-        UserText = string.Join(' ', args);
+        UserText = string.Join(' ', context.Args);
     }
 
     public ChitChatRequest(long conversationId, ChatUser? user, string userText) : base(conversationId, user, userText)

@@ -14,7 +14,7 @@ public enum CompleteTaskOption
 
 public interface ICompleteTaskWorkflowManager : IWorkflowManager
 {
-    Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, long forUserId, string taskName, CompleteTaskOption option,
+    Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string taskName, CompleteTaskOption option,
         CancellationToken cancellationToken = default);
 }
 
@@ -23,14 +23,14 @@ public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWor
 {
     private readonly ITaskManagerClient _taskManagerClient;
     
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, long forUserId, string taskName, CompleteTaskOption option, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string taskName, CompleteTaskOption option, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(taskName))
         {
-            return await Mediator.Send(new ListTasksRequest(conversationId, new ChatUser(forUserId, ""), true), cancellationToken);
+            return await Mediator.Send(new ListTasksRequest(cmdContext, true), cancellationToken);
         }
 
-        var tasksMatchingName = await _taskManagerClient.GetTasksByKeywordSearchAsync(conversationId, taskName,
+        var tasksMatchingName = await _taskManagerClient.GetTasksByKeywordSearchAsync(cmdContext.ConversationId, taskName,
             new PageOptions(0, 100), cancellationToken);
 
         if (!tasksMatchingName.IsSuccess || tasksMatchingName.Data?.TotalCount == 0)

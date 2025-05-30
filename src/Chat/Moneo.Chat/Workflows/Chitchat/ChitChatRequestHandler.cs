@@ -28,7 +28,7 @@ internal class ChitChatRequestHandler : IRequestHandler<ChitChatRequest, MoneoCo
         _logger.LogWarning("Received idle chitchat or unknown command: {@Text}", request.UserText);
         if (_chitChatWorkflowManager is not null)
         {
-            return _chitChatWorkflowManager.StartWorkflowAsync(request.ConversationId, request.ForUserId, request.UserText,
+            return _chitChatWorkflowManager.StartWorkflowAsync(request.Context, request.UserText,
                 cancellationToken);
         }
 

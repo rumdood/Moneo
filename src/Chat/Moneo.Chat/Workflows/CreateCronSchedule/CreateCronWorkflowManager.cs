@@ -178,25 +178,25 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
         return null;
     }
 
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, ChatState? outerChatState = null, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, CancellationToken cancellationToken = default)
     {
-        await Mediator.Send(new CreateCronWorkflowStartedEvent(chatId));
+        await Mediator.Send(new CreateCronWorkflowStartedEvent(cmdContext.ConversationId), cancellationToken);
         
         // mark where we came from
-        _outerChatStates[chatId] = outerChatState;
+        _outerChatStates[cmdContext.ConversationId] = cmdContext.CurrentState;
 
         // save the machine
-        _chatStates[chatId] = new CronStateMachine();
+        _chatStates[cmdContext.ConversationId] = new CronStateMachine();
 
-        return await ContinueWorkflowAsync(chatId, forUserId, "", cancellationToken);
+        return await ContinueWorkflowAsync(cmdContext, "", cancellationToken);
     }
 
-    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> ContinueWorkflowAsync(CommandContext cmdContext, string userInput, CancellationToken cancellationToken = default)
     {
-        if (!_chatStates.TryGetValue(chatId, out var machine))
+        if (!_chatStates.TryGetValue(cmdContext.ConversationId, out var machine))
         {
             // we shouldn't be here
-            await CompleteWorkflowAsync(chatId, cancellationToken: cancellationToken);
+            await CompleteWorkflowAsync(cmdContext, cancellationToken: cancellationToken);
             return new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
@@ -227,17 +227,17 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
 
         if (machine.CurrentState == CronWorkflowState.Complete || response is null)
         {
-            return await CompleteWorkflowAsync(chatId, machine.Draft, cancellationToken);
+            return await CompleteWorkflowAsync(cmdContext, machine.Draft, cancellationToken);
         }
 
         return response;
     }
 
-    private async Task<MoneoCommandResult> CompleteWorkflowAsync(long chatId, CronDraft? draft = null, CancellationToken cancellationToken = default)
+    private async Task<MoneoCommandResult> CompleteWorkflowAsync(CommandContext cmdContext, CronDraft? draft = null, CancellationToken cancellationToken = default)
     {
-        _chatStates.Remove(chatId);
+        _chatStates.Remove(cmdContext.ConversationId);
         var cronStatement = draft?.GenerateCronStatement() ?? "";
-        await Mediator.Send(new CreateCronWorkflowCompletedEvent(chatId, cronStatement), cancellationToken);
+        await Mediator.Send(new CreateCronWorkflowCompletedEvent(cmdContext.ConversationId, cronStatement), cancellationToken);
 
         if (draft is null || draft.DayRepeatMode == DayRepeatMode.Undefined)
         {
@@ -249,12 +249,12 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
             };
         }
 
-        var currentOuterState = _outerChatStates[chatId];
+        var currentOuterState = _outerChatStates[cmdContext.ConversationId];
 
         return currentOuterState switch
         {
-            _ when currentOuterState == ChatState.CreateTask => await Mediator.Send(new CreateTaskContinuationRequest(chatId, new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
-            _ when currentOuterState == ChatState.ChangeTask => await Mediator.Send(new ChangeTaskContinuationRequest(chatId,  new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
+            _ when currentOuterState == ChatState.CreateTask => await Mediator.Send(new CreateTaskContinuationRequest(cmdContext.ConversationId, new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
+            _ when currentOuterState == ChatState.ChangeTask => await Mediator.Send(new ChangeTaskContinuationRequest(cmdContext.ConversationId,  new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
             _ => new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
