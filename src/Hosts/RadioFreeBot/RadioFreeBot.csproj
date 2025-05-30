@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.4" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="8.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Chat\Moneo.Chat.Telegram\Moneo.Chat.Telegram.csproj" />
+      <ProjectReference Include="..\..\Chat\Moneo.Chat\Moneo.Chat.csproj" />
+      <ProjectReference Include="..\..\Moneo.Common\Moneo.Common.csproj" />
+      <ProjectReference Include="..\..\Moneo.Web.Common\Moneo.Web.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Chat\Moneo.Chat.Generators\Moneo.Chat.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Configuration\" />
+    </ItemGroup>
+
+</Project>

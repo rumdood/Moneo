@@ -19,7 +19,7 @@ public record CreateCronWorkflowStartedEvent(long ChatId) : IRequest;
 
 public record CreateCronWorkflowCompletedEvent(long ChatId, string CronStatement) : IRequest;
 
-internal abstract class WorkflowStartedOrCompletedEventHandlerBase(IChatStateRepository chatStateRepository)
+public abstract class WorkflowStartedOrCompletedEventHandlerBase(IChatStateRepository chatStateRepository)
 {
     protected readonly IChatStateRepository ChatStateRepository = chatStateRepository;
 }

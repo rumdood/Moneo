@@ -10,7 +10,7 @@ public static class CommandRegistrar
         MoneoChatCommandConfiguration configuration,
         CancellationToken cancellationToken = default)
     {
-        var assemblies = configuration.ChatCommandAssemblies.Distinct().ToArray();
+        var assemblies = configuration.MoneoRegistrationAssemblies.Distinct().ToArray();
 
         foreach (var assembly in assemblies)
         {
@@ -20,9 +20,9 @@ public static class CommandRegistrar
                 {
                     continue;
                 }
-
-                var userCommandAttribute = type.GetCustomAttribute<UserCommandAttribute>();
-                if (userCommandAttribute == null)
+                
+                var customAttributes = type.GetCustomAttributes();
+                if (!customAttributes.Any(attr => attr is UserCommandAttribute or WorkflowContinuationCommandAttribute))
                 {
                     continue;
                 }

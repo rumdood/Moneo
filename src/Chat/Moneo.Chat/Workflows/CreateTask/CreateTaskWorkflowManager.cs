@@ -6,9 +6,10 @@ using Moneo.TaskManagement.Contracts;
 
 namespace Moneo.Chat.Workflows.CreateTask;
 
-public interface ICreateTaskWorkflowManager : ICreateOrUpdateTaskWorkflowManager, IWorkflowManager;
+public interface ICreateTaskWorkflowManager : ICreateOrUpdateTaskWorkflowManager;
 
 // TODO: Add some default Completed messages
+[MoneoWorkflow]
 public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
 {
     private readonly IMediator _mediator;
@@ -30,7 +31,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
         _innerWorkflowManager =
         new CreateOrUpdateTaskWorkflowManager(
             logger,
-            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId, ChatState.CreateTask)),
+            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId, null, ChatState.CreateTask)),
             CompleteWorkflowAsync);
         
         _innerWorkflowManager.SetResponse(TaskCreateOrUpdateState.End, new MoneoCommandResult
@@ -41,11 +42,11 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
         });
     }
     
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, string? taskName = null)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string? taskName = null, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new CreateTaskWorkflowStartedEvent(chatId));
+        await _mediator.Send(new CreateTaskWorkflowStartedEvent(chatId), cancellationToken);
         
-        if (_chatStates.ContainsKey(chatId))
+        if (_chatStates.ContainsKey(new ConversationUserKey(chatId, forUserId)))
         {
             // can't create a task while creating another task
             return new MoneoCommandResult
@@ -56,16 +57,16 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
             };
         }
         
-        var machine = new TaskCreationStateMachine(chatId, taskName);
+        var machine = new TaskCreationStateMachine(chatId, forUserId, taskName);
         
-        _chatStates.Add(chatId, machine);
+        _chatStates.Add(new ConversationUserKey(chatId, forUserId), machine);
 
-        return await _innerWorkflowManager.StartWorkflowAsync(machine);
+        return await _innerWorkflowManager.StartWorkflowAsync(machine, cancellationToken);
     }
 
-    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, string userInput)
+    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
     {
-        if (!_chatStates.TryGetValue(chatId, out var machine))
+        if (!_chatStates.TryGetValue(new ConversationUserKey(chatId, forUserId), out var machine))
         {
             return new MoneoCommandResult
             {
@@ -75,7 +76,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
             };
         }
         
-        return await _innerWorkflowManager.ContinueWorkflowAsync(machine, userInput);
+        return await _innerWorkflowManager.ContinueWorkflowAsync(machine, userInput, cancellationToken);
     }
 
     public Task AbandonWorkflowAsync(long chatId)
@@ -95,7 +96,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
                 stateMachine.ConversationId);
         }
         
-        _chatStates.Remove(stateMachine.ConversationId);
+        _chatStates.Remove(new ConversationUserKey(stateMachine.ConversationId, stateMachine.Draft.ForUserId));
         await _mediator.Send(new CreateTaskWorkflowCompletedEvent(stateMachine.ConversationId));
     }
 }

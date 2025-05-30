@@ -1,3 +1,5 @@
+using Moneo.Chat.Models;
+
 namespace Moneo.Chat;
 
 [UserCommand(
@@ -8,13 +10,14 @@ public partial class ListTasksRequest : UserRequestBase
 {
     public bool AsMenuFlag { get; private set; }
 
-    public ListTasksRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public ListTasksRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
     {
         this.AsMenuFlag = args.Length > 0 && bool.TryParse(args[0], out var flagValue) && flagValue;
     }
 
-    public ListTasksRequest(long conversationId, bool asMenu) : base(conversationId, asMenu.ToString())
+    public ListTasksRequest(long conversationId, ChatUser? user, bool asMenu) : base(conversationId, user, asMenu.ToString())
     {
         this.AsMenuFlag = asMenu;
     }
 }
+

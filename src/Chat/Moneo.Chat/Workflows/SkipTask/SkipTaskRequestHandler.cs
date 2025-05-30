@@ -16,6 +16,7 @@ internal class SkipTaskRequestHandler : IRequestHandler<SkipTaskRequest, MoneoCo
     public async Task<MoneoCommandResult> Handle(SkipTaskRequest request, CancellationToken cancellationToken) =>
         await _manager.StartWorkflowAsync(
             request.ConversationId, 
+            request.ForUserId,
             request.TaskName, 
             CompleteTaskOption.Skip,
             cancellationToken);

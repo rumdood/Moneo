@@ -1,5 +1,6 @@
 using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 using Moneo.Common;
 using Moneo.TaskManagement.Contracts;
 
@@ -13,19 +14,20 @@ public enum CompleteTaskOption
 
 public interface ICompleteTaskWorkflowManager : IWorkflowManager
 {
-    Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CompleteTaskOption option,
+    Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, long forUserId, string taskName, CompleteTaskOption option,
         CancellationToken cancellationToken = default);
 }
 
+[MoneoWorkflow]
 public class CompleteTaskWorkflowManager : WorkflowManagerBase, ICompleteTaskWorkflowManager
 {
     private readonly ITaskManagerClient _taskManagerClient;
     
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CompleteTaskOption option, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, long forUserId, string taskName, CompleteTaskOption option, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(taskName))
         {
-            return await Mediator.Send(new ListTasksRequest(conversationId, true), cancellationToken);
+            return await Mediator.Send(new ListTasksRequest(conversationId, new ChatUser(forUserId, ""), true), cancellationToken);
         }
 
         var tasksMatchingName = await _taskManagerClient.GetTasksByKeywordSearchAsync(conversationId, taskName,

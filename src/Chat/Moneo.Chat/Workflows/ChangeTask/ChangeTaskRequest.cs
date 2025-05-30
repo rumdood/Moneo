@@ -1,3 +1,5 @@
+using Moneo.Chat.Models;
+
 namespace Moneo.Chat.Workflows.ChangeTask;
 
 [UserCommand(
@@ -10,15 +12,16 @@ public partial class ChangeTaskRequest : UserRequestBase
     [UserCommandArgument(LongName = nameof(TaskName), HelpText = @"Name of the task to change")]
     public string TaskName { get; private set; }
 
-    public ChangeTaskRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public ChangeTaskRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
     {
         TaskName = args.Length > 0
             ? string.Join(" ", args)
             : "";
     }
 
-    public ChangeTaskRequest(long conversationId, string taskName) : base(conversationId, taskName)
+    public ChangeTaskRequest(long conversationId, ChatUser? user, string taskName) : base(conversationId, user, taskName)
     {
         TaskName = taskName;
     }
 }
+

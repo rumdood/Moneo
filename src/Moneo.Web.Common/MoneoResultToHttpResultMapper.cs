@@ -26,6 +26,8 @@ public static class MoneoResultToHttpResultMapper
         { MoneoResultType.TaskNotFound, r => Results.NotFound(r.Message) },
         { MoneoResultType.ConversationNotFound, r => Results.NotFound(r.Message) },
         { MoneoResultType.TaskAlreadyExists, r => Results.Conflict(r.Message) },
+        { MoneoResultType.NotFound, r => Results.NotFound(r.Message) },
+        { MoneoResultType.BadRequest, r => Results.BadRequest(r.Message) },
     };
     
     /*
@@ -49,10 +51,13 @@ public static class HttpResponseMessageExtensions
     {
         if (!responseMessage.IsSuccessStatusCode)
         {
-            var errorContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-            return MoneoResult<TData>.Failed(
-                responseMessage.ReasonPhrase ?? "Request Failed",
-                new InvalidOperationException(errorContent));
+            var errorContent = await GetErrorMessage(responseMessage);
+            return responseMessage.StatusCode switch
+            {
+                HttpStatusCode.Conflict => MoneoResult<TData>.AlreadyExists(errorContent),
+                HttpStatusCode.NotFound => MoneoResult<TData>.NotFound(errorContent),
+                _ => MoneoResult<TData>.Failed(errorContent),
+            };
         }
 
         if (responseMessage.Content.Headers.ContentType?.MediaType != "application/json")
@@ -60,12 +65,16 @@ public static class HttpResponseMessageExtensions
             return MoneoResult<TData>.Failed("Response was not in the expected format.");
         }
         
-        var s = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-        
         var data = await responseMessage.Content.ReadFromJsonAsync<TData>(cancellationToken: cancellationToken);
         return data is not null
             ? MoneoResult<TData>.Success(data)
             : MoneoResult<TData>.Failed("Failed to deserialize response.");
+
+        async Task<string> GetErrorMessage(HttpResponseMessage message)
+        {
+            var errorContent = await message.Content.ReadAsStringAsync(cancellationToken);
+            return string.IsNullOrEmpty(errorContent) ? message.ReasonPhrase ?? "Request Failed" : errorContent;
+        }
     }
     
     public static async Task<MoneoResult> GetMoneoResultAsync(

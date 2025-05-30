@@ -1,4 +1,6 @@
-﻿namespace Moneo.Chat;
+﻿using Moneo.Chat.Models;
+
+namespace Moneo.Chat;
 
 [UserCommand(CommandKey = "/confirmCommand")]
 public partial class ConfirmCommandRequest : UserRequestBase
@@ -6,7 +8,7 @@ public partial class ConfirmCommandRequest : UserRequestBase
     public string PotentialCommand { get; private set; }
     public string PotentialArguments { get; private set; }
 
-    public ConfirmCommandRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public ConfirmCommandRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
     {
         if (args.Length == 0)
         {
@@ -19,7 +21,7 @@ public partial class ConfirmCommandRequest : UserRequestBase
             : "";
     }
 
-    public ConfirmCommandRequest(long conversationId, string potentialCommand, string[] potentialArguments) : base(conversationId, potentialCommand)
+    public ConfirmCommandRequest(long conversationId, ChatUser? user, string potentialCommand, string[] potentialArguments) : base(conversationId, user, potentialCommand)
     {
         PotentialCommand = potentialCommand.StartsWith('/') ? potentialCommand : $"/{potentialCommand}";
         PotentialArguments = string.Join(' ', potentialArguments);

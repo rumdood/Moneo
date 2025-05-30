@@ -18,5 +18,5 @@ internal class DisableTaskRequestHandler : IRequestHandler<DisableTaskRequest, M
     }
 
     public Task<MoneoCommandResult> Handle(DisableTaskRequest request, CancellationToken cancellationToken) =>
-        _workflowManager.StartWorkflowAsync(request.ConversationId, request.TaskName, cancellationToken);
+        _workflowManager.StartWorkflowAsync(request.ConversationId, request.ForUserId, request.TaskName, cancellationToken);
 }

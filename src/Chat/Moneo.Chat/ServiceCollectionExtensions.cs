@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Moneo.Chat.CommandRegistration;
 using Moneo.Chat.Workflows;
@@ -7,8 +8,57 @@ using Moneo.Common;
 
 namespace Moneo.Chat.ServiceCollectionExtensions;
 
-public static partial class ServiceCollectionExtensions
+public static class ServiceCollectionExtensions
 {
+    private static void BuildWorkflowRegistrations(IServiceCollection services, MoneoChatCommandConfiguration configuration,
+        CancellationToken cancellationToken = default)
+    {
+        var assemblies = configuration.MoneoRegistrationAssemblies.Distinct().ToArray();
+
+        foreach (var assembly in assemblies)
+        {
+            var workflowTypes = assembly.GetTypes().Where(t => t.GetCustomAttribute<MoneoWorkflowAttribute>() is not null);
+            foreach (var type in workflowTypes)
+            {
+                if (!type.IsClass || type.IsAbstract || type.GetCustomAttribute<MoneoWorkflowAttribute>() is null)
+                {
+                    continue;
+                }
+
+                configuration.WorkflowManagersToRegister.Add(type);
+            }
+        }
+        
+        var registeredInterfaces = new HashSet<Type>();
+        
+        foreach (var workflowManagerType in configuration.WorkflowManagersToRegister)
+        {
+            if (workflowManagerType.GetInterfaces().Length == 0)
+            {
+                continue;
+            }
+
+            var allInterfaces = workflowManagerType.GetInterfaces();
+            var baseType = workflowManagerType.BaseType;
+            var baseInterfaces = baseType != null ? baseType.GetInterfaces() : [];
+            
+            // check to see if any of the interfaces are derived from any of the other interfaces in the list
+            var interfacesToRegister = allInterfaces
+                .Except(baseInterfaces)
+                .Where(i => !allInterfaces.Any(j => i != j && i.IsAssignableFrom(j) && !j.IsAssignableFrom(i)))
+                .ToArray();
+
+            foreach (var iface in interfacesToRegister)
+            {
+                if (!registeredInterfaces.Add(iface))
+                {
+                    throw new InvalidOperationException($"A workflow manager for interface {iface.Name} has already been registered.");
+                }
+                services.AddSingleton(iface, workflowManagerType);
+            }
+        }
+    }
+    
     public static IServiceCollection AddChatAdapter(this IServiceCollection services, IBotClientConfiguration botConfig)
     {
         // Use reflection to locate the appropriate class
@@ -37,14 +87,14 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection AddChatAdapter<TChatAdapter>(this IServiceCollection services,
         ChatAdapterOptions options) where TChatAdapter : class, IChatAdapter
     {
-        // for now let's automatically add the default commandset
-        options.RegisterUserRequestsFromAssemblyContaining<HelpRequest>();
+        // for now let's automatically add the default command set and its associated workflows
+        options.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<HelpRequest>();
         
         services.AddSingleton<IChatAdapter, TChatAdapter>();
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblies(typeof(TChatAdapter).Assembly);
-            cfg.RegisterServicesFromAssemblies(options.ChatCommandAssemblies.ToArray());
+            cfg.RegisterServicesFromAssemblies(options.MoneoRegistrationAssemblies.ToArray());
         });
         
         if (!options.IsValid())
@@ -53,6 +103,7 @@ public static partial class ServiceCollectionExtensions
         }
 
         CommandRegistrar.RegisterCommands(options);
+        BuildWorkflowRegistrations(services, options);
         
         if (options.InMemoryStateManagementEnabled)
         {

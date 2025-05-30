@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 using Moneo.Common;
 using Moneo.TaskManagement.Contracts;
 
@@ -7,18 +8,19 @@ namespace Moneo.Chat.Workflows.DisableTask;
 
 public interface IDisableTaskWorkflowManager : IWorkflowManager
 {
-    Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CancellationToken cancellationToken = default);
+    Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, long forUserId, string taskName, CancellationToken cancellationToken = default);
 }
 
+[MoneoWorkflow]
 public class DisableTaskWorkflowManager : WorkflowManagerBase, IDisableTaskWorkflowManager
 {
     private readonly ITaskManagerClient _taskManagerClient;
 
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, string taskName, CancellationToken cancellationToken = default)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(long conversationId, long forUserId, string taskName, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(taskName))
         {
-            return await Mediator.Send(new ListTasksRequest(conversationId, true), cancellationToken);
+            return await Mediator.Send(new ListTasksRequest(conversationId, new ChatUser(forUserId, "")), cancellationToken);
         }
 
         var tasksMatchingName = await _taskManagerClient.GetTasksByKeywordSearchAsync(

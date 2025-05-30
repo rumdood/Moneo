@@ -13,6 +13,8 @@ public class MoneoTaskDraft
     public bool IsBadgerEnabled => _badger is not null;
 
     public MoneoTaskDto Task { get; set; } = new();
+
+    public long ForUserId { get; set; } = 0;
     
     public TaskRepeaterDraft? Repeater 
     {
@@ -96,13 +98,15 @@ public class MoneoTaskDraft
         return dto;
     }
 
-    public MoneoTaskDraft(bool isForCreate = false)
+    public MoneoTaskDraft(long forUserId, bool isForCreate = false)
     {
+        ForUserId = forUserId;
         _isForCreate = isForCreate;
     }
 
-    public MoneoTaskDraft(MoneoTaskDto dto)
+    public MoneoTaskDraft(long forUserId, MoneoTaskDto dto)
     {
+        ForUserId = forUserId;
         Task = dto;
         if (dto.Repeater is not null)
         {

@@ -26,6 +26,7 @@ public class ChangeTaskWorkflowTests
     private readonly Dictionary<long, MoneoTaskDto> _tasksById = new();
     private const long ChatId = 123456789;
     private const long ExistingTaskId = 987654321;
+    private const long UserId = 1234567890;
     private const string ExistingTaskName = "Existing Task";
     private readonly DateTime _existingTaskCreatedDate = new(2022, 1, 1);
 
@@ -158,7 +159,7 @@ public class ChangeTaskWorkflowTests
         _ = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
         
         // Act
-        var result = await workflowManager.ContinueWorkflowAsync(ChatId, userInput);
+        var result = await workflowManager.ContinueWorkflowAsync(ChatId, UserId, userInput);
         
         // Assert
         Assert.Equal(ResponseType.Text, result.ResponseType);
@@ -180,7 +181,7 @@ public class ChangeTaskWorkflowTests
         _ = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
         
         // Act
-        var result = await workflowManager.ContinueWorkflowAsync(ChatId, userInput);
+        var result = await workflowManager.ContinueWorkflowAsync(ChatId, UserId, userInput);
         
         // Assert
         Assert.Equal(ResponseType.Text, result.ResponseType);
@@ -211,7 +212,7 @@ public class ChangeTaskWorkflowTests
                 _ => throw new ArgumentOutOfRangeException()
             };
             
-            currentResponse = await workflowManager.ContinueWorkflowAsync(ChatId, responseText);
+            currentResponse = await workflowManager.ContinueWorkflowAsync(ChatId, UserId, responseText);
         }
         
         Assert.Equal(ResultType.WorkflowCompleted, currentResponse.Type);

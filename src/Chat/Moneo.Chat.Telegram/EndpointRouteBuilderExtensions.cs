@@ -10,11 +10,10 @@ namespace Moneo.Chat.Telegram;
 
 public static class EndpointRouteBuilderExtensions
 {
-    public static void AddTelegramChatAdapterEndpoints(this IEndpointRouteBuilder app, Action<TelegramEndpointOptions> configureOptions)
+    public static void AddTelegramChatAdapterEndpoints(this IEndpointRouteBuilder app, Action<TelegramEndpointOptions>? configureOptions = null)
     {
         var options = new TelegramEndpointOptions();
-        configureOptions(options);
-
+        configureOptions?.Invoke(options);
         app.AddTelegramChatAdapterEndpoints(options);
     }
     

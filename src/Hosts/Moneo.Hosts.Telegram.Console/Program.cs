@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -9,6 +10,8 @@ using Moneo.Common;
 using Moneo.TaskManagement.Contracts;
 using Moneo.TaskManagement.Contracts.Models;
 using Moneo.Web;
+using RadioFreeBot;
+using RadioFreeBot.Features.FindSong;
 
 var builder = Host.CreateDefaultBuilder(args);
 
@@ -46,6 +49,15 @@ builder.ConfigureServices((context, services) =>
 
     services.AddSingleton(taskManagementConfig);
     
+    var radioFreeOptions = configuration.GetSection("RadioFree:YouTubeProxy").Get<YouTubeProxyOptions>();
+
+    if (radioFreeOptions is null)
+    {
+        throw new InvalidOperationException("YouTubeProxy configuration is missing");
+    }
+
+    services.AddSingleton(radioFreeOptions);
+    
     var chatConfig = configuration.GetSection("Moneo:Chat").Get<ChatConfig>();
     if (chatConfig is null)
     {
@@ -68,11 +80,21 @@ builder.ConfigureServices((context, services) =>
         opts.BotToken = botToken;
         opts.UseInMemoryStateManagement();
         opts.RegisterAsHostedService();
+        opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<FindSongRequest>();
     });
 
     services.AddTaskManagement(opt =>
     {
         opt.UseConfiguration(taskManagementConfig);
+    });
+
+    services.AddPlaylistManagement(opt =>
+    {
+        opt.ConfigureYouTubeProxy(ytopt =>
+        {
+            ytopt.YouTubeMusicProxyUrl = radioFreeOptions.YouTubeMusicProxyUrl;
+        });
+        opt.UseSqliteDatabase(configuration.GetConnectionString("RadioFree"));
     });
 });
 
@@ -87,6 +109,11 @@ lifetime.ApplicationStarted.Register(() =>
     // Resolve IChatAdapter after the application has started
     var chatAdapter = app.Services.GetRequiredService<IChatAdapter>();
     logger.LogInformation("IChatAdapter resolved successfully.");
+    
+    // fire the RadioFreeBot.Events.ApplicationStartedEvent
+    var mediator = app.Services.GetRequiredService<IMediator>();
+    mediator.Publish(new RadioFreeBot.Events.ApplicationStartedEvent(DateTime.UtcNow)).GetAwaiter().GetResult();
+    
 });
 
 lifetime.ApplicationStopping.Register(() =>

@@ -14,6 +14,7 @@
       <ProjectReference Include="..\..\Moneo.Common\Moneo.Common.csproj" />
       <ProjectReference Include="..\..\Moneo.Web.Common\Moneo.Web.Common.csproj" />
       <ProjectReference Include="..\..\TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
+      <ProjectReference Include="..\RadioFreeBot\RadioFreeBot.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -26,6 +27,10 @@
         <Content Include="appsettings.Development.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="data\" />
     </ItemGroup>
 
 

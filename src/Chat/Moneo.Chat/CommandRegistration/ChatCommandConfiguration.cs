@@ -1,27 +1,29 @@
 using System.Reflection;
+using Moneo.Chat.Workflows;
 
 namespace Moneo.Chat.CommandRegistration;
 
 public class MoneoChatCommandConfiguration
 {
-    internal List<Assembly> ChatCommandAssemblies { get; } = [];
+    internal List<Assembly> MoneoRegistrationAssemblies { get; } = [];
     internal List<Type> UserRequestsToRegister { get; } = [];
+    internal List<Type> WorkflowManagersToRegister { get; } = [];
     
-    public MoneoChatCommandConfiguration RegisterUserRequestsFromAssemblyContaining<T>()
-        => RegisterUserRequestsFromAssemblyContaining(typeof(T));
+    public MoneoChatCommandConfiguration RegisterUserRequestsAndWorkflowsFromAssemblyContaining<T>()
+        => RegisterUserRequestsAndWorkflowsFromAssemblyContaining(typeof(T));
 
-    public MoneoChatCommandConfiguration RegisterUserRequestsFromAssemblyContaining(Type type)
-        => RegisterUserRequestsFromAssembly(type.Assembly);
+    public MoneoChatCommandConfiguration RegisterUserRequestsAndWorkflowsFromAssemblyContaining(Type type)
+        => RegisterUserRequestsAndWorkflowsFromAssembly(type.Assembly);
     
-    public MoneoChatCommandConfiguration RegisterUserRequestsFromAssembly(Assembly assembly)
+    public MoneoChatCommandConfiguration RegisterUserRequestsAndWorkflowsFromAssembly(Assembly assembly)
     {
-        ChatCommandAssemblies.Add(assembly);
+        MoneoRegistrationAssemblies.Add(assembly);
         return this;
     }
     
-    public MoneoChatCommandConfiguration RegisterUserRequestsFromAssemblies(params Assembly[] assemblies)
+    public MoneoChatCommandConfiguration RegisterUserRequestsAndWorkflowsFromAssemblies(params Assembly[] assemblies)
     {
-        ChatCommandAssemblies.AddRange(assemblies);
+        MoneoRegistrationAssemblies.AddRange(assemblies);
         return this;
     }
     
@@ -35,6 +37,18 @@ public class MoneoChatCommandConfiguration
         }
 
         UserRequestsToRegister.Add(userRequest);
+        return this;
+    }
+
+    public MoneoChatCommandConfiguration RegisterWorkflowManager(Type workflowManager)
+    {
+        // check to see if the type has the custom attribute MoneoWorkflowAttribute
+        if (workflowManager.IsAbstract || 
+            workflowManager.GetCustomAttribute<MoneoWorkflowAttribute>() is null)
+        {
+            throw new ArgumentException($"Type {workflowManager.Name} is not a valid workflow manager type.");
+        }
+        WorkflowManagersToRegister.Add(workflowManager);
         return this;
     }
 }

@@ -1,3 +1,5 @@
+using Moneo.Chat.Models;
+
 namespace Moneo.Chat.Workflows.CreateTask;
 
 [UserCommand(
@@ -11,10 +13,11 @@ public partial class CreateTaskRequest : UserRequestBase
     [UserCommandArgument(LongName = nameof(TaskName), HelpText = @"Optional name of the task to create")]
     public string TaskName { get; private set; }
 
-    public CreateTaskRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public CreateTaskRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
     {
         TaskName = args.Length > 0
             ? string.Join(" ", args)
             : "";
     }
 }
+

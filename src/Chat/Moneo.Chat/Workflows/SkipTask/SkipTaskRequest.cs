@@ -1,5 +1,6 @@
 using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 
 namespace Moneo.Chat.UserRequests;
 
@@ -15,11 +16,11 @@ public partial class SkipTaskRequest : UserRequestBase
 You do not need to label the argument. '/skip my task' will work fine.", 
         IsRequired = true)]
     public string TaskName { get; private set; }
-    
-    public SkipTaskRequest(long conversationId, params string[] args) : base(conversationId, args)
+
+    public SkipTaskRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
     {
         TaskName = args.Length > 0
-            ? string.Join(" ", args)    
+            ? string.Join(' ', args)    
             : "";
     }
 }

@@ -1,19 +1,20 @@
 using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 
 namespace Moneo.Chat.Workflows.CreateTask;
 
-[UserCommand(CommandKey = "/continueCreate")]
+[WorkflowContinuationCommand(nameof(ChatState.CreateTask), "/continueCreateTask")]
 public partial class CreateTaskContinuationRequest : UserRequestBase
 {
     public string Text { get; }
 
-    public CreateTaskContinuationRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public CreateTaskContinuationRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
     {
         Text = string.Join(' ', args);
     }
 
-    public CreateTaskContinuationRequest(long conversationId, string text) : base(conversationId, text)
+    public CreateTaskContinuationRequest(long conversationId, ChatUser? user, string text) : base(conversationId, user, text)
     {
         Text = text;
     }
@@ -28,5 +29,5 @@ internal class CreateTaskContinuationRequestHandler : IRequestHandler<CreateTask
         _manager = manager;
     }
     public Task<MoneoCommandResult> Handle(CreateTaskContinuationRequest request, CancellationToken cancellationToken)
-        => _manager.ContinueWorkflowAsync(request.ConversationId, request.Text);
+        => _manager.ContinueWorkflowAsync(request.ConversationId, request.ForUserId, request.Text);
 }

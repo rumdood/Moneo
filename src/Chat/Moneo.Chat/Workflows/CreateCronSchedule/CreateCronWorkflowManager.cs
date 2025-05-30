@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 using Moneo.Chat.Workflows.ChangeTask;
 using Moneo.Chat.Workflows.CreateTask;
 
@@ -15,6 +16,7 @@ internal enum DayRepeatMode
     DayOfMonth,
 }
 
+[MoneoWorkflow]
 public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflowManager
 {
     private readonly ILogger<CreateCronWorkflowManager> _logger;
@@ -176,7 +178,7 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
         return null;
     }
 
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, ChatState? outerChatState = null)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, ChatState? outerChatState = null, CancellationToken cancellationToken = default)
     {
         await Mediator.Send(new CreateCronWorkflowStartedEvent(chatId));
         
@@ -186,15 +188,15 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
         // save the machine
         _chatStates[chatId] = new CronStateMachine();
 
-        return await ContinueWorkflowAsync(chatId, "");
+        return await ContinueWorkflowAsync(chatId, forUserId, "", cancellationToken);
     }
 
-    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, string userInput)
+    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
     {
         if (!_chatStates.TryGetValue(chatId, out var machine))
         {
             // we shouldn't be here
-            await CompleteWorkflowAsync(chatId);
+            await CompleteWorkflowAsync(chatId, cancellationToken: cancellationToken);
             return new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
@@ -225,17 +227,17 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
 
         if (machine.CurrentState == CronWorkflowState.Complete || response is null)
         {
-            return await CompleteWorkflowAsync(chatId, machine.Draft);
+            return await CompleteWorkflowAsync(chatId, machine.Draft, cancellationToken);
         }
 
         return response;
     }
 
-    private async Task<MoneoCommandResult> CompleteWorkflowAsync(long chatId, CronDraft? draft = null)
+    private async Task<MoneoCommandResult> CompleteWorkflowAsync(long chatId, CronDraft? draft = null, CancellationToken cancellationToken = default)
     {
         _chatStates.Remove(chatId);
         var cronStatement = draft?.GenerateCronStatement() ?? "";
-        await Mediator.Send(new CreateCronWorkflowCompletedEvent(chatId, cronStatement));
+        await Mediator.Send(new CreateCronWorkflowCompletedEvent(chatId, cronStatement), cancellationToken);
 
         if (draft is null || draft.DayRepeatMode == DayRepeatMode.Undefined)
         {
@@ -251,8 +253,8 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
 
         return currentOuterState switch
         {
-            ChatState.CreateTask => await Mediator.Send(new CreateTaskContinuationRequest(chatId, cronStatement)),
-            ChatState.ChangeTask => await Mediator.Send(new ChangeTaskContinuationRequest(chatId, cronStatement)),
+            _ when currentOuterState == ChatState.CreateTask => await Mediator.Send(new CreateTaskContinuationRequest(chatId, new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
+            _ when currentOuterState == ChatState.ChangeTask => await Mediator.Send(new ChangeTaskContinuationRequest(chatId,  new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
             _ => new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,

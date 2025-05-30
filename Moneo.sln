@@ -43,6 +43,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Web.Common", "src\Mon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moneo.Hosts.Telegram.Console", "src\Hosts\Moneo.Hosts.Telegram.Console\Moneo.Hosts.Telegram.Console.csproj", "{645D2325-A422-46C2-9863-85965BD20059}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadioFreeBot", "src\Hosts\RadioFreeBot\RadioFreeBot.csproj", "{967D1CEE-51A4-47B4-AA12-51C682C3D70B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadioFreeTests", "Tests\RadioFreeTests\RadioFreeTests.csproj", "{27D44126-B401-4ACF-BAB8-3C136CBDA324}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -109,6 +113,14 @@ Global
 		{645D2325-A422-46C2-9863-85965BD20059}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{645D2325-A422-46C2-9863-85965BD20059}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{645D2325-A422-46C2-9863-85965BD20059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{967D1CEE-51A4-47B4-AA12-51C682C3D70B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{967D1CEE-51A4-47B4-AA12-51C682C3D70B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{967D1CEE-51A4-47B4-AA12-51C682C3D70B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{967D1CEE-51A4-47B4-AA12-51C682C3D70B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27D44126-B401-4ACF-BAB8-3C136CBDA324}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27D44126-B401-4ACF-BAB8-3C136CBDA324}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27D44126-B401-4ACF-BAB8-3C136CBDA324}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27D44126-B401-4ACF-BAB8-3C136CBDA324}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -132,6 +144,8 @@ Global
 		{F7DB7921-AD36-4A26-988B-C01318AE8045} = {C80150B3-C997-47FF-BE06-ED0709EA6DCB}
 		{AC612371-092B-4A01-903A-393F3EC3B12D} = {BAC297B4-CBE2-403F-AD70-110B317BBE28}
 		{645D2325-A422-46C2-9863-85965BD20059} = {C80150B3-C997-47FF-BE06-ED0709EA6DCB}
+		{967D1CEE-51A4-47B4-AA12-51C682C3D70B} = {C80150B3-C997-47FF-BE06-ED0709EA6DCB}
+		{27D44126-B401-4ACF-BAB8-3C136CBDA324} = {E9789803-25DA-48D3-9181-DF34D79DC9A1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A69730A-25AE-421F-A76A-39B03C0A0207}

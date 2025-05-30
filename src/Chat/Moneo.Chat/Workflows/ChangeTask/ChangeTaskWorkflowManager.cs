@@ -9,9 +9,10 @@ using Moneo.TaskManagement.Contracts;
 
 namespace Moneo.Chat.Workflows.ChangeTask;
 
-public interface IChangeTaskWorkflowManager : ICreateOrUpdateTaskWorkflowManager, IWorkflowManager;
+public interface IChangeTaskWorkflowManager : ICreateOrUpdateTaskWorkflowManager;
 
-public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
+[MoneoWorkflow]
+public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflowManager
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ChangeTaskWorkflowManager> _logger;
@@ -24,7 +25,7 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
         IMediator mediator,
         ILogger<ChangeTaskWorkflowManager> logger,
         IWorkflowWithTaskDraftStateMachineRepository chatStates,
-        ITaskManagerClient taskResourceManager)
+        ITaskManagerClient taskResourceManager) : base(mediator)
     {
         _mediator = mediator;
         _logger = logger;
@@ -34,7 +35,7 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
         _innerWorkflowManager =
         new CreateOrUpdateTaskWorkflowManager(
             logger,
-            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId, ChatState.ChangeTask)),
+            stateMachine => mediator.Send(new CreateCronRequest(stateMachine.ConversationId, null, ChatState.ChangeTask)),
             CompleteWorkflowAsync);
         
         _innerWorkflowManager.SetResponseHandler(TaskCreateOrUpdateState.WaitingForUserDirection, HandleWaitingForUserSelection);
@@ -67,9 +68,9 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
         });
     }
     
-    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, string? taskName = null)
+    public async Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string? taskName = null, CancellationToken cancellationToken = default)
     {
-        if (_chatStates.ContainsKey(chatId))
+        if (_chatStates.ContainsKey(new ConversationUserKey(chatId, forUserId)))
         {
             // can't create a task while creating another task
             return new MoneoCommandResult
@@ -90,12 +91,12 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
             };
         }
         
-        await _mediator.Send(new ChangeTaskWorkflowStartedEvent(chatId));
+        await _mediator.Send(new ChangeTaskWorkflowStartedEvent(chatId), cancellationToken);
 
         var searchResult = await _taskResourceManager.GetTasksByKeywordSearchAsync(
             chatId, 
             taskName, 
-            new PageOptions(0, 100));
+            new PageOptions(0, 100), cancellationToken);
         
         if (!searchResult.IsSuccess || searchResult.Data is null)
         {
@@ -128,15 +129,15 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
                     MenuOptions = tasks.Select(t => $"/change {t.Name}").ToHashSet()
                 };
             default:
-                var machine = new TaskChangeStateMachine(chatId, new MoneoTaskDraft(tasks.Single()));
-                _chatStates.Add(chatId, machine);
-                return await _innerWorkflowManager.StartWorkflowAsync(machine);
+                var machine = new TaskChangeStateMachine(chatId, new MoneoTaskDraft(forUserId, tasks.Single()));
+                _chatStates.Add(new ConversationUserKey(chatId, forUserId), machine);
+                return await _innerWorkflowManager.StartWorkflowAsync(machine, cancellationToken);
         }
     }
 
-    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, string userInput)
+    public async Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, long forUserId, string userInput, CancellationToken cancellationToken = default)
     {
-        if (!_chatStates.TryGetValue(chatId, out var machine))
+        if (!_chatStates.TryGetValue(new ConversationUserKey(chatId, forUserId), out var machine))
         {
             return new MoneoCommandResult
             {
@@ -146,7 +147,7 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
             };
         }
         
-        return await _innerWorkflowManager.ContinueWorkflowAsync(machine, userInput);
+        return await _innerWorkflowManager.ContinueWorkflowAsync(machine, userInput, cancellationToken);
     }
 
     public Task AbandonWorkflowAsync(long chatId)
@@ -165,7 +166,7 @@ public class ChangeTaskWorkflowManager : IChangeTaskWorkflowManager
             _logger.LogError(result.Exception, "Failed to update task {TaskId}", stateMachine.ConversationId);
         }
         
-        _chatStates.Remove(stateMachine.ConversationId);
+        _chatStates.Remove(new ConversationUserKey(stateMachine.ConversationId, stateMachine.Draft.ForUserId));
         await _mediator.Send(new ChangeTaskWorkflowCompletedEvent(stateMachine.ConversationId));
     }
 

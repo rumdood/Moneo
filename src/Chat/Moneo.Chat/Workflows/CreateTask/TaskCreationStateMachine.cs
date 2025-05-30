@@ -3,11 +3,12 @@ namespace Moneo.Chat.Workflows.CreateTask;
 public class TaskCreationStateMachine : IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>
 {
     public TaskCreateOrUpdateState CurrentState { get; private set; }
-    public MoneoTaskDraft Draft { get; } = new(isForCreate: true);
+    public MoneoTaskDraft Draft { get; private set; }
     public long ConversationId { get; private set; }
 
-    public TaskCreationStateMachine(long conversationId, string? name = null)
+    public TaskCreationStateMachine(long conversationId, long forUserId, string? name = null)
     {
+        Draft = new MoneoTaskDraft(forUserId, isForCreate: true);
         ConversationId = conversationId;
         CurrentState = string.IsNullOrEmpty(name) ? TaskCreateOrUpdateState.Start : TaskCreateOrUpdateState.WaitingForName;
 

@@ -32,7 +32,7 @@ public class UnitTest1
         
         long conversationId = 1;
         var userString = "/complete";
-        var context = CommandContext.Get(1, ChatState.Waiting, userString);
+        var context = CommandContextFactory.BuildCommandContext(1, ChatState.Waiting, userString);
 
         var request = UserRequestFactory.GetUserRequest(context) as CompleteTaskRequest;
 

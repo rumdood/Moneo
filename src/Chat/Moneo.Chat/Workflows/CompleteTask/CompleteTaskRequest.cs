@@ -1,3 +1,5 @@
+using Moneo.Chat.Models;
+
 namespace Moneo.Chat;
 
 [UserCommand(
@@ -13,14 +15,14 @@ You do not need to label the argument. '/complete my task' will work fine.",
         IsRequired = true)]
     public string TaskName { get; private set; }
 
-    public CompleteTaskRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public CompleteTaskRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
     {
         TaskName = args.Length > 0
             ? string.Join(" ", args)
             : "";
     }
 
-    public CompleteTaskRequest(long conversationId, string taskName) : base(conversationId, taskName)
+    public CompleteTaskRequest(long conversationId, ChatUser? user, string taskName) : base(conversationId, user, taskName)
     {
         TaskName = taskName;
     }

@@ -1,6 +1,24 @@
 namespace Moneo.Chat;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public class WorkflowContinuationCommandAttribute : Attribute
+{
+    public string RequiredChatStateName { get; }
+    public string CommandKey { get; }
+
+    public WorkflowContinuationCommandAttribute(string stateName, string commandKey)
+    {
+        RequiredChatStateName = stateName;
+        CommandKey = commandKey;
+    }
+
+    public ChatState GetRequiredChatState()
+    {
+        return ChatState.FromName(RequiredChatStateName);
+    }
+}
+
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class UserCommandAttribute : Attribute
 {
     public string CommandKey { get; init; }

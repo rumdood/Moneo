@@ -4,22 +4,22 @@ using Moneo.Chat.Workflows.CreateTask;
 
 namespace Moneo.Chat.Workflows;
 
-public interface ICreateOrUpdateTaskWorkflowManager
+public interface ICreateOrUpdateTaskWorkflowManager : IWorkflowManagerWithContinuation
 {
-    Task<MoneoCommandResult> StartWorkflowAsync(long chatId, string? taskName = null);
-    Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, string userInput);
+    Task<MoneoCommandResult> StartWorkflowAsync(long chatId, long forUserId, string? taskName = null, CancellationToken cancellationToken = default);
     Task AbandonWorkflowAsync(long chatId);
 }
 
-public interface ITaskWorkflowManager
+public interface ITaskWorkflowManager : IWorkflowManager
 {
     Task<MoneoCommandResult> StartWorkflowAsync(
-        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine);
+        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, CancellationToken cancellationToken);
 
     Task<MoneoCommandResult> ContinueWorkflowAsync(
-        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, string userInput);
+        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, string userInput, CancellationToken cancellationToken);
 }
 
+[MoneoWorkflow]
 public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
 {
     private readonly ILogger _logger;
@@ -271,7 +271,7 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
         _responseHandlers[state] = handler;
     }
 
-    public Task<MoneoCommandResult> StartWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
+    public Task<MoneoCommandResult> StartWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, CancellationToken cancellationToken = default)
     {
         var nextState = stateMachine.GoToNext();
         
@@ -292,7 +292,7 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
     }
 
     public async Task<MoneoCommandResult> ContinueWorkflowAsync(
-        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, string userInput)
+        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, string userInput, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Current State: {@State}", stateMachine.CurrentState);
 

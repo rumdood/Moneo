@@ -1,13 +1,14 @@
 ﻿using MediatR;
 using Moneo.Chat.Commands;
 using System.Text;
+using Moneo.Chat.Models;
 
 namespace Moneo.Chat.Workflows.BotStatus
 {
     [UserCommand(CommandKey = "/botstatus", HelpDescription = @"Gets the status of the bot")]
     public partial class BotStatusRequest : UserRequestBase
     {
-        public BotStatusRequest(long conversationId, params string[] args) : base(conversationId, args)
+        public BotStatusRequest(long conversationId, ChatUser? user, params string[] args) : base(conversationId, user, args)
         {
         }
     }

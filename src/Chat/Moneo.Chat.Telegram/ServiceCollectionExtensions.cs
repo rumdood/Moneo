@@ -20,7 +20,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddChatAdapter<TelegramChatAdapter>(options);
         services.AddChatManager();
-        services.AddWorkflowManagers();
         
         // Register named HttpClient to get benefits of IHttpClientFactory
         // and consume it with ITelegramBotClient typed client.
