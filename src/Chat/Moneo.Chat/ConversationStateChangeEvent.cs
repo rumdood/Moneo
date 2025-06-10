@@ -3,21 +3,21 @@ using Moneo.Chat.Workflows.CreateTask;
 
 namespace Moneo.Chat;
 
-public record CreateTaskWorkflowStartedEvent(long ChatId) : IRequest;
+public record CreateTaskWorkflowStartedEvent(long ChatId, long UserId) : IRequest;
 
-public record CreateTaskWorkflowCompletedEvent(long ChatId) : IRequest;
+public record CreateTaskWorkflowCompletedEvent(long ChatId, long UserId) : IRequest;
 
-public record ChangeTaskWorkflowStartedEvent(long ChatId) : IRequest;
+public record ChangeTaskWorkflowStartedEvent(long ChatId, long UserId) : IRequest;
 
-public record ChangeTaskWorkflowCompletedEvent(long ChatId) : IRequest;
+public record ChangeTaskWorkflowCompletedEvent(long ChatId, long UserId) : IRequest;
 
-public record ConfirmCommandWorkflowStartedEvent(long ChatId) : IRequest;
+public record ConfirmCommandWorkflowStartedEvent(long ChatId, long UserId) : IRequest;
 
-public record ConfirmCommandWorkflowCompletedEvent(long ChatId, string? userInput = null) : IRequest;
+public record ConfirmCommandWorkflowCompletedEvent(long ChatId, long UserId, string? userInput = null) : IRequest;
 
-public record CreateCronWorkflowStartedEvent(long ChatId) : IRequest;
+public record CreateCronWorkflowStartedEvent(long ChatId, long UserId) : IRequest;
 
-public record CreateCronWorkflowCompletedEvent(long ChatId, string CronStatement) : IRequest;
+public record CreateCronWorkflowCompletedEvent(long ChatId, long UserId, string CronStatement) : IRequest;
 
 public abstract class WorkflowStartedOrCompletedEventHandlerBase(IChatStateRepository chatStateRepository)
 {
@@ -30,7 +30,7 @@ internal class CreateTaskWorkflowStartedEventHandler(IChatStateRepository chatSt
 {
     public async Task Handle(CreateTaskWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.CreateTask);
+        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, request.UserId, ChatState.CreateTask);
     }
 }
 
@@ -40,7 +40,7 @@ internal class CreateTaskWorkflowCompletedEventHandler(IChatStateRepository chat
 {
     public async Task Handle(CreateTaskWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.RevertChatStateAsync(request.ChatId);
+        await ChatStateRepository.RevertChatStateAsync(request.ChatId, request.UserId);
     }
 }
 
@@ -50,7 +50,7 @@ internal class ChangeTaskWorkflowStartedEventHandler(IChatStateRepository chatSt
 {
     public async Task Handle(ChangeTaskWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.ChangeTask);
+        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, request.UserId, ChatState.ChangeTask);
     }
 }
 
@@ -60,7 +60,7 @@ internal class ChangeTaskWorkflowCompletedEventHandler(IChatStateRepository chat
 {
     public async Task Handle(ChangeTaskWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.RevertChatStateAsync(request.ChatId);
+        await ChatStateRepository.RevertChatStateAsync(request.ChatId, request.UserId);
     }
 }
 
@@ -70,7 +70,7 @@ internal class ConfirmCommandWorkflowStartedEventHandler(IChatStateRepository ch
 {
     public async Task Handle(ConfirmCommandWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.ConfirmCommand);
+        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, request.UserId, ChatState.ConfirmCommand);
     }
 }
 
@@ -80,7 +80,7 @@ internal class ConfirmCommandWorkflowCompletedEventHandler(IChatStateRepository 
 {
     public async Task Handle(ConfirmCommandWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.RevertChatStateAsync(request.ChatId);
+        await ChatStateRepository.RevertChatStateAsync(request.ChatId, request.UserId);
     }
 }
 
@@ -90,7 +90,7 @@ internal class CreateCronWorkflowStartedEventHandler(IChatStateRepository chatSt
 {
     public async Task Handle(CreateCronWorkflowStartedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, ChatState.CreateCron);
+        await ChatStateRepository.UpdateChatStateAsync(request.ChatId, request.UserId, ChatState.CreateCron);
     }
 }
 
@@ -104,6 +104,6 @@ internal class CreateCronWorkflowCompletedEventHandler : WorkflowStartedOrComple
 
     public async Task Handle(CreateCronWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.RevertChatStateAsync(request.ChatId);
+        await ChatStateRepository.RevertChatStateAsync(request.ChatId, request.UserId);
     }
 }

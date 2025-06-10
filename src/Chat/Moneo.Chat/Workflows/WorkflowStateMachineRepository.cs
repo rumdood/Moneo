@@ -4,35 +4,12 @@ namespace Moneo.Chat.Workflows;
 
 public record ConversationUserKey(long ConversationId, long UserId);
 
-public interface IWorkflowWithTaskDraftStateMachineRepository
-{
-    bool ContainsKey(ConversationUserKey key);
-    void Add(ConversationUserKey key, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine);
-    bool TryGetValue(ConversationUserKey key, out IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine);
-    void Remove(ConversationUserKey key);
-}
-
 public interface IWorkflowStateMachineRepository<TState> where TState : Enum
 {
     bool ContainsKey(ConversationUserKey key);
     void Add(ConversationUserKey key, IWorkflowStateMachine<TState> stateMachine);
     bool TryGetValue(ConversationUserKey key, out IWorkflowStateMachine<TState> stateMachine);
     void Remove(ConversationUserKey key);
-}
-
-internal class TaskCreateOrChangeStateMachineRepository : IWorkflowWithTaskDraftStateMachineRepository
-{
-    private readonly Dictionary<ConversationUserKey, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>> _chatStates = new();
-    
-    public bool ContainsKey(ConversationUserKey key) => _chatStates.ContainsKey(key);
-
-    public void Add(ConversationUserKey key, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
-        => _chatStates.Add(key, stateMachine);
-
-    public bool TryGetValue(ConversationUserKey key, out IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
-        => _chatStates.TryGetValue(key, out stateMachine);
-
-    public void Remove(ConversationUserKey key) => _chatStates.Remove(key);
 }
 
 internal class CronStateMachineRepository : IWorkflowStateMachineRepository<CronWorkflowState>
@@ -50,7 +27,7 @@ internal class CronStateMachineRepository : IWorkflowStateMachineRepository<Cron
     public void Remove(ConversationUserKey key) => _chatStates.Remove(key);
 }
 
-internal static class CommandContextExtensions
+public static class CommandContextExtensions
 {
     public static ConversationUserKey GenerateConversationUserKey(this CommandContext context)
         => new ConversationUserKey(context.ConversationId, context.User?.Id ?? 0);

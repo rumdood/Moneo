@@ -67,7 +67,7 @@ internal class ChatManager : IChatManager
                 break;
             case ResponseType.Text:
                 await _mediator.Send(new BotTextMessageRequest(message.ConversationId, result.UserMessageText ?? "",
-                    result.Type == ResultType.Error));
+                    result.Format.ToBotRequestFormat(), result.Type == ResultType.Error));
                 break;
             case ResponseType.Animation:
                 await _mediator.Send(new BotGifMessageRequest(message.ConversationId, result.UserMessageText!));
@@ -82,14 +82,14 @@ internal class ChatManager : IChatManager
         }
     }
 
-    public Task<ChatState> GetChatStateForConversationAsync(long conversationId)
+    public Task<ChatState> GetChatStateForConversationAsync(long conversationId, long userId)
     {
-        return _chatStateRepository.GetChatStateAsync(conversationId);
+        return _chatStateRepository.GetChatStateAsync(conversationId, userId);
     }
 
     private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, ChatUser? user, string? text, CancellationToken cancellationToken = default)
     {
-        var state = await _chatStateRepository.GetChatStateAsync(conversationId);
+        var state = await _chatStateRepository.GetChatStateAsync(conversationId, user?.Id ?? 0);
         
         _logger.LogDebug("Current Chat State for conversation {@Conversation} is {@State}", conversationId, state);
 

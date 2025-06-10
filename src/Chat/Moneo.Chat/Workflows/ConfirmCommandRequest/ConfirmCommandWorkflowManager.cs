@@ -31,7 +31,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
         
         // the workflow completes regardless of what the user says at this point. Either we confirm the command and
         // run it, or we're unclear on what they meant to do
-        await Mediator.Send(new ConfirmCommandWorkflowCompletedEvent(cmdContext.ConversationId), cancellationToken);
+        await Mediator.Send(new ConfirmCommandWorkflowCompletedEvent(cmdContext.ConversationId, cmdContext.User?.Id ?? 0), cancellationToken);
 
         if (confirmation == UserConfirmation.Negative)
         {
@@ -78,7 +78,7 @@ public class ConfirmCommandWorkflowManager : WorkflowManagerBase, IConfirmComman
     {
         _userCommandsLookup[request.Context.ConversationId] = $"{request.PotentialCommand} {request.PotentialArguments}";
 
-        await Mediator.Send(new ConfirmCommandWorkflowStartedEvent(request.Context.ConversationId), cancellationToken);
+        await Mediator.Send(new ConfirmCommandWorkflowStartedEvent(request.Context.ConversationId, request.Context.User?.Id ?? 0), cancellationToken);
         return new MoneoCommandResult
         {
             ResponseType = ResponseType.Text,

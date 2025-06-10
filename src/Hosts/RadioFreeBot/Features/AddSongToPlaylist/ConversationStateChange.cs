@@ -4,8 +4,8 @@ using RadioFreeBot.Models;
 
 namespace RadioFreeBot.Features.AddSongToPlaylist;
 
-public record AddSongToPlaylistWorkflowStartedEvent(long ChatId) : IRequest;
-public record AddSongToPlaylistWorkflowCompletedEvent(long ChatId) : IRequest;
+public record AddSongToPlaylistWorkflowStartedEvent(long ChatId, long UserId) : IRequest;
+public record AddSongToPlaylistWorkflowCompletedEvent(long ChatId, long UserId) : IRequest;
 
 internal class
     AddSongToPlaylistWorkflowStartedEventHandler (IChatStateRepository chatStateRepository)
@@ -16,6 +16,7 @@ internal class
     {
         await ChatStateRepository.UpdateChatStateAsync(
             request.ChatId,
+            request.UserId,
             RadioFreeChatStates.AddSongToPlaylist);
     }
 }
@@ -27,6 +28,6 @@ internal class
 {
     public async Task Handle(AddSongToPlaylistWorkflowCompletedEvent request, CancellationToken cancellationToken)
     {
-        await ChatStateRepository.RevertChatStateAsync(request.ChatId);
+        await ChatStateRepository.RevertChatStateAsync(request.ChatId, request.UserId);
     }
 }

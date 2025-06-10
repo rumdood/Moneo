@@ -10,7 +10,29 @@ namespace Moneo.Chat.ServiceCollectionExtensions;
 
 public static class ServiceCollectionExtensions
 {
-    private static void BuildWorkflowRegistrations(IServiceCollection services, MoneoChatCommandConfiguration configuration,
+    public static IServiceCollection RegisterChatStates(this IServiceCollection services,
+        MoneoChatCommandConfiguration configuration, CancellationToken cancellation = default)
+    {
+        var assemblies = configuration.MoneoRegistrationAssemblies.Distinct().ToArray();
+
+        foreach (var assembly in assemblies)
+        {
+            // get all the types that inherit from ChatStateProviderBase
+            var chatStateProviderTypes = assembly.GetTypes()
+                .Where(t => typeof(ChatStateProviderBase).IsAssignableFrom(t) && !t.IsAbstract)
+                .ToArray();
+
+            foreach (var providerType in chatStateProviderTypes)
+            {
+                var instance = (ChatStateProviderBase)Activator.CreateInstance(providerType)!;
+                instance.RegisterStates();
+            }
+        }
+
+        return services;
+    }
+    
+    public static void BuildWorkflowRegistrations(this IServiceCollection services, MoneoChatCommandConfiguration configuration,
         CancellationToken cancellationToken = default)
     {
         var assemblies = configuration.MoneoRegistrationAssemblies.Distinct().ToArray();
@@ -90,6 +112,8 @@ public static class ServiceCollectionExtensions
         // for now let's automatically add the default command set and its associated workflows
         options.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<HelpRequest>();
         
+        services.RegisterChatStates(options);
+        
         services.AddSingleton<IChatAdapter, TChatAdapter>();
         services.AddMediatR(cfg =>
         {
@@ -101,9 +125,9 @@ public static class ServiceCollectionExtensions
         {
             throw new InvalidOperationException("Invalid ChatManagerOptions");
         }
-
+        
         CommandRegistrar.RegisterCommands(options);
-        BuildWorkflowRegistrations(services, options);
+        services.BuildWorkflowRegistrations(options);
         
         if (options.InMemoryStateManagementEnabled)
         {

@@ -1,5 +1,4 @@
 using System.Data;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using RadioFreeBot.ResourceAccess.Entities;
@@ -8,29 +7,21 @@ namespace RadioFreeBot.ResourceAccess;
 
 public class RadioFreeDbContext : DbContext
 {
-    private readonly TimeProvider _timeProvider;
-    private readonly IMediator _mediator;
     private IDbContextTransaction? _currentTransaction;
     
     public DbSet<Playlist> Playlists { get; set; }
+    public DbSet<PlaylistSong> PlaylistSongs { get; set; }
+    public DbSet<Song> Songs { get; set; }
+    public DbSet<User> Users { get; set; }
 
-    public RadioFreeDbContext(DbContextOptions<RadioFreeDbContext> options, TimeProvider timeProvider, IMediator mediator) 
+    public RadioFreeDbContext(DbContextOptions<RadioFreeDbContext> options)
         : base(options)
     {
-        _timeProvider = timeProvider;
-        _mediator = mediator;
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var entry in ChangeTracker.Entries<EntityBase>())
-        {
-            if (entry.State == EntityState.Added) 
-            {
-                entry.Entity.CreatedOn = _timeProvider.GetUtcNow().UtcDateTime;
-            }
-        }
-
+        // The timestamp auditing is now handled by the AuditingInterceptor
         var result = await base.SaveChangesAsync(cancellationToken);
         return result;
     }
@@ -57,6 +48,10 @@ public class RadioFreeDbContext : DbContext
 
         modelBuilder.Entity<PlaylistSong>()
             .HasAlternateKey(ps => new { ps.PlaylistId, ps.SongId });
+
+        modelBuilder.Entity<PlaylistSong>()
+            .Property(p => p.AddedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
         
         base.OnModelCreating(modelBuilder);
     }

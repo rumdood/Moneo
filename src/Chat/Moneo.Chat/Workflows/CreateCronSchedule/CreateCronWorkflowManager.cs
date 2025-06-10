@@ -180,7 +180,7 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
 
     public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, CancellationToken cancellationToken = default)
     {
-        await Mediator.Send(new CreateCronWorkflowStartedEvent(cmdContext.ConversationId), cancellationToken);
+        await Mediator.Send(new CreateCronWorkflowStartedEvent(cmdContext.ConversationId, cmdContext.User?.Id ?? 0), cancellationToken);
         
         // mark where we came from
         _outerChatStates[cmdContext.ConversationId] = cmdContext.CurrentState;
@@ -237,7 +237,7 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
     {
         _chatStates.Remove(cmdContext.ConversationId);
         var cronStatement = draft?.GenerateCronStatement() ?? "";
-        await Mediator.Send(new CreateCronWorkflowCompletedEvent(cmdContext.ConversationId, cronStatement), cancellationToken);
+        await Mediator.Send(new CreateCronWorkflowCompletedEvent(cmdContext.ConversationId, cmdContext.User?.Id ?? 0, cronStatement), cancellationToken);
 
         if (draft is null || draft.DayRepeatMode == DayRepeatMode.Undefined)
         {

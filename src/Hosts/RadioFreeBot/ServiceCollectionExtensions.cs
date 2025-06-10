@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RadioFreeBot.Features.GetHistory;
 using RadioFreeBot.ResourceAccess;
 
 namespace RadioFreeBot;
@@ -27,9 +28,11 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton(options.TimeProvider);
         services.AddYouTubeMusicProxyClient(options.YouTubeProxyOptions);
-        services.AddDbContext<RadioFreeDbContext>((_, opt) =>
+        services.AddScoped<AuditingInterceptor>();
+        services.AddDbContext<RadioFreeDbContext>((sp, opt) =>
         {
             opt.UseSqlite(options.ConnectionString);
+            opt.AddInterceptors(sp.GetRequiredService<AuditingInterceptor>());
         });
         return services;
     }
@@ -66,5 +69,14 @@ public class RadioFreeBotOptions
     public void UseSqliteDatabase(string connectionString = DefaultConnectionString)
     {
         ConnectionString = connectionString;
+    }
+}
+
+public static class AppBuilderExtensions
+{
+    public static void AddRadioFreeBotEndpoints(this IEndpointRouteBuilder app)
+    {
+        app.MapGet("/api/about", () => "Radio Free Bot API");
+        var getHistoryEndpoint = app.AddGetHistoryEndpoint();
     }
 }

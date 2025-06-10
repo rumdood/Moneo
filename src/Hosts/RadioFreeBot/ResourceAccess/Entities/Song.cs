@@ -5,6 +5,9 @@ namespace RadioFreeBot.ResourceAccess.Entities;
 
 public class Song : EntityBase
 {
+    [Column("external_id")]
+    public string? ExternalId { get; set; }
+    
     [Column("name")]
     [StringLength(250)]
     public string Name { get; set; }
@@ -17,9 +20,10 @@ public class Song : EntityBase
     
     private Song() { } // for EF Core
     
-    public Song(string name, string originalUrl)
+    public Song(string name, string? externalId = null, string originalUrl = "")
     {
         Name = name;
+        ExternalId = externalId;
         OriginalUrl = originalUrl;
     }
 

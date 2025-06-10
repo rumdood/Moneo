@@ -16,10 +16,18 @@ public enum ResponseType
     Menu
 }
 
+public enum TextFormat
+{
+    Plain,
+    Markdown,
+    Html
+}
+
 public class MoneoCommandResult
 {
     public string? UserMessageText { get; set; }
     public ResultType Type { get; set; }
     public ResponseType ResponseType { get; set; }
+    public TextFormat Format { get; set; } = TextFormat.Plain;
     public HashSet<string> MenuOptions { get; set; }
 }

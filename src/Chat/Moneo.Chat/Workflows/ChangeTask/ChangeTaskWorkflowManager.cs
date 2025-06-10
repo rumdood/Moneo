@@ -91,7 +91,7 @@ public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflo
             };
         }
         
-        await _mediator.Send(new ChangeTaskWorkflowStartedEvent(cmdContext.ConversationId), cancellationToken);
+        await _mediator.Send(new ChangeTaskWorkflowStartedEvent(cmdContext.ConversationId, cmdContext.User?.Id ?? 0), cancellationToken);
 
         var searchResult = await _taskResourceManager.GetTasksByKeywordSearchAsync(
             cmdContext.ConversationId, 
@@ -147,7 +147,7 @@ public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflo
             };
         }
         
-        return await _innerWorkflowManager.ContinueWorkflowAsync(machine, userInput, cancellationToken);
+        return await _innerWorkflowManager.ContinueWorkflowAsync(cmdContext, machine, userInput, cancellationToken);
     }
 
     public Task AbandonWorkflowAsync(long chatId)
@@ -155,7 +155,7 @@ public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflo
         throw new NotImplementedException();
     }
     
-    private async Task CompleteWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
+    private async Task CompleteWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, CommandContext context)
     {
         var result = await _taskResourceManager.UpdateTaskAsync(
             stateMachine.ConversationId, 
@@ -167,7 +167,7 @@ public class ChangeTaskWorkflowManager : WorkflowManagerBase, IChangeTaskWorkflo
         }
         
         _chatStates.Remove(new ConversationUserKey(stateMachine.ConversationId, stateMachine.Draft.ForUserId));
-        await _mediator.Send(new ChangeTaskWorkflowCompletedEvent(stateMachine.ConversationId));
+        await _mediator.Send(new ChangeTaskWorkflowCompletedEvent(stateMachine.ConversationId, context.User?.Id ?? 0));
     }
 
     private (bool Success, string? FailureMessage) HandleWaitingForUserSelection(

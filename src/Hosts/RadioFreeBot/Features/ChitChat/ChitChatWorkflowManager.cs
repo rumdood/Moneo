@@ -1,7 +1,6 @@
 using MediatR;
 using Moneo.Chat;
 using Moneo.Chat.Commands;
-using Moneo.Chat.Models;
 using Moneo.Chat.Workflows;
 using Moneo.Chat.Workflows.Chitchat;
 

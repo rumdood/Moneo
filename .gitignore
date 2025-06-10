@@ -9,6 +9,8 @@
 # Sqlite Files
 *.sqlite
 
+logs/
+
 # User-specific files
 *.rsuser
 *.suo

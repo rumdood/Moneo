@@ -10,6 +10,9 @@ public interface IYouTubeMusicProxyClient
     Task<MoneoResult> AddSongToPlaylistAsync(string playlistId, string songId, CancellationToken cancellationToken = default);
     Task<MoneoResult> RemoveSongFromPlaylistAsync(string playlistId, string songId, CancellationToken cancellationToken = default);
     Task<MoneoResult<SongItem>> GetSongFromPlaylistAsync(string playlistId, string songId, CancellationToken cancellationToken = default);
+
+    Task<MoneoResult<IReadOnlyList<SongItem>>> FindSongOnPlaylistAsync(string songName, string playlistId,
+        CancellationToken cancellationToken = default);
 }
 
 public class YouTubeProxyOptions
@@ -68,6 +71,13 @@ internal class YouTubeMusicProxyClient : IYouTubeMusicProxyClient
 
     public Task<MoneoResult<SongItem>> GetSongFromPlaylistAsync(string playlistId, string songId, CancellationToken cancellationToken = default)
     {
-        return SendRequestAsync<SongItem>(HttpMethod.Get, $"playlist/{playlistId}/song/{songId}", null, cancellationToken);
+        return SendRequestAsync<SongItem>(HttpMethod.Get, $"playlist/{playlistId}/songs/{songId}", null, cancellationToken);
+    }
+    
+    public Task<MoneoResult<IReadOnlyList<SongItem>>> FindSongOnPlaylistAsync(string songName, string playlistId, CancellationToken cancellationToken = default)
+    {
+        // url encode the song name to handle spaces and special characters
+        var encodedSongName = Uri.EscapeDataString(songName);
+        return SendRequestAsync<IReadOnlyList<SongItem>>(HttpMethod.Get, $"playlist/{playlistId}/songs?title={encodedSongName}", null, cancellationToken);
     }
 }

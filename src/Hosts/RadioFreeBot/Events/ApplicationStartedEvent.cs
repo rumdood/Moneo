@@ -24,18 +24,17 @@ internal sealed class ApplicationStartedEventHandler : INotificationHandler<Appl
     public async Task Handle(ApplicationStartedEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Application started");
-        
-        _logger.LogInformation("Ensuring database is created...");
-        // await _dbContext.Database.EnsureDeletedAsync(cancellationToken);
-        var dbExists = await _dbContext.Database.EnsureCreatedAsync(cancellationToken);
-        
-        if (!dbExists)
+    
+        var canConnect = await _dbContext.Database.CanConnectAsync(cancellationToken);
+        if (canConnect)
         {
-            _logger.LogInformation("dbExists is false");
+            _logger.LogInformation("Database exists and is reachable.");
         }
         else
         {
-            _logger.LogInformation("dbExists is true");
+            _logger.LogError("Database does not exist or is not reachable.");
+            // exit the application in an error state
+            throw new InvalidOperationException("Database connection failed. Please check your configuration.");
         }
     }
 }

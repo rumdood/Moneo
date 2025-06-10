@@ -51,7 +51,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     {
         try
         {
-            _logger.LogDebug("Received Telegram Message: {@Message}", JsonSerializer.Serialize(message));
+            _logger.LogDebug("Received Telegram Message: {@Message}", message);
             await _conversationManager.ProcessUserMessageAsync(new UserMessage(message.Chat.Id, message.From?.ToChatUser(), message.Text!));
         }
         catch (Exception e)
@@ -172,6 +172,7 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
                       new BotTextMessageRequest(
                           botTextMessage.ConversationId,
                           botTextMessage.Text,
+                          TextFormat.Plain,
                           botTextMessage.IsError);
         
         await Handle(message, cancellationToken);
@@ -192,7 +193,12 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
 
     public async Task Handle(BotTextMessageRequest request, CancellationToken cancellationToken)
     {
-        await _botClient.SendMessage(request.ConversationId, request.Text, cancellationToken: cancellationToken);
+        await _botClient.SendMessage(
+            chatId: request.ConversationId, 
+            text: request.Text,
+            parseMode: request.Format.ToParseMode(),
+            replyMarkup: new ReplyKeyboardRemove(),
+            cancellationToken: cancellationToken);
     }
 
     public async Task Handle(BotGifMessageRequest request, CancellationToken cancellationToken)
@@ -245,14 +251,25 @@ public class TelegramChatAdapter : IChatAdapter<Update, BotTextMessageRequest>,
     }
 }
 
-internal static class TelegramUserExtensions
+internal static class TelegramExtensions
 {
     public static ChatUser ToChatUser(this User user)
     {
         return new ChatUser(
             user.Id,
-            user.Username ?? user.FirstName ?? "Unknown",
             user.FirstName,
-            user.LastName);
+            user.LastName,
+            user.Username);
+    }
+
+    public static ParseMode ToParseMode(this TextFormat format)
+    {
+        return format switch
+        {
+            TextFormat.Plain => ParseMode.None,
+            TextFormat.Markdown => ParseMode.MarkdownV2,
+            TextFormat.Html => ParseMode.Html,
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+        };
     }
 }

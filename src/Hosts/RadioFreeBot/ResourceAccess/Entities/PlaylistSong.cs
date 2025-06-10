@@ -15,5 +15,20 @@ public class PlaylistSong : EntityBase
     [Column("added_by_user_id")]
     public long? AddedByUserId { get; set; }
     public User? AddedByUser { get; set; }
+    
+    [Column("added_at")]
+    public DateTime AddedAt { get; set; }
+
+    private PlaylistSong()
+    {
+    }
+    
+    public PlaylistSong(long playlistId, long songId, DateTime addedAt, long? addedByUserId = null)
+    {
+        PlaylistId = playlistId;
+        SongId = songId;
+        AddedByUserId = addedByUserId;
+        AddedAt = addedAt;
+    }
 }
 

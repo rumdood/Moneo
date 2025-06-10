@@ -44,7 +44,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
     
     public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, string? taskName = null, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new CreateTaskWorkflowStartedEvent(cmdContext.ConversationId), cancellationToken);
+        await _mediator.Send(new CreateTaskWorkflowStartedEvent(cmdContext.ConversationId, cmdContext.User?.Id ?? 0), cancellationToken);
         
         if (_chatStates.ContainsKey(cmdContext.GenerateConversationUserKey()))
         {
@@ -76,7 +76,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
             };
         }
         
-        return await _innerWorkflowManager.ContinueWorkflowAsync(machine, userInput, cancellationToken);
+        return await _innerWorkflowManager.ContinueWorkflowAsync(cmdContext, machine, userInput, cancellationToken);
     }
 
     public Task AbandonWorkflowAsync(long chatId)
@@ -84,7 +84,7 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
         throw new NotImplementedException();
     }
     
-    private async Task CompleteWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
+    private async Task CompleteWorkflowAsync(IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, CommandContext context)
     {
         var result = await _taskManagerClient.CreateTaskAsync(stateMachine.ConversationId, stateMachine.Draft.ToEditDto());
         
@@ -97,6 +97,6 @@ public class CreateTaskWorkflowManager : ICreateTaskWorkflowManager
         }
         
         _chatStates.Remove(new ConversationUserKey(stateMachine.ConversationId, stateMachine.Draft.ForUserId));
-        await _mediator.Send(new CreateTaskWorkflowCompletedEvent(stateMachine.ConversationId));
+        await _mediator.Send(new CreateTaskWorkflowCompletedEvent(stateMachine.ConversationId, context.User?.Id ?? 0));
     }
 }

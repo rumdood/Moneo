@@ -5,7 +5,7 @@ namespace Moneo.Chat;
 
 public static class CommandContextFactory
 {
-    private static readonly CommandStateRegistry CommandStateRegistry = new ();
+    private static readonly CommandStateRegistry CommandStateRegistry = CommandStateRegistry.Instance;
     
     private static string GetCommandKeyForDefaultState(string text)
     {

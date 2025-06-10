@@ -4,6 +4,7 @@ namespace Moneo.Chat.CommandRegistration;
 
 public static class CommandRegistrar
 {
+    private static readonly CommandStateRegistry CommandStateRegistry = CommandStateRegistry.Instance;
     public const string RegistrationMethodName = "Register";
     
     public static void RegisterCommands(
@@ -20,9 +21,12 @@ public static class CommandRegistrar
                 {
                     continue;
                 }
+
+                var customAttributes = type.GetCustomAttributes()
+                    .Where(attr => attr is UserCommandAttribute or WorkflowContinuationCommandAttribute)
+                    .ToArray();
                 
-                var customAttributes = type.GetCustomAttributes();
-                if (!customAttributes.Any(attr => attr is UserCommandAttribute or WorkflowContinuationCommandAttribute))
+                if (customAttributes.Length == 0)
                 {
                     continue;
                 }
@@ -35,6 +39,18 @@ public static class CommandRegistrar
         {
             var registerMethod = type.GetMethod(RegistrationMethodName, BindingFlags.Public | BindingFlags.Static);
             registerMethod?.Invoke(null, null);
+            
+            var continuationAttribute = type.GetCustomAttributes<WorkflowContinuationCommandAttribute>().SingleOrDefault();
+
+            if (continuationAttribute is null)
+            {
+                continue;
+            }
+                
+            // register the continuation state and command
+            CommandStateRegistry.RegisterCommand(
+                ChatState.FromName(continuationAttribute.RequiredChatStateName),
+                continuationAttribute.CommandKey);
         }
     }
 }

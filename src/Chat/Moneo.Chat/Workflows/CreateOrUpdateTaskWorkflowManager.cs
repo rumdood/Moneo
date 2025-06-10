@@ -16,7 +16,10 @@ public interface ITaskWorkflowManager : IWorkflowManager
         IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, CancellationToken cancellationToken);
 
     Task<MoneoCommandResult> ContinueWorkflowAsync(
-        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, string userInput, CancellationToken cancellationToken);
+        CommandContext context,
+        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, 
+        string userInput, 
+        CancellationToken cancellationToken);
 }
 
 [MoneoWorkflow]
@@ -30,14 +33,14 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
         Dictionary<TaskCreateOrUpdateState, Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, string, (
             bool Success, string? FailureMessage)>>
         _responseHandlers = new();
-    private readonly Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task> _onComplete;
+    private readonly Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, CommandContext, Task> _onComplete;
     private readonly Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task<MoneoCommandResult>> _onReadyForRepeaterCron;
     private readonly string _defaultTimezone;
 
     public CreateOrUpdateTaskWorkflowManager(
         ILogger logger,
         Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task<MoneoCommandResult>> onReadyForRepeaterCron,
-        Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, Task> onComplete,
+        Func<IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>, CommandContext, Task> onComplete,
         string defaultTimezone = "America/Los_Angeles")
     {
         _logger = logger;
@@ -292,7 +295,10 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
     }
 
     public async Task<MoneoCommandResult> ContinueWorkflowAsync(
-        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, string userInput, CancellationToken cancellationToken = default)
+        CommandContext context,
+        IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine, 
+        string userInput, 
+        CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Current State: {@State}", stateMachine.CurrentState);
 
@@ -335,7 +341,7 @@ public class CreateOrUpdateTaskWorkflowManager : ITaskWorkflowManager
         switch (stateMachine.CurrentState)
         {
             case TaskCreateOrUpdateState.End:
-                await _onComplete(stateMachine);
+                await _onComplete(stateMachine, context);
                 break;
             case TaskCreateOrUpdateState.WaitingForRepeaterCron:
                 return await _onReadyForRepeaterCron.Invoke(stateMachine);

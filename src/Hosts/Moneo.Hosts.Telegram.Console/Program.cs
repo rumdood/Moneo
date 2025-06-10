@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using Moneo.Chat;
 using Moneo.Chat.Telegram;
 using Moneo.Common;
@@ -33,13 +34,11 @@ builder.ConfigureAppConfiguration((context, config) =>
 builder.ConfigureServices((context, services) =>
 {
     var configuration = context.Configuration;
-    
-    services.AddLogging(loggingBuilder =>
-    {
-        loggingBuilder.AddConsole();
-        loggingBuilder.AddDebug();
-        loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
-    });
+
+    services.AddSerilog(
+        opt => opt
+            .WriteTo.Console()
+            .ReadFrom.Configuration(configuration));
 
     var taskManagementConfig = configuration.GetSection("Moneo:TaskManagement").Get<TaskManagementConfig>();
     if (taskManagementConfig is null)

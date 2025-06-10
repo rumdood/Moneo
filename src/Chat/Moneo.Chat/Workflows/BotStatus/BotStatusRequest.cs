@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Moneo.Chat.Commands;
 using System.Text;
-using Moneo.Chat.Models;
 
 namespace Moneo.Chat.Workflows.BotStatus
 {
@@ -16,10 +15,12 @@ namespace Moneo.Chat.Workflows.BotStatus
     internal class BotStatusRequestHandler : IRequestHandler<BotStatusRequest, MoneoCommandResult>
     {
         private readonly IChatAdapter _chatAdapter;
+        private readonly IChatStateRepository _chatStateRepository;
 
-        public BotStatusRequestHandler(IChatAdapter chatAdapter)
+        public BotStatusRequestHandler(IChatAdapter chatAdapter, IChatStateRepository chatStateRepository)
         {
             _chatAdapter = chatAdapter;
+            _chatStateRepository = chatStateRepository;
         }
 
         public async Task<MoneoCommandResult> Handle(BotStatusRequest request, CancellationToken cancellationToken)
@@ -37,6 +38,21 @@ namespace Moneo.Chat.Workflows.BotStatus
                 builder.AppendLine($"Webhook Last Error Date: {status.WebHookInfo.LastErrorDate}");
                 builder.AppendLine($"Webhook Last Error Message: {status.WebHookInfo.LastErrorMessage}");
                 builder.AppendLine($"Webhook Pending Update Count: {status.WebHookInfo.PendingUpdateCount}");
+            }
+            
+            builder.AppendLine("==========================");
+            builder.AppendLine("Chat States:");
+            var chatStates = await _chatStateRepository.GetAllChatStatesAsync();
+            if (chatStates.Count == 0)
+            {
+                builder.AppendLine("No chat states found.");
+            }
+            else
+            {
+                foreach (var chatState in chatStates)
+                {
+                    builder.AppendLine($"Chat ID: {chatState.ChatId}, User ID: {chatState.UserId}, State: {chatState.State}");
+                }
             }
 
             return new MoneoCommandResult

@@ -1,7 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using Moneo.Chat.Telegram;
 using Moneo.Chat.Workflows.Chitchat;
 using RadioFreeBot;
 using RadioFreeBot.Features.AddSongToPlaylist;
+using RadioFreeBot.ResourceAccess;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,16 @@ if (config is null)
 }
 
 builder.Services.AddSingleton(config);
+builder.Services.AddSingleton(TimeProvider.System);
+
+builder.Services.AddPlaylistManagement(opt =>
+{
+    opt.ConfigureYouTubeProxy(ytopt =>
+    {
+        ytopt.YouTubeMusicProxyUrl = config.YouTubeMusicProxyUrl;
+    });
+    opt.UseSqliteDatabase(builder.Configuration.GetConnectionString("RadioFree")!);
+});
 
 builder.Services.AddTelegramChatAdapter(opts =>
 {

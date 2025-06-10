@@ -120,7 +120,7 @@ public class AddSongByQueryWorkflowManager : WorkflowManagerBase, IAddSongByQuer
             };
         }
 
-        await Mediator.Send(new AddSongToPlaylistWorkflowStartedEvent(context.ConversationId), cancellationToken);
+        await Mediator.Send(new AddSongToPlaylistWorkflowStartedEvent(context.ConversationId, context.User?.Id ?? 0), cancellationToken);
         var machine = _chatStates[context.ConversationId] = new AddSongStateMachine(playlistId);
 
         if (!string.IsNullOrEmpty(userInput))
@@ -166,10 +166,10 @@ public class AddSongByQueryWorkflowManager : WorkflowManagerBase, IAddSongByQuer
         }
     }
 
-    private async Task CompleteWorkflowAsync(long chatId, CancellationToken cancellationToken)
+    private async Task CompleteWorkflowAsync(CommandContext context, CancellationToken cancellationToken)
     {
-        await Mediator.Send(new AddSongToPlaylistWorkflowCompletedEvent(chatId), cancellationToken);
-        _chatStates.Remove(chatId);
+        await Mediator.Send(new AddSongToPlaylistWorkflowCompletedEvent(context.ConversationId, context.User?.Id ?? 0), cancellationToken);
+        _chatStates.Remove(context.ConversationId);
     }
 
     public async Task<MoneoCommandResult> ContinueWorkflowAsync(CommandContext context, string userInput, CancellationToken cancellationToken = default)
@@ -208,7 +208,7 @@ public class AddSongByQueryWorkflowManager : WorkflowManagerBase, IAddSongByQuer
 
         if (machine.CurrentState == AddSongStates.Complete)
         {
-            await CompleteWorkflowAsync(context.ConversationId, cancellationToken);
+            await CompleteWorkflowAsync(context, cancellationToken);
         }
 
         if (response is null)
