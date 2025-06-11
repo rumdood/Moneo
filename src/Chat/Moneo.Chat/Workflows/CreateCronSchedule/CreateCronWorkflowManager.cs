@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.Commands;
-using Moneo.Chat.Models;
 
 namespace Moneo.Chat.Workflows.CreateCronSchedule;
 
