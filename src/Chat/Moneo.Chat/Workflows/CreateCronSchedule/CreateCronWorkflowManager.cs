@@ -2,8 +2,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Models;
-using Moneo.Chat.Workflows.ChangeTask;
-using Moneo.Chat.Workflows.CreateTask;
 
 namespace Moneo.Chat.Workflows.CreateCronSchedule;
 
@@ -20,11 +18,12 @@ internal enum DayRepeatMode
 public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflowManager
 {
     private readonly ILogger<CreateCronWorkflowManager> _logger;
-    private readonly Dictionary<long, ChatState?> _outerChatStates = new();
-    private readonly Dictionary<long, CronStateMachine> _chatStates = new();
+    private readonly Dictionary<ConversationUserKey, ChatState?> _outerChatStates = new();
+    private readonly Dictionary<ConversationUserKey, CronStateMachine> _chatStates = new();
     private readonly
         Dictionary<CronWorkflowState, Func<CronDraft, string, (bool Success, string? FailureMessage)>>
         _responseHandlers = new();
+    private readonly IChatStateRepository _chatStateRepository;
 
     private readonly Dictionary<CronWorkflowState, Func<CronDraft, MoneoCommandResult>> _responseStore = new();
 
@@ -180,20 +179,25 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
 
     public async Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, CancellationToken cancellationToken = default)
     {
+        // fetch the state before we start the workflow and change the current state
+        var outerState = await _chatStateRepository.GetChatStateAsync(cmdContext.ConversationId, cmdContext.User?.Id ?? 0);
+        
         await Mediator.Send(new CreateCronWorkflowStartedEvent(cmdContext.ConversationId, cmdContext.User?.Id ?? 0), cancellationToken);
         
+        var conversationUserKey = cmdContext.GenerateConversationUserKey();
+        
         // mark where we came from
-        _outerChatStates[cmdContext.ConversationId] = cmdContext.CurrentState;
+        _outerChatStates[conversationUserKey] = outerState;
 
-        // save the machine
-        _chatStates[cmdContext.ConversationId] = new CronStateMachine();
+        _chatStates[conversationUserKey] = new CronStateMachine();
 
         return await ContinueWorkflowAsync(cmdContext, "", cancellationToken);
     }
 
     public async Task<MoneoCommandResult> ContinueWorkflowAsync(CommandContext cmdContext, string userInput, CancellationToken cancellationToken = default)
     {
-        if (!_chatStates.TryGetValue(cmdContext.ConversationId, out var machine))
+        var conversationUserKey = cmdContext.GenerateConversationUserKey();
+        if (!_chatStates.TryGetValue(conversationUserKey, out var machine))
         {
             // we shouldn't be here
             await CompleteWorkflowAsync(cmdContext, cancellationToken: cancellationToken);
@@ -235,7 +239,8 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
 
     private async Task<MoneoCommandResult> CompleteWorkflowAsync(CommandContext cmdContext, CronDraft? draft = null, CancellationToken cancellationToken = default)
     {
-        _chatStates.Remove(cmdContext.ConversationId);
+        var conversationUserKey = cmdContext.GenerateConversationUserKey();
+        _chatStates.Remove(conversationUserKey);
         var cronStatement = draft?.GenerateCronStatement() ?? "";
         await Mediator.Send(new CreateCronWorkflowCompletedEvent(cmdContext.ConversationId, cmdContext.User?.Id ?? 0, cronStatement), cancellationToken);
 
@@ -249,25 +254,53 @@ public class CreateCronWorkflowManager : WorkflowManagerBase, ICreateCronWorkflo
             };
         }
 
-        var currentOuterState = _outerChatStates[cmdContext.ConversationId];
-
-        return currentOuterState switch
+        var currentOuterState = _outerChatStates[conversationUserKey];
+        
+        if (currentOuterState is null)
         {
-            _ when currentOuterState == ChatState.CreateTask => await Mediator.Send(new CreateTaskContinuationRequest(cmdContext.ConversationId, new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
-            _ when currentOuterState == ChatState.ChangeTask => await Mediator.Send(new ChangeTaskContinuationRequest(cmdContext.ConversationId,  new ChatUser(draft!.ForUserId, ""), cronStatement), cancellationToken),
-            _ => new MoneoCommandResult
+            return new MoneoCommandResult
             {
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
-                UserMessageText =
-                    "I'm not sure what you were trying to do, but it didn't work (invalid outer chat state: {currentOuterState})"
-            }
-        };
+                UserMessageText = "I don't know what to do with this cron statement, I don't know where we came from"
+            };
+        }
+
+        var continuationCommand = CommandStateRegistry.Instance.GetCommandForState(currentOuterState);
+
+        if (string.IsNullOrEmpty(continuationCommand))
+        {
+            return new MoneoCommandResult
+            {
+                ResponseType = ResponseType.Text,
+                Type = ResultType.Error,
+                UserMessageText = "I don't know what to do with this cron statement, I don't know where we came from"
+            };
+        }
+
+        var newContext = CommandContextFactory.BuildCommandContext(cmdContext.ConversationId, cmdContext.User,
+            currentOuterState, continuationCommand + " " + cronStatement);
+
+        var userRequest = UserRequestFactory.GetUserRequest(newContext);
+        
+        if (userRequest is null)
+        {
+            _logger.LogError("Failed to create user request for command context {@Context}", newContext);
+            return new MoneoCommandResult
+            {
+                ResponseType = ResponseType.Text,
+                Type = ResultType.Error,
+                UserMessageText = "I don't know what to do with this cron statement, I don't know where we came from"
+            };
+        }
+        
+        return await Mediator.Send(userRequest, cancellationToken);
     }
 
-    public CreateCronWorkflowManager(IMediator mediator, ILogger<CreateCronWorkflowManager> logger) : base(mediator)
+    public CreateCronWorkflowManager(IMediator mediator, ILogger<CreateCronWorkflowManager> logger, IChatStateRepository chatStateRepository) : base(mediator)
     {
         _logger = logger;
+        _chatStateRepository = chatStateRepository;
         InitWorkflow();
         InitResponses();
     }

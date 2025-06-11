@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.SendBotTextMessage;
+namespace Moneo.Chat.Telegram.Api.SendBotTextMessage;
 
 public static class SendBotTextMessageEndpoint
 {

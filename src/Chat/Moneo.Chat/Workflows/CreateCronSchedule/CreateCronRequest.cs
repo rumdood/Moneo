@@ -14,10 +14,12 @@ public partial class CreateCronRequest : UserRequestBase
     {
         CalledFromState = context.CurrentState;
         
+        /*
         if (CalledFromState != ChatState.CreateTask && CalledFromState != ChatState.ChangeTask)
         {
             throw new ArgumentException("Invalid chat state for CRON creation");
         }
+        */
         
         TaskName = context.Args.Length > 0
             ? string.Join(" ", context.Args)
@@ -43,10 +45,12 @@ public partial class CreateCronRequest : UserRequestBase
         // the first arg should be the chat state
         CalledFromState = ChatState.FromName(args[0]);
         
+        /*
         if (CalledFromState != ChatState.CreateTask && CalledFromState != ChatState.ChangeTask)
         {
             throw new ArgumentException("Invalid chat state for CRON creation");
         }
+        */
         
         TaskName = args.Length > 0
             ? string.Join(" ", args)

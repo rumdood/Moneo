@@ -1,14 +1,14 @@
 using AutoFixture.AutoMoq;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Moneo.Chat;
 using Moneo.Chat.Commands;
-using Moneo.Chat.Workflows;
-using Moneo.Chat.Workflows.ChangeTask;
-using Moneo.Chat.Workflows.CreateTask;
 using Moneo.Common;
+using Moneo.Hosts.Chat.Api.Tasks;
 using Moneo.TaskManagement.Contracts;
 using Moneo.TaskManagement.Contracts.Models;
+using Moneo.TaskManagement.Workflows;
+using Moneo.TaskManagement.Workflows.ChangeTask;
+using Moneo.TaskManagement.Workflows.CreateTask;
 
 namespace Moneo.Tests;
 

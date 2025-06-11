@@ -2,7 +2,7 @@ using MediatR;
 using Moneo.Chat;
 using Moneo.Common;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.StopChatAdapter;
+namespace Moneo.Chat.Telegram.Api.StopChatAdapter;
 
 public sealed record StopTelegramRequest : IRequest<MoneoResult>;
 

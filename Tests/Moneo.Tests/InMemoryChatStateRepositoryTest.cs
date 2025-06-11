@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moneo.Chat;
+using Moneo.Hosts.Chat.Api;
 
 namespace Moneo.Tests;
 
@@ -15,7 +16,7 @@ public class InMemoryChatStateRepositoryTest
         // Arrange
         var context = _fixture.GetCommandContext();
         
-        var chatState = ChatState.CreateTask;
+        var chatState = TaskChatStates.CreateTask;
 
         // Act
         await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, chatState);
@@ -30,8 +31,8 @@ public class InMemoryChatStateRepositoryTest
     {
         // Arrange
         var context = _fixture.GetCommandContext();
-        var chatState = ChatState.CreateTask;
-        var newChatState = ChatState.ChangeTask;
+        var chatState = TaskChatStates.CreateTask;
+        var newChatState = TaskChatStates.ChangeTask;
         
         // Act
         await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, chatState);
@@ -47,8 +48,8 @@ public class InMemoryChatStateRepositoryTest
     {
         // Arrange
         var context = _fixture.GetCommandContext();
-        var chatState = ChatState.CreateTask;
-        var newChatState = ChatState.ChangeTask;
+        var chatState = TaskChatStates.CreateTask;
+        var newChatState = TaskChatStates.ChangeTask;
         
         // Act
         await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, chatState);
@@ -67,7 +68,7 @@ public class InMemoryChatStateRepositoryTest
         var context = _fixture.GetCommandContext();
         
         // Act
-        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, ChatState.CreateTask);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, TaskChatStates.CreateTask);
         await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, ChatState.Waiting);
         await _chatStateRepository.RevertChatStateAsync(context.ConversationId, context.User!.Id);
 
@@ -80,7 +81,7 @@ public class InMemoryChatStateRepositoryTest
     public async Task RevertChatStateAsync_WhenCalledMultipleTimes_Works()
     {
         var context = _fixture.GetCommandContext();
-        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, ChatState.ChangeTask);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, TaskChatStates.ChangeTask);
         await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, ChatState.CreateCron);
         await _chatStateRepository.RevertChatStateAsync(context.ConversationId, context.User!.Id);
         await _chatStateRepository.RevertChatStateAsync(context.ConversationId, context.User!.Id);

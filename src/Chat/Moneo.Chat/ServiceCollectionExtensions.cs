@@ -150,7 +150,6 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddInMemoryChatStateManagement(this IServiceCollection services)
     {
         services.AddSingleton<IChatStateRepository, InMemoryChatStateRepository>();
-        services.AddSingleton<IWorkflowWithTaskDraftStateMachineRepository, TaskCreateOrChangeStateMachineRepository>();
         services.AddSingleton<IWorkflowStateMachineRepository<CronWorkflowState>, CronStateMachineRepository>();
         return services;
     }

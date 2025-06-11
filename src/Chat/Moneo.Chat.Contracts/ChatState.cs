@@ -1,18 +1,5 @@
 namespace Moneo.Chat;
 
-/*
-public enum ChatState
-{
-    Waiting,
-    CreateTask,
-    ChangeTask,
-    CreateCron,
-    CompleteTask,
-    SkipTask,
-    ConfirmCommand,
-}
-*/
-
 public sealed class ChatState
 {
     private static readonly Dictionary<string, ChatState> ChatStateRegistry = new(StringComparer.OrdinalIgnoreCase);
@@ -26,11 +13,7 @@ public sealed class ChatState
     }
 
     public static readonly ChatState Waiting = new("Waiting");
-    public static readonly ChatState CreateTask = new("CreateTask");
-    public static readonly ChatState ChangeTask = new("ChangeTask");
     public static readonly ChatState CreateCron = new("CreateCron");
-    public static readonly ChatState CompleteTask = new("CompleteTask");
-    public static readonly ChatState SkipTask = new("SkipTask");
     public static readonly ChatState ConfirmCommand = new("ConfirmCommand");
 
     // Allow external creation

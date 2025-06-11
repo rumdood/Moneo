@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.StartChatAdapter;
+namespace Moneo.Chat.Telegram.Api.StartChatAdapter;
 
 public static class StartChatAdapterEndpoints
 {

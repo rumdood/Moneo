@@ -1,6 +1,7 @@
 using Moneo.Chat.Telegram;
 using Moneo.Hosts.Chat.Api;
 using Moneo.Hosts.Chat.Api.Tasks;
+using Moneo.TaskManagement.Workflows.CreateTask;
 using Moneo.Web.Auth;
 using Moneo.Web.Auth.Logging;
 
@@ -47,6 +48,8 @@ builder.Services.AddTelegramChatAdapter(opts =>
             "Telegram:BotToken and Telegram:CallbackToken must be set in the configuration");
     }
     
+    opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<CreateTaskRequest>();
+    
     opts.MasterConversationId = masterConversationId;
     opts.BotToken = botToken;
     opts.CallbackToken = callbackToken;
@@ -59,6 +62,8 @@ builder.Services.AddTaskManagement(opt =>
 {
     opt.UseConfiguration(taskManagementConfig);
 });
+
+builder.Services.AddTaskManagementChat();
 
 builder.Services.AddOpenApi();
 

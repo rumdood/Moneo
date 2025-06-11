@@ -1,4 +1,4 @@
-namespace Moneo.Moneo.Chat.Telegram.Api.ReceiveMessage;
+namespace Moneo.Chat.Telegram.Api.ReceiveMessage;
 
 public class ReceiveMessageResultData
 {

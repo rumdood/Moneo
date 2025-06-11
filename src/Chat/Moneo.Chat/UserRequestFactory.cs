@@ -1,5 +1,3 @@
-using Moneo.Chat.Models;
-
 namespace Moneo.Chat;
 
 public static class UserRequestFactory

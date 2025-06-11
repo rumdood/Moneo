@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moneo.Chat;
 using Moneo.Common;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.StartChatAdapter;
+namespace Moneo.Chat.Telegram.Api.StartChatAdapter;
 
 public sealed record StartTelegramRequest(string RequestUrl) : IRequest<MoneoResult>;
 

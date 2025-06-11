@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Moneo.Moneo.Chat.Telegram.Api.GetStatus;
-using Moneo.Moneo.Chat.Telegram.Api.ReceiveMessage;
-using Moneo.Moneo.Chat.Telegram.Api.SendBotTextMessage;
-using Moneo.Moneo.Chat.Telegram.Api.StartChatAdapter;
-using Moneo.Moneo.Chat.Telegram.Api.StopChatAdapter;
+using Moneo.Chat.Telegram.Api.GetStatus;
+using Moneo.Chat.Telegram.Api.ReceiveMessage;
+using Moneo.Chat.Telegram.Api.SendBotTextMessage;
+using Moneo.Chat.Telegram.Api.StartChatAdapter;
+using Moneo.Chat.Telegram.Api.StopChatAdapter;
 
 namespace Moneo.Chat.Telegram;
 

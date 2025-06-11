@@ -14,6 +14,7 @@
       <ProjectReference Include="..\..\Moneo.Common\Moneo.Common.csproj" />
       <ProjectReference Include="..\..\Moneo.Web.Common\Moneo.Web.Common.csproj" />
       <ProjectReference Include="..\..\TaskManagement\Moneo.TaskManagement.Contracts\Moneo.TaskManagement.Contracts.csproj" />
+      <ProjectReference Include="..\Moneo.Hosts.Chat.Api\Moneo.Hosts.Chat.Api.csproj" />
       <ProjectReference Include="..\RadioFreeBot\RadioFreeBot.csproj" />
     </ItemGroup>
 

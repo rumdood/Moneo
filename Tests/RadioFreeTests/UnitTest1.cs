@@ -27,7 +27,7 @@ public class AddSongToPlaylistWorkflowManagerTests
     {
         var chatId = _fixture.Create<long>();
         var playlistId = _fixture.Create<string>();
-        var result = await _manager.StartWorkflowForQueryAsync(chatId, playlistId, null);
+        var result = await _manager.StartWorkflowAsync(chatId, playlistId, null);
         result.ShouldNotBeNull();
         Debug.Assert(result.UserMessageText != null, "result.UserMessageText != null");
         result.UserMessageText.ShouldContain("What song do you want to add");
@@ -39,8 +39,8 @@ public class AddSongToPlaylistWorkflowManagerTests
     {
         var chatId = _fixture.Create<long>();
         var playlistId = _fixture.Create<string>();
-        await _manager.StartWorkflowForQueryAsync(chatId, playlistId, null);
-        var result = await _manager.StartWorkflowForQueryAsync(chatId, playlistId, null);
+        await _manager.StartWorkflowAsync(chatId, playlistId, null);
+        var result = await _manager.StartWorkflowAsync(chatId, playlistId, null);
         result.Type.ShouldBe(ResultType.Error);
         Debug.Assert(result.UserMessageText != null, "result.UserMessageText != null");
         result.UserMessageText.ShouldContain("already in a workflow");
@@ -63,7 +63,7 @@ public class AddSongToPlaylistWorkflowManagerTests
         var playlistId = _fixture.Create<string>();
         _client.Setup(c => c.FindSongAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MoneoResult<List<RadioFreeBot.Models.SongItem>>.Failed("Song not found"));
-        await _manager.StartWorkflowForQueryAsync(chatId, playlistId, "song");
+        await _manager.StartWorkflowAsync(chatId, playlistId, "song");
         var result = await _manager.ContinueWorkflowAsync(chatId, "song");
         result.Type.ShouldBe(ResultType.Error);
         Debug.Assert(result.UserMessageText != null, "result.UserMessageText != null");
@@ -83,7 +83,7 @@ public class AddSongToPlaylistWorkflowManagerTests
             .Create();
         _client.Setup(c => c.FindSongAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MoneoResult<List<RadioFreeBot.Models.SongItem>>.Failed("Song not found"));
-        await _manager.StartWorkflowForQueryAsync(chatId, playlistId, "song");
+        await _manager.StartWorkflowAsync(chatId, playlistId, "song");
         var result = await _manager.ContinueWorkflowAsync(chatId, "song");
         result.Type.ShouldBe(ResultType.NeedMoreInfo);
         Debug.Assert(result.UserMessageText != null, "result.UserMessageText != null");

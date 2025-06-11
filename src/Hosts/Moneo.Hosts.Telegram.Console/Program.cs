@@ -8,8 +8,10 @@ using Serilog;
 using Moneo.Chat;
 using Moneo.Chat.Telegram;
 using Moneo.Common;
+using Moneo.Hosts.Chat.Api;
 using Moneo.TaskManagement.Contracts;
 using Moneo.TaskManagement.Contracts.Models;
+using Moneo.TaskManagement.Workflows.CreateTask;
 using Moneo.Web;
 using RadioFreeBot;
 using RadioFreeBot.Features.FindSong;
@@ -80,7 +82,10 @@ builder.ConfigureServices((context, services) =>
         opts.UseInMemoryStateManagement();
         opts.RegisterAsHostedService();
         opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<FindSongRequest>();
+        opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<CreateTaskRequest>();
     });
+
+    services.AddTaskManagementChat();
 
     services.AddTaskManagement(opt =>
     {
