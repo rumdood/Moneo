@@ -17,23 +17,20 @@ public interface IAddSongByIdWorkflowManager
 }
 
 [MoneoWorkflow]
-public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkflowManager
+public class AddSongByIdWorkflowManager : WorkflowManagerWithDbContextBase<RadioFreeDbContext>, IAddSongByIdWorkflowManager
 {
     private readonly IYouTubeMusicProxyClient _youTubeMusicProxyClient;
-    private readonly RadioFreeDbContext _dbContext;
     private readonly ILogger<AddSongByIdWorkflowManager> _logger;
     private readonly TimeProvider _timeProvider;
-    private const string YouTubeSongUrl = "https://music.youtube.com/watch?v=";
     
     public AddSongByIdWorkflowManager(
-        IMediator mediator, 
-        IYouTubeMusicProxyClient youTubeMusicProxyClient, 
-        RadioFreeDbContext dbDbContext, 
+        IMediator mediator,
+        IServiceScopeFactory serviceScopeFactory,
+        IYouTubeMusicProxyClient youTubeMusicProxyClient,
         ILogger<AddSongByIdWorkflowManager> logger,
-        TimeProvider timeProvider) : base(mediator)
+        TimeProvider timeProvider) : base(mediator, serviceScopeFactory)
     {
         _youTubeMusicProxyClient = youTubeMusicProxyClient;
-        _dbContext = dbDbContext;
         _logger = logger;
         _timeProvider = timeProvider;
     }
@@ -51,12 +48,12 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
     /// <summary>
     /// Updates the database with the song information after adding it to the playlist.
     /// </summary>
-    /// <param name="songId"></param>
-    /// <param name="playlistExternalId"></param>
-    /// <param name="userId"></param>
+    /// <param name="song"></param>
+    /// <param name="playlist"></param>
+    /// <param name="context"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    private async Task<MoneoResult> UpdateDatabaseAsync(SongItem song, long playlistId, CommandContext context,
+    private async Task<MoneoResult> UpdateDatabaseAsync(SongItem song, Playlist playlist, CommandContext context,
         CancellationToken cancellationToken = default)
     {
         if (context.User is null)
@@ -66,43 +63,40 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
         
         try
         {
-            // Check if the song already exists in the database
-            var existingSong =
-                await _dbContext.Songs.Where(s => s.ExternalId == song.Id).FirstOrDefaultAsync(cancellationToken);
-        
-            if (existingSong == null)
-            {
-                // If the song does not exist, create a new entry
-                existingSong = new Song(song.Title, song.Id, YouTubeSongUrl + song.Id);
-                _dbContext.Songs.Add(existingSong);
-                _logger.LogDebug("Adding new song {SongId} to the database for user {UserId}", song.Id, context.User?.Id ?? 0);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
+            await using var scope = GetScope();
+            var dbContext = scope.GetDbContext<RadioFreeDbContext>();
             
             var existingUser =
-                await _dbContext.Users.Where(u => u.TelegramId == context.User!.Id).FirstOrDefaultAsync(cancellationToken);
+                await dbContext.Users.Where(u => u.TelegramId == context.User!.Id).FirstOrDefaultAsync(cancellationToken);
             
             if (existingUser == null)
             {
                 // If the user does not exist, create a new entry
-                existingUser = new User(context.User!.Username ?? context.User!.FirstName, context.User!.Id);
-                _dbContext.Users.Add(existingUser);
+                existingUser = new User(context.User!.ReferenceName, context.User!.Id);
+                dbContext.Users.Add(existingUser);
                 _logger.LogDebug("Adding new user {UserId} to the database", context.User!.Id);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
-        
-            // create a new PlaylistSong entry
-            var playlistSong = new PlaylistSong(playlistId, existingSong.Id, _timeProvider.GetUtcNow().UtcDateTime, existingUser.Id);
-            _dbContext.PlaylistSongs.Add(playlistSong);
-            _logger.LogDebug("Adding song {SongId} to playlist {PlaylistId} for user {UserId}", song.Id, playlistId, existingUser.TelegramId);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            
+            var getOrCreateResult = await dbContext.GetOrCreateSongAsync(song, playlist, existingUser, cancellationToken);
+            
+            if (!getOrCreateResult.IsSuccess)
+            {
+                _logger.LogError("Failed to get or create song {SongId} in the database: {ErrorMessage}", song.Id, getOrCreateResult.Message);
+                return MoneoResult.Failed(getOrCreateResult.Message);
+            }
+            
+            var existingSong = getOrCreateResult.Data!;
+            _logger.LogDebug(
+                "Successfully retrieved or created song {SongId} (external id: {ExternalId} in the database"
+                , existingSong.Id, existingSong.ExternalId);
         
             return MoneoResult.Success();
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error adding song {SongId} to the Playlist {PlaylistId} in the database", song.Id, playlistId);
-            return MoneoResult.Failed($"Failed to add song {song.Id} to the playlist {playlistId} in the database: {e.Message}");
+            _logger.LogError(e, "Error adding song {SongId} to the Playlist {PlaylistId} in the database", song.Id, playlist.Id);
+            return MoneoResult.Failed($"Failed to add song {song.Id} to the playlist {playlist.Id} in the database: {e.Message}");
         }
     }
 
@@ -128,7 +122,10 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
             };
         }
         
-        var playlist = _dbContext.Playlists.FirstOrDefault(pl => pl.ConversationId == cmdContext.ConversationId);
+        await using var scope = GetScope();
+        var dbContext = scope.GetDbContext<RadioFreeDbContext>();
+        
+        var playlist = dbContext.Playlists.FirstOrDefault(pl => pl.ConversationId == cmdContext.ConversationId);
         
         if (playlist == null)
         {
@@ -141,16 +138,18 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
             };
         }
         
-        var user = await _dbContext.GetOrCreateUserPlaylistHistoryForTelegramAsync(
+        var user = await dbContext.GetOrCreateUserPlaylistHistoryForTelegramAsync(
             cmdContext.User.Id,
-            cmdContext.User.Username ?? cmdContext.User.FirstName,
+            cmdContext.User.ReferenceName,
             true,
             playlist.Id,
             cancellationToken);
         
         var username = "@" + user.Name;
-        
-        if (user.History.Count(h => _timeProvider.GetUtcNow().UtcDateTime.Subtract(h.OccurredOn) < TimeSpan.FromHours(24)) >= 2)
+
+        // never prevent ME from adding songs
+        if (user.TelegramId != 122243374 && user.History.Count(h =>
+                _timeProvider.GetUtcNow().UtcDateTime.Subtract(h.OccurredOn) < TimeSpan.FromHours(24)) >= 2)
         {
             _logger.LogWarning("User {UserId} has reached the daily limit of adding songs to the playlist", user.TelegramId);
             return new MoneoCommandResult
@@ -173,7 +172,7 @@ public class AddSongByIdWorkflowManager : WorkflowManagerBase, IAddSongByIdWorkf
             if (songInfo is not null)
             {
                 // Update the database with the song information
-                _ = await UpdateDatabaseAsync(songInfo, playlist.Id, cmdContext, cancellationToken);
+                _ = await UpdateDatabaseAsync(songInfo, playlist, cmdContext, cancellationToken);
                 
                 return new MoneoCommandResult
                 {

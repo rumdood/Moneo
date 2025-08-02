@@ -33,11 +33,10 @@ internal class RemoveSongFromPlaylistStateRepository : IWorkflowStateMachineRepo
 }
 
 [MoneoWorkflow]
-internal partial class RemoveSongFromPlaylistWorkflowManager : WorkflowManagerBase, IRemoveSongFromPlaylistWorkflowManager
+internal partial class RemoveSongFromPlaylistWorkflowManager : WorkflowManagerWithDbContextBase<RadioFreeDbContext>, IRemoveSongFromPlaylistWorkflowManager
 {
     private readonly ILogger<RemoveSongFromPlaylistWorkflowManager> _logger;
     private readonly IYouTubeMusicProxyClient _youTubeMusicProxyClient;
-    private readonly RadioFreeDbContext _context;
     private readonly RemoveSongFromPlaylistStateRepository _workflowStateMachineRepository = new();
 
     private readonly
@@ -50,14 +49,12 @@ internal partial class RemoveSongFromPlaylistWorkflowManager : WorkflowManagerBa
 
     public RemoveSongFromPlaylistWorkflowManager(
         IMediator mediator,
+        IServiceScopeFactory serviceScopeFactory,
         ILogger<RemoveSongFromPlaylistWorkflowManager> logger,
-        IYouTubeMusicProxyClient proxyClient,
-        RadioFreeDbContext dbContext) : base(mediator)
+        IYouTubeMusicProxyClient proxyClient) : base(mediator, serviceScopeFactory)
     {
         _logger = logger;
         _youTubeMusicProxyClient = proxyClient;
-        _context = dbContext;
-
         _responseHandlers =
             new Dictionary<RemoveSongFromPlaylistState, Func<RemoveSongFromPlaylistStateMachine, string,
                 CancellationToken, Task<ResponseHandleResult>>>
@@ -184,7 +181,7 @@ internal partial class RemoveSongFromPlaylistWorkflowManager : WorkflowManagerBa
     {
         _logger.LogDebug(
             "Continuing RemoveSongFromPlaylist workflow for user input: {UserInput} in conversation ID: {ConversationId} for User: {User}",
-            userInput, context.ConversationId, context.User?.Username);
+            userInput, context.ConversationId, context.User?.ReferenceName);
         if (_responseHandlers.TryGetValue(machine.CurrentState, out var handler))
         {
             var result = await handler.Invoke(machine, userInput, cancellationToken);
@@ -340,7 +337,7 @@ internal partial class RemoveSongFromPlaylistWorkflowManager : WorkflowManagerBa
     {
         _logger.LogDebug(
             "Starting RemoveSongFromPlaylist workflow for song: {SongName} in conversation ID: {ConversationId} for User: {User}",
-            songName, context.ConversationId, context.User?.Username);
+            songName, context.ConversationId, context.User?.ReferenceName);
 
         // get the conversation user key
         var conversationUserKey = context.GenerateConversationUserKey();
@@ -368,9 +365,12 @@ internal partial class RemoveSongFromPlaylistWorkflowManager : WorkflowManagerBa
                 UserMessageText = "Song Name cannot be empty."
             };
         }
+        
+        await using var scope = GetScope();
+        var dbContext = scope.GetDbContext<RadioFreeDbContext>();
 
         // get the playlist for the conversation
-        var playlist = _context.Playlists.FirstOrDefault(pl => pl.ConversationId == context.ConversationId);
+        var playlist = dbContext.Playlists.FirstOrDefault(pl => pl.ConversationId == context.ConversationId);
 
         if (playlist == null)
         {
@@ -430,6 +430,7 @@ internal partial class RemoveSongFromPlaylistWorkflowManager : WorkflowManagerBa
             _logger.LogDebug(
                 "Only one song found for name {SongName} on playlist {PlaylistId}, skipping selection step",
                 state.SongName, playlist.ExternalId);
+            state.SetOptions([searchResult.Data[0]]);
             state.SelectSong(searchResult.Data[0].Id);
         }
         else

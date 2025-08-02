@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RadioFreeBot.ResourceAccess;
 
@@ -10,9 +11,11 @@ using RadioFreeBot.ResourceAccess;
 namespace RadioFreeBot.ResourceAccess.Migrations
 {
     [DbContext(typeof(RadioFreeDbContext))]
-    partial class RadioFreeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250619192232_AddAlbumRelationships")]
+    partial class AddAlbumRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");

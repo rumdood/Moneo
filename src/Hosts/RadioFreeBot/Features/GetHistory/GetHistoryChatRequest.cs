@@ -2,6 +2,7 @@ using MediatR;
 using Moneo.Chat;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Models;
+using RadioFreeBot.Configuration;
 using RadioFreeBot.ResourceAccess;
 
 namespace RadioFreeBot.Features.GetHistory;
@@ -38,20 +39,11 @@ internal class GetHistoryChatRequestHandler : IRequestHandler<GetHistoryChatRequ
 {
     private readonly RadioFreeDbContext _dbContext;
     private readonly ILogger<GetHistoryChatRequestHandler> _logger;
-    private const string YouTubeSongUrl = "https://music.youtube.com/watch?v=";
 
     public GetHistoryChatRequestHandler(RadioFreeDbContext dbContext, ILogger<GetHistoryChatRequestHandler> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
-    }
-
-    private static string EscapeMarkdown(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return string.Empty;
-        var charsToEscape = new[]
-            { "\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", "-", ".", "!", "|", ">", "~", "=" };
-        return charsToEscape.Aggregate(text, (current, c) => current.Replace(c, "\\" + c));
     }
 
     public async Task<MoneoCommandResult> Handle(GetHistoryChatRequest request, CancellationToken cancellationToken)
@@ -86,7 +78,7 @@ internal class GetHistoryChatRequestHandler : IRequestHandler<GetHistoryChatRequ
             }
 
             var songLinks = user.History
-                .Select(h => $"*{EscapeMarkdown(h.OccurredOn.ToString("f"))}:*  [{EscapeMarkdown(h.Song.Title)}]({YouTubeSongUrl + h.Song.Id})")
+                .Select(h => $"*{h.OccurredOn.ToString("f").EscapeMarkdown()}:*  {Utilities.GetYouTubeMusicLinkForSong(h.Song, true)}")
                 .ToArray();
 
             return new MoneoCommandResult

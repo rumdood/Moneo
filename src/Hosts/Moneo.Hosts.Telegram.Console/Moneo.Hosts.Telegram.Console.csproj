@@ -20,7 +20,7 @@
 
     <ItemGroup>
         <Content Include="appsettings.local.json" Condition="Exists('appsettings.local.json')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
         <Content Include="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

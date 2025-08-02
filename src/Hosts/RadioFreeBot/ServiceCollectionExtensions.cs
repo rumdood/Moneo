@@ -1,21 +1,44 @@
 using Microsoft.EntityFrameworkCore;
+using RadioFreeBot.Configuration;
 using RadioFreeBot.Features.GetHistory;
 using RadioFreeBot.ResourceAccess;
+using RadioFreeBot.YouTube;
 
 namespace RadioFreeBot;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddYouTubeMusicProxyClient(this IServiceCollection services,
-        Action<YouTubeProxyOptions> configure)
+    public static bool IsRadioFreeBotConfigurationValid(this IServiceCollection services,
+        RadioFreeBotConfiguration? botConfiguration)
     {
-        var options = new YouTubeProxyOptions();
+        if (botConfiguration == null)
+        {
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(botConfiguration.YouTubeMusicProxy.YouTubeMusicProxyUrl))
+        {
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(botConfiguration.YouTubeVideos.ApiKey))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    
+    public static IServiceCollection AddYouTubeMusicProxyClient(this IServiceCollection services,
+        Action<YouTubeMusicProxyOptions> configure)
+    {
+        var options = new YouTubeMusicProxyOptions();
         configure(options);
         return services.AddYouTubeMusicProxyClient(options);
     }
     
     private static IServiceCollection AddYouTubeMusicProxyClient(this IServiceCollection services,
-        YouTubeProxyOptions options)
+        YouTubeMusicProxyOptions options)
     {
         services.AddHttpClient<IYouTubeMusicProxyClient, YouTubeMusicProxyClient>(client =>
         {
@@ -27,7 +50,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddPlaylistManagement(this IServiceCollection services, RadioFreeBotOptions options)
     {
         services.AddSingleton(options.TimeProvider);
-        services.AddYouTubeMusicProxyClient(options.YouTubeProxyOptions);
+        services.AddYouTubeMusicProxyClient(options.YouTubeMusicProxyOptions);
+        services.AddSingleton<IRadioFreeYouTubeService, RadioFreeYouTubeService>();
         services.AddScoped<AuditingInterceptor>();
         services.AddDbContext<RadioFreeDbContext>((sp, opt) =>
         {
@@ -50,7 +74,7 @@ public class RadioFreeBotOptions
 {
     private const string DefaultConnectionString = "Data Source=RadioFreeBot.sqlite";
 
-    public YouTubeProxyOptions YouTubeProxyOptions { get; set; } = new();
+    public YouTubeMusicProxyOptions YouTubeMusicProxyOptions { get; set; } = new();
     
     public string ConnectionString { get; private set; } = DefaultConnectionString;
     
@@ -61,9 +85,9 @@ public class RadioFreeBotOptions
         configure(TimeProvider);
     }
     
-    public void ConfigureYouTubeProxy(Action<YouTubeProxyOptions> configure)
+    public void ConfigureYouTubeProxy(Action<YouTubeMusicProxyOptions> configure)
     {
-        configure(YouTubeProxyOptions);
+        configure(YouTubeMusicProxyOptions);
     }
     
     public void UseSqliteDatabase(string connectionString = DefaultConnectionString)

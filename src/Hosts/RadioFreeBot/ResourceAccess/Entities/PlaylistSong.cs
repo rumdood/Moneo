@@ -30,5 +30,21 @@ public class PlaylistSong : EntityBase
         AddedByUserId = addedByUserId;
         AddedAt = addedAt;
     }
+
+    public PlaylistSong(Playlist playlist, Song song, DateTime addedAt, long? addedByUserId = null)
+    {
+        Playlist = playlist;
+        Song = song;
+        AddedByUserId = addedByUserId;
+        AddedAt = addedAt;
+    }
+
+    public PlaylistSong(long playlistId, Song song, DateTime addedAt, long? addedByUserId = null)
+    {
+        PlaylistId = playlistId;
+        Song = song;
+        AddedByUserId = addedByUserId;
+        AddedAt = addedAt;
+    }
 }
 

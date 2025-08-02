@@ -14,6 +14,7 @@ using Moneo.TaskManagement.Contracts.Models;
 using Moneo.TaskManagement.Workflows.CreateTask;
 using Moneo.Web;
 using RadioFreeBot;
+using RadioFreeBot.Configuration;
 using RadioFreeBot.Features.FindSong;
 
 var builder = Host.CreateDefaultBuilder(args);
@@ -50,14 +51,10 @@ builder.ConfigureServices((context, services) =>
 
     services.AddSingleton(taskManagementConfig);
     
-    var radioFreeOptions = configuration.GetSection("RadioFree:YouTubeProxy").Get<YouTubeProxyOptions>();
+    var radioFreeBotConfiguration = configuration.GetSection("RadioFree").Get<RadioFreeBotConfiguration>();
 
-    if (radioFreeOptions is null)
-    {
-        throw new InvalidOperationException("YouTubeProxy configuration is missing");
-    }
-
-    services.AddSingleton(radioFreeOptions);
+    services.AddSingleton(radioFreeBotConfiguration!);
+    services.AddSingleton(radioFreeBotConfiguration!.YouTubeMusicProxy);
     
     var chatConfig = configuration.GetSection("Moneo:Chat").Get<ChatConfig>();
     if (chatConfig is null)
@@ -81,8 +78,16 @@ builder.ConfigureServices((context, services) =>
         opts.BotToken = botToken;
         opts.UseInMemoryStateManagement();
         opts.RegisterAsHostedService();
-        opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<FindSongRequest>();
-        opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<CreateTaskRequest>();
+
+        if (chatConfig.LoadTaskManagementCommands)
+        {
+            opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<CreateTaskRequest>();
+        }
+        
+        if (chatConfig.LoadRadioFreeBotCommands)
+        {
+            opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<FindSongRequest>();
+        }
     });
 
     services.AddTaskManagementChat();
@@ -96,9 +101,9 @@ builder.ConfigureServices((context, services) =>
     {
         opt.ConfigureYouTubeProxy(ytopt =>
         {
-            ytopt.YouTubeMusicProxyUrl = radioFreeOptions.YouTubeMusicProxyUrl;
+            ytopt.YouTubeMusicProxyUrl = radioFreeBotConfiguration.YouTubeMusicProxy.YouTubeMusicProxyUrl;
         });
-        opt.UseSqliteDatabase(configuration.GetConnectionString("RadioFree"));
+        opt.UseSqliteDatabase(configuration.GetConnectionString("RadioFree")!);
     });
 });
 
@@ -139,6 +144,8 @@ public class ChatConfig
 {
     public string? PrivateKey { get; set; }
     public string DefaultTimezone { get; set; }
+    public bool LoadTaskManagementCommands { get; set; } = false;
+    public bool LoadRadioFreeBotCommands { get; set; } = false;
 }
 
 public static class ServiceCollectionExtensions

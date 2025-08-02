@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Moneo.Chat;
 using Moneo.Chat.Commands;
 using Moneo.Chat.Models;
+using Moneo.Common;
+using RadioFreeBot.Configuration;
+using RadioFreeBot.Models;
 using RadioFreeBot.ResourceAccess;
 
 namespace RadioFreeBot.Features.FindSong;
@@ -33,7 +36,6 @@ internal sealed class FindSongHandler : IRequestHandler<FindSongRequest, MoneoCo
     private readonly ILogger<FindSongHandler> _logger;
     private readonly IYouTubeMusicProxyClient _client;
     private readonly RadioFreeDbContext _dbContext;
-    private const string YouTubeSongUrl = "https://music.youtube.com/watch?v=";
 
     private async Task<string?> GetPlaylistIdForConversationAsync(long conversationId,
         CancellationToken cancellationToken)
@@ -64,7 +66,7 @@ internal sealed class FindSongHandler : IRequestHandler<FindSongRequest, MoneoCo
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
                 UserMessageText =
-                    $"Sorry @{request.Context.User?.Username}, I couldn't find a playlist for this conversation. Please create a playlist first."
+                    $"Sorry @{request.Context.User?.ReferenceName}, I couldn't find a playlist for this conversation. Please create a playlist first."
             };
         }
 
@@ -79,12 +81,12 @@ internal sealed class FindSongHandler : IRequestHandler<FindSongRequest, MoneoCo
                 ResponseType = ResponseType.Text,
                 Type = ResultType.Error,
                 UserMessageText =
-                    $"Sorry @{request.Context.User?.Username}, I couldn't find what you were looking for. Are you sure the name is correct? You can also try adding in the name of the artist or album."
+                    $"Sorry @{request.Context.User?.ReferenceName}, I couldn't find what you were looking for. Are you sure the name is correct? You can also try adding in the name of the artist or album."
             };
         }
 
         var songLinks = searchResult.Data!
-            .Select(song => $"[{EscapeMarkdown(song.Title)}]({YouTubeSongUrl + song.Id}) by {EscapeMarkdown(song.Artist)}")
+            .Select(song => Utilities.GetYouTubeMusicLinkForSong(song, true))
             .ToArray();
         return new MoneoCommandResult
         {
@@ -92,14 +94,7 @@ internal sealed class FindSongHandler : IRequestHandler<FindSongRequest, MoneoCo
             Type = ResultType.WorkflowCompleted,
             Format = TextFormat.Markdown,
             UserMessageText =
-                $"Hey @{request.Context.User?.Username}, I found the following songs on the playlist:\n{string.Join("\n", songLinks)}"
+                $"Hey @{request.Context.User?.ReferenceName}, I found the following songs on the playlist:\n{string.Join("\n", songLinks)}"
         };
-    }
-    
-    private static string EscapeMarkdown(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return string.Empty;
-        var charsToEscape = new[] { "\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", "-", ".", "!", "|", ">", "~", "=" };
-        return charsToEscape.Aggregate(text, (current, c) => current.Replace(c, "\\" + c));
     }
 }

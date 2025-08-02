@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RadioFreeBot.ResourceAccess;
 
@@ -10,42 +11,14 @@ using RadioFreeBot.ResourceAccess;
 namespace RadioFreeBot.ResourceAccess.Migrations
 {
     [DbContext(typeof(RadioFreeDbContext))]
-    partial class RadioFreeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250619024518_AddArtistsAndAlbumsAndTextSearch")]
+    partial class AddArtistsAndAlbumsAndTextSearch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
-
-            modelBuilder.Entity("AlbumArtist", b =>
-                {
-                    b.Property<long>("AlbumsId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("ArtistsId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AlbumsId", "ArtistsId");
-
-                    b.HasIndex("ArtistsId");
-
-                    b.ToTable("AlbumArtist");
-                });
-
-            modelBuilder.Entity("AlbumSong", b =>
-                {
-                    b.Property<long>("AlbumsId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("SongsId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AlbumsId", "SongsId");
-
-                    b.HasIndex("SongsId");
-
-                    b.ToTable("AlbumSong");
-                });
 
             modelBuilder.Entity("ArtistSong", b =>
                 {
@@ -69,6 +42,9 @@ namespace RadioFreeBot.ResourceAccess.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
+                    b.Property<long?>("ArtistId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("TEXT")
                         .HasColumnName("created_on");
@@ -77,7 +53,14 @@ namespace RadioFreeBot.ResourceAccess.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("SongId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ArtistId");
+
+                    b.HasIndex("SongId");
 
                     b.ToTable("Albums");
                 });
@@ -228,36 +211,6 @@ namespace RadioFreeBot.ResourceAccess.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("AlbumArtist", b =>
-                {
-                    b.HasOne("RadioFreeBot.ResourceAccess.Entities.Album", null)
-                        .WithMany()
-                        .HasForeignKey("AlbumsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RadioFreeBot.ResourceAccess.Entities.Artist", null)
-                        .WithMany()
-                        .HasForeignKey("ArtistsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AlbumSong", b =>
-                {
-                    b.HasOne("RadioFreeBot.ResourceAccess.Entities.Album", null)
-                        .WithMany()
-                        .HasForeignKey("AlbumsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RadioFreeBot.ResourceAccess.Entities.Song", null)
-                        .WithMany()
-                        .HasForeignKey("SongsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ArtistSong", b =>
                 {
                     b.HasOne("RadioFreeBot.ResourceAccess.Entities.Artist", null)
@@ -271,6 +224,17 @@ namespace RadioFreeBot.ResourceAccess.Migrations
                         .HasForeignKey("SongsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("RadioFreeBot.ResourceAccess.Entities.Album", b =>
+                {
+                    b.HasOne("RadioFreeBot.ResourceAccess.Entities.Artist", null)
+                        .WithMany("Albums")
+                        .HasForeignKey("ArtistId");
+
+                    b.HasOne("RadioFreeBot.ResourceAccess.Entities.Song", null)
+                        .WithMany("Albums")
+                        .HasForeignKey("SongId");
                 });
 
             modelBuilder.Entity("RadioFreeBot.ResourceAccess.Entities.PlaylistSong", b =>
@@ -299,6 +263,11 @@ namespace RadioFreeBot.ResourceAccess.Migrations
                     b.Navigation("Song");
                 });
 
+            modelBuilder.Entity("RadioFreeBot.ResourceAccess.Entities.Artist", b =>
+                {
+                    b.Navigation("Albums");
+                });
+
             modelBuilder.Entity("RadioFreeBot.ResourceAccess.Entities.Playlist", b =>
                 {
                     b.Navigation("PlaylistSongs");
@@ -306,6 +275,8 @@ namespace RadioFreeBot.ResourceAccess.Migrations
 
             modelBuilder.Entity("RadioFreeBot.ResourceAccess.Entities.Song", b =>
                 {
+                    b.Navigation("Albums");
+
                     b.Navigation("PlaylistSongs");
                 });
 
