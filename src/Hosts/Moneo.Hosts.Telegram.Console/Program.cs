@@ -1,14 +1,21 @@
 ﻿using System.Net.Http.Json;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using Moneo.Chat;
 using Moneo.Chat.Telegram;
 using Moneo.Common;
+using Moneo.Hosts.Chat.Api;
 using Moneo.TaskManagement.Contracts;
 using Moneo.TaskManagement.Contracts.Models;
+using Moneo.TaskManagement.Workflows.CreateTask;
 using Moneo.Web;
+using RadioFreeBot;
+using RadioFreeBot.Configuration;
+using RadioFreeBot.Features.FindSong;
 
 var builder = Host.CreateDefaultBuilder(args);
 
@@ -30,13 +37,11 @@ builder.ConfigureAppConfiguration((context, config) =>
 builder.ConfigureServices((context, services) =>
 {
     var configuration = context.Configuration;
-    
-    services.AddLogging(loggingBuilder =>
-    {
-        loggingBuilder.AddConsole();
-        loggingBuilder.AddDebug();
-        loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
-    });
+
+    services.AddSerilog(
+        opt => opt
+            .WriteTo.Console()
+            .ReadFrom.Configuration(configuration));
 
     var taskManagementConfig = configuration.GetSection("Moneo:TaskManagement").Get<TaskManagementConfig>();
     if (taskManagementConfig is null)
@@ -45,6 +50,11 @@ builder.ConfigureServices((context, services) =>
     }
 
     services.AddSingleton(taskManagementConfig);
+    
+    var radioFreeBotConfiguration = configuration.GetSection("RadioFree").Get<RadioFreeBotConfiguration>();
+
+    services.AddSingleton(radioFreeBotConfiguration!);
+    services.AddSingleton(radioFreeBotConfiguration!.YouTubeMusicProxy);
     
     var chatConfig = configuration.GetSection("Moneo:Chat").Get<ChatConfig>();
     if (chatConfig is null)
@@ -68,11 +78,32 @@ builder.ConfigureServices((context, services) =>
         opts.BotToken = botToken;
         opts.UseInMemoryStateManagement();
         opts.RegisterAsHostedService();
+
+        if (chatConfig.LoadTaskManagementCommands)
+        {
+            opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<CreateTaskRequest>();
+        }
+        
+        if (chatConfig.LoadRadioFreeBotCommands)
+        {
+            opts.RegisterUserRequestsAndWorkflowsFromAssemblyContaining<FindSongRequest>();
+        }
     });
+
+    services.AddTaskManagementChat();
 
     services.AddTaskManagement(opt =>
     {
         opt.UseConfiguration(taskManagementConfig);
+    });
+
+    services.AddPlaylistManagement(opt =>
+    {
+        opt.ConfigureYouTubeProxy(ytopt =>
+        {
+            ytopt.YouTubeMusicProxyUrl = radioFreeBotConfiguration.YouTubeMusicProxy.YouTubeMusicProxyUrl;
+        });
+        opt.UseSqliteDatabase(configuration.GetConnectionString("RadioFree")!);
     });
 });
 
@@ -87,6 +118,11 @@ lifetime.ApplicationStarted.Register(() =>
     // Resolve IChatAdapter after the application has started
     var chatAdapter = app.Services.GetRequiredService<IChatAdapter>();
     logger.LogInformation("IChatAdapter resolved successfully.");
+    
+    // fire the RadioFreeBot.Events.ApplicationStartedEvent
+    var mediator = app.Services.GetRequiredService<IMediator>();
+    mediator.Publish(new RadioFreeBot.Events.ApplicationStartedEvent(DateTime.UtcNow)).GetAwaiter().GetResult();
+    
 });
 
 lifetime.ApplicationStopping.Register(() =>
@@ -108,6 +144,8 @@ public class ChatConfig
 {
     public string? PrivateKey { get; set; }
     public string DefaultTimezone { get; set; }
+    public bool LoadTaskManagementCommands { get; set; } = false;
+    public bool LoadRadioFreeBotCommands { get; set; } = false;
 }
 
 public static class ServiceCollectionExtensions

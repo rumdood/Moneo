@@ -16,6 +16,7 @@ public class UserRequestGenerators : IIncrementalGenerator
         public const string UserCommandAttribute = "UserCommandAttribute";
         public const string UserCommandArgumentAttribute = "UserCommandArgument";
         public const string UserCommandHelpText = "HelpDescription";
+        public const string WorkflowContinuationCommandAttribute = "WorkflowContinuationCommandAttribute";
     }
 
     private record struct UserRequestInfo
@@ -209,12 +210,12 @@ public class UserRequestGenerators : IIncrementalGenerator
         builder.AppendLine();
         builder.AppendLine("    public static void Register()");
         builder.AppendLine("    {");
-        builder.AppendLine($"        UserRequestFactory.RegisterCommand({AttributeKeys.CommandKey}, (id, args) => new {userRequest.Name}(id, args));");
+        builder.AppendLine($"        Moneo.Chat.UserRequestFactory.RegisterCommand({AttributeKeys.CommandKey}, (context) => new {userRequest.Name}(context));");
         
         if (!string.IsNullOrEmpty(userRequest.HelpText))
         {
             builder.AppendLine(
-                $"        HelpResponseFactory.RegisterCommand({AttributeKeys.CommandKey}, @\"{userRequest.HelpText}\");");
+                $"        Moneo.Chat.HelpResponseFactory.RegisterCommand({AttributeKeys.CommandKey}, @\"{userRequest.HelpText}\");");
         }
         
         builder.AppendLine("    }");
@@ -241,13 +242,17 @@ public class UserRequestGenerators : IIncrementalGenerator
             return null;
         }
 
-        var userCommandAttribute = GetUserCommandAttributeValue(type);
+        var userCommandAttribute = GetCommandAttributeValue(type);
+        if (userCommandAttribute == null)
+        {
+            return null;
+        }
 
         return new UserRequestInfo
         {
             Name = type.Name,
-            CommandKey = userCommandAttribute.UserCommand,
-            HelpText = string.IsNullOrEmpty(userCommandAttribute.HelpText) ? "" : GetHelpText(type, userCommandAttribute.HelpText!),
+            CommandKey = userCommandAttribute.Value.UserCommand,
+            HelpText = string.IsNullOrEmpty(userCommandAttribute.Value.HelpText) ? "" : GetHelpText(type, userCommandAttribute.Value.HelpText!),
             Namespace = type.ContainingNamespace.ToDisplayString()
         };
     }
@@ -319,6 +324,34 @@ public class UserRequestGenerators : IIncrementalGenerator
         return null;
     }
 
+    private static UserCommandAttributeData? GetCommandAttributeValue(INamedTypeSymbol type)
+    {
+        foreach (var attribute in type.GetAttributes())
+        {
+            var attrClassName = attribute.AttributeClass?.Name;
+            switch (attrClassName)
+            {
+                case AttributeKeys.UserCommandAttribute:
+                {
+                    var commandKey = attribute.NamedArguments.FirstOrDefault(x => x.Key == AttributeKeys.CommandKey).Value.Value as string
+                                     ?? attribute.ConstructorArguments.FirstOrDefault().Value as string
+                                     ?? string.Empty;
+                    var helpText = attribute.NamedArguments.FirstOrDefault(x => x.Key == AttributeKeys.UserCommandHelpText).Value.Value as string
+                                   ?? (attribute.ConstructorArguments.Length > 1 ? attribute.ConstructorArguments[1].Value as string : null);
+                    return new UserCommandAttributeData { UserCommand = commandKey, HelpText = helpText };
+                }
+                case AttributeKeys.WorkflowContinuationCommandAttribute:
+                {
+                    var commandKey = attribute.NamedArguments.FirstOrDefault(x => x.Key == AttributeKeys.CommandKey).Value.Value as string
+                                     ?? (attribute.ConstructorArguments.Length > 1 ? attribute.ConstructorArguments[1].Value as string : null)
+                                     ?? string.Empty;
+                    return new UserCommandAttributeData { UserCommand = commandKey, HelpText = null };
+                }
+            }
+        }
+        return null;
+    }
+
     private static UserCommandAttributeData GetUserCommandAttributeValue(ISymbol symbol)
     {
         var attribute = symbol.GetAttributes()
@@ -363,8 +396,7 @@ public class UserRequestGenerators : IIncrementalGenerator
         // foreach loop here
         foreach (var userRequest in requests)
         {
-            sourceBuilder.AppendLine($"    RegisterCommand({userRequest.Name}.CommandKey, (id, args) => new {userRequest.Name}(id, args));");
-            //sourceBuilder.AppendLine($"    _lookup[{userRequest.Name}.CommandKey] = (id, args) => new {userRequest.Name}(id, args);");
+            sourceBuilder.AppendLine($"    RegisterCommand({userRequest.Name}.CommandKey, (context) => new {userRequest.Name}(context));");
         }
 
         sourceBuilder.AppendLine("  }");
@@ -373,3 +405,4 @@ public class UserRequestGenerators : IIncrementalGenerator
         return sourceBuilder.ToString();
     }
 }
+

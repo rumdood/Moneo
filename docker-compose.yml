@@ -41,6 +41,30 @@ services:
       - "7078:8080"
     networks:
       - moneo
+      
+  radiofreebot:
+    container_name: radiofree_bot
+    build:
+      context: .
+      dockerfile: src/Hosts/RadioFreeBot/Dockerfile
+    image: mrobold/moneo-radiofree-bot:latest
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Moneo__Chat__ApiKey: ${CHAT_API_KEY}
+      Telegram__BotToken: ${TELEGRAM_BOT_TOKEN}
+      Telegram__MasterConversationId: ${TELEGRAM_MASTER_CONVERSATION_ID}
+      Telegram__CallbackToken: callbacktoken
+      RadioFree__YouTubeMusicProxy__YouTubeMusicProxyUrl: ${YTM_PROXY_URL}
+      RadioFree__YouTubeVideos__ApiKey: ${YOUTUBE_API_KEY}
+      RadioFree__LoadPlaylistsFromYouTubeOnStartup: false
+      ConectionStrings__RadioFree: Data Source=/app/data/radiofree.sqlite
+    volumes:
+        - ./data/radiofree:/app/data
+    ports:
+      - "7079:8080"
+    networks:
+      - moneo
         
 networks:
     moneo:

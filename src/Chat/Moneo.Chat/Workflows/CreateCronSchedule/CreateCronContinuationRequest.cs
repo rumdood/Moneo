@@ -1,19 +1,20 @@
 using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 
 namespace Moneo.Chat.Workflows.CreateCronSchedule;
 
-[UserCommand(CommandKey = "/continueCron")]
+[WorkflowContinuationCommand(nameof(ChatState.CreateCron), "/continueCron")]
 public partial class CreateCronContinuationRequest : UserRequestBase
 {
     public string Text { get; }
     
-    public CreateCronContinuationRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public CreateCronContinuationRequest(CommandContext context) : base(context)
     {
-        Text = string.Join(' ', args);
+        Text = string.Join(' ', context.Args);
     }
 
-    public CreateCronContinuationRequest(long conversationId, string text) : base(conversationId, text)
+    public CreateCronContinuationRequest(long conversationId, ChatUser? user, string text) : base(conversationId, user, text)
     {
         Text = text;
     }
@@ -30,5 +31,5 @@ internal class CreateCronContinuationRequestHandler : IRequestHandler<CreateCron
 
     public Task<MoneoCommandResult> Handle(CreateCronContinuationRequest request,
         CancellationToken cancellationToken)
-        => _manager.ContinueWorkflowAsync(request.ConversationId, request.Text);
+        => _manager.ContinueWorkflowAsync(request.Context, request.Text, cancellationToken);
 }

@@ -2,48 +2,33 @@ using Moneo.Chat.Workflows.CreateCronSchedule;
 
 namespace Moneo.Chat.Workflows;
 
-public interface IWorkflowWithTaskDraftStateMachineRepository
-{
-    bool ContainsKey(long conversationId);
-    void Add(long conversationId, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine);
-    bool TryGetValue(long conversationId, out IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine);
-    void Remove(long conversationId);
-}
+public record ConversationUserKey(long ConversationId, long UserId);
 
 public interface IWorkflowStateMachineRepository<TState> where TState : Enum
 {
-    bool ContainsKey(long conversationId);
-    void Add(long conversationId, IWorkflowStateMachine<TState> stateMachine);
-    bool TryGetValue(long conversationId, out IWorkflowStateMachine<TState> stateMachine);
-    void Remove(long conversationId);
-}
-
-internal class TaskCreateOrChangeStateMachineRepository : IWorkflowWithTaskDraftStateMachineRepository
-{
-    private readonly Dictionary<long, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState>> _chatStates = new();
-    
-    public bool ContainsKey(long conversationId) => _chatStates.ContainsKey(conversationId);
-
-    public void Add(long conversationId, IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
-        => _chatStates.Add(conversationId, stateMachine);
-
-    public bool TryGetValue(long conversationId, out IWorkflowWithTaskDraftStateMachine<TaskCreateOrUpdateState> stateMachine)
-        => _chatStates.TryGetValue(conversationId, out stateMachine);
-
-    public void Remove(long conversationId) => _chatStates.Remove(conversationId);
+    bool ContainsKey(ConversationUserKey key);
+    void Add(ConversationUserKey key, IWorkflowStateMachine<TState> stateMachine);
+    bool TryGetValue(ConversationUserKey key, out IWorkflowStateMachine<TState> stateMachine);
+    void Remove(ConversationUserKey key);
 }
 
 internal class CronStateMachineRepository : IWorkflowStateMachineRepository<CronWorkflowState>
 {
-    private readonly Dictionary<long, IWorkflowStateMachine<CronWorkflowState>> _chatStates = new();
+    private readonly Dictionary<ConversationUserKey, IWorkflowStateMachine<CronWorkflowState>> _chatStates = new();
     
-    public bool ContainsKey(long conversationId) => _chatStates.ContainsKey(conversationId);
+    public bool ContainsKey(ConversationUserKey key) => _chatStates.ContainsKey(key);
 
-    public void Add(long conversationId, IWorkflowStateMachine<CronWorkflowState> stateMachine)
-        => _chatStates.Add(conversationId, stateMachine);
+    public void Add(ConversationUserKey key, IWorkflowStateMachine<CronWorkflowState> stateMachine)
+        => _chatStates.Add(key, stateMachine);
 
-    public bool TryGetValue(long conversationId, out IWorkflowStateMachine<CronWorkflowState> stateMachine)
-        => _chatStates.TryGetValue(conversationId, out stateMachine);
+    public bool TryGetValue(ConversationUserKey key, out IWorkflowStateMachine<CronWorkflowState> stateMachine)
+        => _chatStates.TryGetValue(key, out stateMachine);
 
-    public void Remove(long conversationId) => _chatStates.Remove(conversationId);
+    public void Remove(ConversationUserKey key) => _chatStates.Remove(key);
+}
+
+public static class CommandContextExtensions
+{
+    public static ConversationUserKey GenerateConversationUserKey(this CommandContext context)
+        => new ConversationUserKey(context.ConversationId, context.User?.Id ?? 0);
 }

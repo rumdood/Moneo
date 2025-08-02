@@ -1,23 +1,28 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moneo.Chat;
+using Moneo.Hosts.Chat.Api;
 
 namespace Moneo.Tests;
 
 public class InMemoryChatStateRepositoryTest
 {
-    private readonly IChatStateRepository _chatStateRepository = new InMemoryChatStateRepository();
+    private readonly IChatStateRepository _chatStateRepository =
+        new InMemoryChatStateRepository(new NullLogger<InMemoryChatStateRepository>());
+    private readonly Fixture _fixture = new Fixture();
 
     [Fact]
     public async Task UpdateChatStateAsync_WhenChatStateIsNotSet_ShouldUpdateChatState()
     {
         // Arrange
-        const int chatId = 1;
-        var chatState = ChatState.CreateTask;
+        var context = _fixture.GetCommandContext();
+        
+        var chatState = TaskChatStates.CreateTask;
 
         // Act
-        await _chatStateRepository.UpdateChatStateAsync(chatId, chatState);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, chatState);
 
         // Assert
-        var result = await _chatStateRepository.GetChatStateAsync(chatId);
+        var result = await _chatStateRepository.GetChatStateAsync(context.ConversationId, context.User!.Id);
         Assert.Equal(chatState, result);
     }
     
@@ -25,16 +30,16 @@ public class InMemoryChatStateRepositoryTest
     public async Task UpdateChatStateAsync_WhenChatStateIsAlreadySet_ShouldUpdateChatState()
     {
         // Arrange
-        const int chatId = 1;
-        var chatState = ChatState.CreateTask;
-        var newChatState = ChatState.ChangeTask;
+        var context = _fixture.GetCommandContext();
+        var chatState = TaskChatStates.CreateTask;
+        var newChatState = TaskChatStates.ChangeTask;
         
         // Act
-        await _chatStateRepository.UpdateChatStateAsync(chatId, chatState);
-        await _chatStateRepository.UpdateChatStateAsync(chatId, newChatState);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, chatState);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, newChatState);
 
         // Assert
-        var result = await _chatStateRepository.GetChatStateAsync(chatId);
+        var result = await _chatStateRepository.GetChatStateAsync(context.ConversationId, context.User!.Id);
         Assert.Equal(newChatState, result);
     }
     
@@ -42,17 +47,17 @@ public class InMemoryChatStateRepositoryTest
     public async Task RevertChatStateAsync_WhenChatStateIsSet_ShouldRevertChatState()
     {
         // Arrange
-        const int chatId = 1;
-        var chatState = ChatState.CreateTask;
-        var newChatState = ChatState.ChangeTask;
+        var context = _fixture.GetCommandContext();
+        var chatState = TaskChatStates.CreateTask;
+        var newChatState = TaskChatStates.ChangeTask;
         
         // Act
-        await _chatStateRepository.UpdateChatStateAsync(chatId, chatState);
-        await _chatStateRepository.UpdateChatStateAsync(chatId, newChatState);
-        await _chatStateRepository.RevertChatStateAsync(chatId);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, chatState);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, newChatState);
+        await _chatStateRepository.RevertChatStateAsync(context.ConversationId, context.User!.Id);
 
         // Assert
-        var result = await _chatStateRepository.GetChatStateAsync(chatId);
+        var result = await _chatStateRepository.GetChatStateAsync(context.ConversationId, context.User!.Id);
         Assert.Equal(chatState, result);
     }
     
@@ -60,27 +65,28 @@ public class InMemoryChatStateRepositoryTest
     public async Task RevertChatStateAsync_WhenChatStateIsWaiting_ShouldNotRevertChatState()
     {
         // Arrange
-        const int chatId = 1;
+        var context = _fixture.GetCommandContext();
         
         // Act
-        await _chatStateRepository.UpdateChatStateAsync(chatId, ChatState.CreateTask);
-        await _chatStateRepository.UpdateChatStateAsync(chatId, ChatState.Waiting);
-        await _chatStateRepository.RevertChatStateAsync(chatId);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, TaskChatStates.CreateTask);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, ChatState.Waiting);
+        await _chatStateRepository.RevertChatStateAsync(context.ConversationId, context.User!.Id);
 
         // Assert
-        var result = await _chatStateRepository.GetChatStateAsync(chatId);
+        var result = await _chatStateRepository.GetChatStateAsync(context.ConversationId, context.User!.Id);
         Assert.Equal(ChatState.Waiting, result);
     }
 
     [Fact]
     public async Task RevertChatStateAsync_WhenCalledMultipleTimes_Works()
     {
-        await _chatStateRepository.UpdateChatStateAsync(1, ChatState.ChangeTask);
-        await _chatStateRepository.UpdateChatStateAsync(1, ChatState.CreateCron);
-        await _chatStateRepository.RevertChatStateAsync(1);
-        await _chatStateRepository.RevertChatStateAsync(1);
+        var context = _fixture.GetCommandContext();
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, TaskChatStates.ChangeTask);
+        await _chatStateRepository.UpdateChatStateAsync(context.ConversationId, context.User!.Id, ChatState.CreateCron);
+        await _chatStateRepository.RevertChatStateAsync(context.ConversationId, context.User!.Id);
+        await _chatStateRepository.RevertChatStateAsync(context.ConversationId, context.User!.Id);
         
-        var result = await _chatStateRepository.GetChatStateAsync(1);
+        var result = await _chatStateRepository.GetChatStateAsync(context.ConversationId, context.User!.Id);
         Assert.Equal(ChatState.Waiting, result);
     }
 }

@@ -1,14 +1,14 @@
 using AutoFixture.AutoMoq;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Moneo.Chat;
 using Moneo.Chat.Commands;
-using Moneo.Chat.Workflows;
-using Moneo.Chat.Workflows.ChangeTask;
-using Moneo.Chat.Workflows.CreateTask;
 using Moneo.Common;
+using Moneo.Hosts.Chat.Api.Tasks;
 using Moneo.TaskManagement.Contracts;
 using Moneo.TaskManagement.Contracts.Models;
+using Moneo.TaskManagement.Workflows;
+using Moneo.TaskManagement.Workflows.ChangeTask;
+using Moneo.TaskManagement.Workflows.CreateTask;
 
 namespace Moneo.Tests;
 
@@ -26,6 +26,7 @@ public class ChangeTaskWorkflowTests
     private readonly Dictionary<long, MoneoTaskDto> _tasksById = new();
     private const long ChatId = 123456789;
     private const long ExistingTaskId = 987654321;
+    private const long UserId = 1234567890;
     private const string ExistingTaskName = "Existing Task";
     private readonly DateTime _existingTaskCreatedDate = new(2022, 1, 1);
 
@@ -97,13 +98,14 @@ public class ChangeTaskWorkflowTests
     {
         // Arrange
         var workflowManager = _fixture.Build<ChangeTaskWorkflowManager>().Create();
+        var context = _fixture.GetCommandContext(ChatId, _fixture.GetUser(UserId));
         
         // start one workflow
-        _ = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
+        _ = await workflowManager.StartWorkflowAsync(context, ExistingTaskName);
         
         // Act
         // try to start a second workflow
-        var result = await workflowManager.StartWorkflowAsync(ChatId, _fixture.Create<string>());
+        var result = await workflowManager.StartWorkflowAsync(context, _fixture.Create<string>());
         
         // Assert
         Assert.Equal(ResponseType.Text, result.ResponseType);
@@ -115,12 +117,12 @@ public class ChangeTaskWorkflowTests
     public async Task StartWorkflowAsync_WhenNoTaskNameIsGiven_ReturnsError()
     {
         // Arrange
-        var chatId = _fixture.Create<long>();
+        var context = _fixture.GetCommandContext();
         var workflowManager = _fixture.Build<ChangeTaskWorkflowManager>().Create();
         
         // Act
         // try to start a second workflow
-        var result = await workflowManager.StartWorkflowAsync(chatId, null);
+        var result = await workflowManager.StartWorkflowAsync(context, null);
         
         // Assert
         Assert.Equal(ResponseType.Text, result.ResponseType);
@@ -133,9 +135,10 @@ public class ChangeTaskWorkflowTests
     {
         // Arrange
         var workflowManager = _fixture.Build<ChangeTaskWorkflowManager>().Create();
+        var context = _fixture.GetCommandContext(ChatId, _fixture.GetUser(UserId));
         
         // Act
-        var result = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
+        var result = await workflowManager.StartWorkflowAsync(context, ExistingTaskName);
         
         // Assert
         Assert.Equal(ResponseType.Menu, result.ResponseType);
@@ -153,12 +156,13 @@ public class ChangeTaskWorkflowTests
     {
         // Arrange
         var workflowManager = _fixture.Build<ChangeTaskWorkflowManager>().Create();
+        var context = _fixture.GetCommandContext(ChatId, _fixture.GetUser(UserId));
         
         // start the workflow
-        _ = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
+        _ = await workflowManager.StartWorkflowAsync(context, ExistingTaskName);
         
         // Act
-        var result = await workflowManager.ContinueWorkflowAsync(ChatId, userInput);
+        var result = await workflowManager.ContinueWorkflowAsync(context, userInput);
         
         // Assert
         Assert.Equal(ResponseType.Text, result.ResponseType);
@@ -175,12 +179,13 @@ public class ChangeTaskWorkflowTests
     {
         // Arrange
         var workflowManager = _fixture.Build<ChangeTaskWorkflowManager>().Create();
+        var context = _fixture.GetCommandContext(ChatId, _fixture.GetUser(UserId));
         
         // start the workflow
-        _ = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
+        _ = await workflowManager.StartWorkflowAsync(context, ExistingTaskName);
         
         // Act
-        var result = await workflowManager.ContinueWorkflowAsync(ChatId, userInput);
+        var result = await workflowManager.ContinueWorkflowAsync(context, userInput);
         
         // Assert
         Assert.Equal(ResponseType.Text, result.ResponseType);
@@ -191,7 +196,8 @@ public class ChangeTaskWorkflowTests
     public async Task EndToEndWorkflow_CompletesSuccessfully()
     {
         var workflowManager = _fixture.Build<ChangeTaskWorkflowManager>().Create();
-        var currentResponse = await workflowManager.StartWorkflowAsync(ChatId, ExistingTaskName);
+        var context = _fixture.GetCommandContext(ChatId, _fixture.GetUser(UserId), commandText: ExistingTaskName);
+        var currentResponse = await workflowManager.StartWorkflowAsync(context, ExistingTaskName);
         var currentStep = 1;
 
         var requests = new Dictionary<int, string>
@@ -211,7 +217,9 @@ public class ChangeTaskWorkflowTests
                 _ => throw new ArgumentOutOfRangeException()
             };
             
-            currentResponse = await workflowManager.ContinueWorkflowAsync(ChatId, responseText);
+            context.Args = [responseText];
+            
+            currentResponse = await workflowManager.ContinueWorkflowAsync(context, responseText);
         }
         
         Assert.Equal(ResultType.WorkflowCompleted, currentResponse.Type);

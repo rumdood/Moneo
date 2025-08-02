@@ -1,34 +1,34 @@
 ﻿using MediatR;
 using Moneo.Chat.Commands;
+using Moneo.Chat.Models;
 
-namespace Moneo.Chat
+namespace Moneo.Chat;
+
+[WorkflowContinuationCommand(nameof(ChatState.ConfirmCommand), "/continueConfirmCommand")]
+public partial class ConfirmCommandContinuationRequest : UserRequestBase
 {
-    [UserCommand(CommandKey = "/continueConfirmCommand")]
-    public partial class ConfirmCommandContinuationRequest : UserRequestBase
+    public string Text { get; }
+
+    public ConfirmCommandContinuationRequest(CommandContext context) : base(context)
     {
-        public string Text { get; }
-
-        public ConfirmCommandContinuationRequest(long conversationId, params string[] args) : base(conversationId, args)
-        {
-            Text = string.Join(' ', args);
-        }
-
-        public ConfirmCommandContinuationRequest(long conversationId, string text) : base(conversationId, text)
-        {
-            Text = text;
-        }
+        Text = string.Join(' ', context.Args);
     }
 
-    internal class ConfirmCommandContinuationRequestHandler : IRequestHandler<ConfirmCommandContinuationRequest, MoneoCommandResult>
+    public ConfirmCommandContinuationRequest(long conversationId, ChatUser? user, string text) : base(conversationId, user, text)
     {
-        private readonly IConfirmCommandWorkflowManager _manager;
-
-        public ConfirmCommandContinuationRequestHandler(IConfirmCommandWorkflowManager manager)
-        {
-            _manager = manager;
-        }
-
-        public Task<MoneoCommandResult> Handle(ConfirmCommandContinuationRequest request, CancellationToken cancellationToken)
-            => _manager.ContinueWorkflowAsync(request.ConversationId, request.Text);
+        Text = text;
     }
+}
+
+internal class ConfirmCommandContinuationRequestHandler : IRequestHandler<ConfirmCommandContinuationRequest, MoneoCommandResult>
+{
+    private readonly IConfirmCommandWorkflowManager _manager;
+
+    public ConfirmCommandContinuationRequestHandler(IConfirmCommandWorkflowManager manager)
+    {
+        _manager = manager;
+    }
+
+    public Task<MoneoCommandResult> Handle(ConfirmCommandContinuationRequest request, CancellationToken cancellationToken)
+        => _manager.ContinueWorkflowAsync(request.Context, request.Text, cancellationToken);
 }

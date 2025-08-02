@@ -1,9 +1,8 @@
 namespace Moneo.Chat.Models;
 
-public class UserMessage(long conversationId, string text, string userFirstName, string? userLastName = null)
+public class UserMessage(long conversationId, ChatUser? fromUser, string text)
 {
     public long ConversationId { get; private set; } = conversationId;
     public string Text { get; private set; } = text;
-    public string UserFirstName { get; private set; } = userFirstName;
-    public string? UserLastName { get; private set; } = userLastName;
+    public ChatUser? FromUser { get; private set; } = fromUser;
 }

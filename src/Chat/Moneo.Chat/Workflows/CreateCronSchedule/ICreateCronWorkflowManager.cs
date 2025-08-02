@@ -2,8 +2,7 @@ using Moneo.Chat.Commands;
 
 namespace Moneo.Chat.Workflows.CreateCronSchedule;
 
-public interface ICreateCronWorkflowManager : IWorkflowManager
+public interface ICreateCronWorkflowManager : IWorkflowManagerWithContinuation
 {
-    Task<MoneoCommandResult> StartWorkflowAsync(long chatId, ChatState? outerChatState = null);
-    Task<MoneoCommandResult> ContinueWorkflowAsync(long chatId, string userInput);
+    Task<MoneoCommandResult> StartWorkflowAsync(CommandContext cmdContext, CancellationToken cancellationToken = default);
 }

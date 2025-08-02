@@ -54,14 +54,13 @@ namespace Moneo.Chat
         public async Task ReceiveMessageAsync(ConsoleUserMessage message, CancellationToken cancellationToken)
         {
             // get the current windows user name
-            var user = Environment.UserName;
+            var user = new ChatUser(0, Environment.UserName);
 
             try
             {
                 await _conversationManager.ProcessUserMessageAsync(
                     new UserMessage(
-                        message.ConversationId, message.Text,
-                        user)
+                        message.ConversationId, user, message.Text)
                     );
             }
             catch (Exception e)

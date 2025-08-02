@@ -2,7 +2,7 @@ using MediatR;
 using Moneo.Chat;
 using Moneo.Common;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.GetStatus;
+namespace Moneo.Chat.Telegram.Api.GetStatus;
 
 public sealed record GetStatusResult(ChatAdapterStatus Status);
 

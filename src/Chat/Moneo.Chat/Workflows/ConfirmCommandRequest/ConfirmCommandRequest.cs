@@ -1,4 +1,6 @@
-﻿namespace Moneo.Chat;
+﻿using Moneo.Chat.Models;
+
+namespace Moneo.Chat;
 
 [UserCommand(CommandKey = "/confirmCommand")]
 public partial class ConfirmCommandRequest : UserRequestBase
@@ -6,20 +8,20 @@ public partial class ConfirmCommandRequest : UserRequestBase
     public string PotentialCommand { get; private set; }
     public string PotentialArguments { get; private set; }
 
-    public ConfirmCommandRequest(long conversationId, params string[] args) : base(conversationId, args)
+    public ConfirmCommandRequest(CommandContext context) : base(context)
     {
-        if (args.Length == 0)
+        if (context.Args.Length == 0)
         {
             throw new ArgumentException("No potential command provided");
         }
 
-        PotentialCommand = args[0].StartsWith('/') ? args[0] : $"/{args[0]}";
-        PotentialArguments = args.Length > 1
-            ? string.Join(' ', args.Skip(1))
+        PotentialCommand = context.Args[0].StartsWith('/') ? context.Args[0] : $"/{context.Args[0]}";
+        PotentialArguments = context.Args.Length > 1
+            ? string.Join(' ', context.Args.Skip(1))
             : "";
     }
 
-    public ConfirmCommandRequest(long conversationId, string potentialCommand, string[] potentialArguments) : base(conversationId, potentialCommand)
+    public ConfirmCommandRequest(long conversationId, ChatUser? user, string potentialCommand, string[] potentialArguments) : base(conversationId, user, potentialCommand)
     {
         PotentialCommand = potentialCommand.StartsWith('/') ? potentialCommand : $"/{potentialCommand}";
         PotentialArguments = string.Join(' ', potentialArguments);

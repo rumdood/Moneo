@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.Telegram;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.ReceiveMessage;
+namespace Moneo.Chat.Telegram.Api.ReceiveMessage;
 
 public static class ReceiveMessageEndpoint
 {

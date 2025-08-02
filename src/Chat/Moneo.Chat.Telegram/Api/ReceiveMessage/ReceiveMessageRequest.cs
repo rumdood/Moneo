@@ -4,7 +4,7 @@ using Moneo.Chat;
 using Moneo.Common;
 using Telegram.Bot.Types;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.ReceiveMessage;
+namespace Moneo.Chat.Telegram.Api.ReceiveMessage;
 
 public sealed record ReceiveMessageRequest(string JsonMessage) : IRequest<MoneoResult>;
 

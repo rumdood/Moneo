@@ -42,6 +42,8 @@ public class MoneoResult<TData> : MoneoResult, IMoneoResult<TData>
         { Type = MoneoResultType.ConversationNotFound, Message = message };
     public static MoneoResult<TData> BadRequest(string message) => new()
         { Type = MoneoResultType.BadRequest, Message = message };
+    public static MoneoResult<TData> NotFound(string message) => new()
+        { Type = MoneoResultType.NotFound, Message = message };
 }
 
 public class MoneoResult : IMoneoResult
@@ -69,6 +71,8 @@ public class MoneoResult : IMoneoResult
         { Type = MoneoResultType.ConversationNotFound, Message = message };
     public new static MoneoResult BadRequest(string message) => new()
         { Type = MoneoResultType.BadRequest, Message = message };
+    public new static MoneoResult NotFound(string message) => new()
+        { Type = MoneoResultType.NotFound, Message = message };
 }
 
 public sealed class MoneoResultType : SmartFlagEnum<MoneoResultType>
@@ -84,6 +88,7 @@ public sealed class MoneoResultType : SmartFlagEnum<MoneoResultType>
     public static readonly MoneoResultType ConversationNotFound = new(nameof(ConversationNotFound), 1 << 5);
     public static readonly MoneoResultType BadRequest = new(nameof(BadRequest), 1 << 6);
     public static readonly MoneoResultType Created = new(nameof(Created), SuccessBit | 1 << 7);
+    public static readonly MoneoResultType NotFound = new(nameof(NotFound), 1 << 8);
     
     public bool IsSuccess => (Value & SuccessBit) == SuccessBit;
 

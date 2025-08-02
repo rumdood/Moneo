@@ -2,7 +2,7 @@ using MediatR;
 using Moneo.Chat;
 using Moneo.Common;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.SendBotTextMessage;
+namespace Moneo.Chat.Telegram.Api.SendBotTextMessage;
 
 public sealed record BotTextMessageDto(long ConversationId, string Text, bool IsError) : IBotTextMessage;
 

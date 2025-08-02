@@ -13,8 +13,8 @@ internal class ConfirmCommandRequestHandler : IRequestHandler<ConfirmCommandRequ
         _manager = manager;
     }
 
-    public async Task<MoneoCommandResult> Handle(ConfirmCommandRequest request, CancellationToken cancellationToken)
+    public async Task<MoneoCommandResult> Handle(ConfirmCommandRequest request, CancellationToken cancellationToken = default)
     {
-        return await _manager.StartWorkflowAsync(request);
+        return await _manager.StartWorkflowAsync(request, cancellationToken);
     }
 }

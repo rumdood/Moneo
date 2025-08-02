@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Moneo.Chat.BotRequests;
@@ -10,7 +11,8 @@ namespace Moneo.Chat;
 internal class ChatManager : IChatManager
 {
     private readonly Dictionary<long, FixedLengthList<ChatEntry>> _conversationsById = new ();
-    private readonly Dictionary<long, User> _usersByConversationId = new();
+    private readonly Dictionary<long, HashSet<long>> _usersByConversationId = new();
+    private readonly Dictionary<long, ChatUser> _usersById = new();
     
     private readonly IMediator _mediator;
     private readonly ILogger<ChatManager> _logger;
@@ -32,19 +34,29 @@ internal class ChatManager : IChatManager
 
     public async Task ProcessUserMessageAsync(UserMessage message)
     {
-        _logger.LogDebug("Received From User: {@Message}", message.Text);
+        // dump the usermessage to the log as JSON
+        _logger.LogDebug("Received From User: {UserMessageJson}", JsonSerializer.Serialize(message));
         
         if (!_usersByConversationId.ContainsKey(message.ConversationId))
         {
-            if (string.IsNullOrEmpty(message.UserFirstName))
+            if (message.FromUser is not null)
             {
-                throw new InvalidOperationException("User has no username");
+                if (!_usersByConversationId.TryGetValue(message.ConversationId, out var users))
+                {
+                    users = [];
+                }
+
+                users.Add(message.FromUser.Id);
+                _usersByConversationId[message.ConversationId] = users;
+                
+                if (!_usersById.ContainsKey(message.FromUser.Id))
+                {
+                    _usersById[message.FromUser.Id] = message.FromUser;
+                }
             }
-            
-            _ = AddUser(message.ConversationId, message.UserFirstName, message.UserLastName);
         }
 
-        var result = await ProcessCommandAsync(message.ConversationId, message.Text);
+        var result = await ProcessCommandAsync(message.ConversationId, message.FromUser, message.Text);
 
         _logger.LogDebug("Handling {@Command}", message.Text);
         
@@ -55,7 +67,7 @@ internal class ChatManager : IChatManager
                 break;
             case ResponseType.Text:
                 await _mediator.Send(new BotTextMessageRequest(message.ConversationId, result.UserMessageText ?? "",
-                    result.Type == ResultType.Error));
+                    result.Format.ToBotRequestFormat(), result.Type == ResultType.Error));
                 break;
             case ResponseType.Animation:
                 await _mediator.Send(new BotGifMessageRequest(message.ConversationId, result.UserMessageText!));
@@ -70,29 +82,35 @@ internal class ChatManager : IChatManager
         }
     }
 
-    public Task<ChatState> GetChatStateForConversationAsync(long conversationId)
+    public Task<ChatState> GetChatStateForConversationAsync(long conversationId, long userId)
     {
-        return _chatStateRepository.GetChatStateAsync(conversationId);
+        return _chatStateRepository.GetChatStateAsync(conversationId, userId);
     }
 
-
-    public bool AddUser(long conversationId, string firstName, string? lastName)
+    private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, ChatUser? user, string? text, CancellationToken cancellationToken = default)
     {
-        return _usersByConversationId.TryAdd(conversationId, new User(Guid.NewGuid(), firstName, lastName, conversationId));
-    }
-
-    private async Task<MoneoCommandResult> ProcessCommandAsync(long conversationId, string text)
-    {
-        var state = await _chatStateRepository.GetChatStateAsync(conversationId);
+        var state = await _chatStateRepository.GetChatStateAsync(conversationId, user?.Id ?? 0);
         
         _logger.LogDebug("Current Chat State for conversation {@Conversation} is {@State}", conversationId, state);
 
-        var context = CommandContext.Get(conversationId, state, text);
-        var userRequest = UserRequestFactory.GetUserRequest(context);
+        var context = CommandContextFactory.BuildCommandContext(conversationId, user, state, text!);
 
-        if (userRequest is IRequest<MoneoCommandResult> request)
+        try
         {
-            return await _mediator.Send(request);
+            var userRequest = UserRequestFactory.GetUserRequest(context);
+            
+            if (userRequest is IRequest<MoneoCommandResult> request)
+            {
+                return await _mediator.Send(request, cancellationToken);
+            }
+        } catch (Exception ex) {
+            _logger.LogError(ex, "Failed to create user request for command: {Command}", text);
+            return new MoneoCommandResult
+            {
+                ResponseType = ResponseType.Text,
+                Type = ResultType.Error,
+                UserMessageText = ex.Message
+            };
         }
 
         return new MoneoCommandResult

@@ -13,6 +13,7 @@ internal sealed class CronDraft
     public bool IsDaysToRepeatComplete { get; set; }
     public bool IsTimesToRepeatComplete { get; set; }
     public int HourIntervalToRepeat { get; set; }
+    public long ForUserId { get; set; }
 
     public IEnumerable<DayOfWeek> DaysOfWeekToRepeat => _daysOfWeekToRepeat;
     public IEnumerable<TimeOnly> TimesToRepeat => _timesToRepeat;

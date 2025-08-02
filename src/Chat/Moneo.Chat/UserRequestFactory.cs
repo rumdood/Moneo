@@ -2,23 +2,23 @@ namespace Moneo.Chat;
 
 public static class UserRequestFactory
 {
-    private static readonly Dictionary<string, Func<long, string[], IUserRequest>> _lookup = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, Func<CommandContext, IUserRequest>> Lookup = new(StringComparer.OrdinalIgnoreCase);
     
-    public static void RegisterCommand(string commandKey, Func<long, string[], IUserRequest> constructor)
+    public static void RegisterCommand(string commandKey, Func<CommandContext, IUserRequest> constructor)
     {
-        _lookup.TryAdd(commandKey, constructor);
+        Lookup.TryAdd(commandKey, constructor);
     }
 
     public static IUserRequest? GetUserRequest(CommandContext context)
     {
-        return !_lookup.TryGetValue(context.CommandKey, out var constructor)
+        return !Lookup.TryGetValue(context.CommandKey, out var constructor)
             ? null
-            : constructor.Invoke(context.ConversationId, context.Args);
+            : constructor.Invoke(context);
     }
 
     public static string? GetPotentialUserCommand(string key)
     {
         var possibleCommand = "/" + key;
-        return !_lookup.TryGetValue(possibleCommand, out _) ? null : possibleCommand;
+        return !Lookup.TryGetValue(possibleCommand, out _) ? null : possibleCommand;
     }
 }

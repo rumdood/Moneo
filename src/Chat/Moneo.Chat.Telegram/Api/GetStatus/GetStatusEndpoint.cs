@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Moneo.Moneo.Chat.Telegram.Api.GetStatus;
+namespace Moneo.Chat.Telegram.Api.GetStatus;
 
 public static class GetStatusEndpoint
 {
